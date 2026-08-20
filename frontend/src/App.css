@@ -1,0 +1,12 @@
+/* App-level overrides — main design system is in index.css */
+
+/* Ensure all routes fill available height */
+.page {
+  flex: 1;
+}
+
+/* Focus ring for accessibility */
+:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
