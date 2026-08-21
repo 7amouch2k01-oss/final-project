@@ -6,11 +6,6 @@ export const AnimatedBackgroundGrid = () => {
       {/* Static Base Grid */}
       <div className="bg-grid-mesh" />
 
-      {/* Sweeping Right-to-Left Vertical Laser Beams */}
-      <div className="laser-beam vertical beam-1" />
-      <div className="laser-beam vertical beam-2" />
-      <div className="laser-beam vertical beam-3" />
-
       {/* Sweeping Right-to-Left Horizontal Laser Lines */}
       <div className="laser-line-h h-line-1" />
       <div className="laser-line-h h-line-2" />
