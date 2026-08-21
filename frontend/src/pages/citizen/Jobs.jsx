@@ -96,10 +96,27 @@ export const Jobs = () => {
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {j.companyLogo ? (
-                      <img src={j.companyLogo} alt="Logo" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: '48px', height: '48px', background: 'var(--grey-200)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: 'var(--text-muted)' }}>💼</div>
-                    )}
+                      <img 
+                        src={j.companyLogo} 
+                        alt={j.company || 'Logo'} 
+                        style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} 
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div style={{ 
+                      width: '48px', height: '48px', 
+                      background: 'var(--bg-elevated)', 
+                      border: '1px solid var(--glass-border)',
+                      borderRadius: 'var(--r-md)', 
+                      display: j.companyLogo ? 'none' : 'flex', 
+                      alignItems: 'center', justifyContent: 'center', 
+                      fontWeight: 600, fontSize: '1.2rem', color: 'var(--text-primary)' 
+                    }}>
+                      💼
+                    </div>
                     <div>
                       <h3 style={{ fontSize: '1.15rem' }}>{j.title}</h3>
                       <p style={{ fontSize: '0.8rem' }}>🏢 {j.company} | 📍 {j.location || 'Remote'}</p>

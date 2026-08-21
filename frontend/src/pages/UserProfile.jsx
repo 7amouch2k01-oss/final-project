@@ -10,6 +10,8 @@ export const UserProfile = () => {
   const [skills, setSkills] = useState(user?.skills?.join(', ') || '');
   const [languages, setLanguages] = useState(user?.languages?.join(', ') || '');
   const [cvUrl, setCvUrl] = useState(user?.cvUrl || '');
+  const [avatar, setAvatar] = useState(user?.avatar || '');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Education
   const firstEdu = user?.education?.[0] || {};
@@ -30,6 +32,36 @@ export const UserProfile = () => {
   const [companyLocation, setCompanyLocation] = useState(user?.company?.location || '');
 
   const [loading, setLoading] = useState(false);
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Avatar file size must be under 5MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    setUploadingAvatar(true);
+    try {
+      const res = await api.patch('/users/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const newAvatar = res.data.data.avatar;
+      setAvatar(newAvatar);
+      if (user) {
+        setUser({ ...user, avatar: newAvatar });
+      }
+      toast.success('Profile photo updated successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload profile photo');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,6 +122,56 @@ export const UserProfile = () => {
         <h2 style={{ marginBottom: '24px' }}>Edit & Complete Profile</h2>
         
         <form onSubmit={handleSubmit} className="glass" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Profile Photo / Avatar Section */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px', paddingBottom: '20px', borderBottom: '1px solid var(--glass-border)', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative' }}>
+              {avatar ? (
+                <img 
+                  src={avatar} 
+                  alt={name || 'Profile'} 
+                  style={{ width: '84px', height: '84px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--glass-border)', boxShadow: '0 0 16px rgba(0,0,0,0.3)' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                style={{ 
+                  width: '84px', height: '84px', borderRadius: '50%', 
+                  background: 'var(--red)', 
+                  display: avatar ? 'none' : 'flex', 
+                  alignItems: 'center', justifyContent: 'center', 
+                  color: '#fff', fontWeight: 800, fontSize: '1.8rem', 
+                  boxShadow: '0 0 16px var(--red-glow)',
+                  border: '2px solid var(--glass-border)'
+                }}
+              >
+                {name?.[0]?.toUpperCase() || user?.name?.[0]?.toUpperCase() || 'U'}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Profile Photo</div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Upload a JPG, PNG or WEBP (max 5MB)
+              </p>
+              <label 
+                className="btn btn-secondary btn-sm" 
+                style={{ cursor: uploadingAvatar ? 'wait' : 'pointer', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0 }}
+              >
+                {uploadingAvatar ? '⏳ Uploading...' : '📷 Change Photo'}
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp" 
+                  onChange={handleAvatarChange} 
+                  disabled={uploadingAvatar}
+                  style={{ display: 'none' }} 
+                />
+              </label>
+            </div>
+          </div>
+
           {/* General */}
           <div className="form-group">
             <label className="form-label">Full Name</label>

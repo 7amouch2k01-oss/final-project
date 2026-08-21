@@ -326,10 +326,26 @@ export const Navbar = () => {
                   e.currentTarget.style.background = 'var(--glass-bg)';
                 }}
               >
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name || 'User'} 
+                    style={{
+                      width: '26px', height: '26px', borderRadius: '50%',
+                      objectFit: 'cover', flexShrink: 0,
+                      border: '1px solid var(--glass-border)',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
                 <div style={{
                   width: '26px', height: '26px', borderRadius: '50%',
                   background: 'var(--red)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  display: user.avatar ? 'none' : 'flex', 
+                  alignItems: 'center', justifyContent: 'center',
                   color: '#fff', fontWeight: 800, fontSize: '0.72rem',
                   flexShrink: 0,
                   boxShadow: '0 0 8px var(--red-glow)',

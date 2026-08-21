@@ -19,16 +19,16 @@ const updateProfile = async (req, res, next) => {
 const uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) return require('../utils/apiResponse').badRequest(res, 'No file uploaded');
-    const user = await userService.uploadAvatar(req.user.id, req.file.buffer);
-    success(res, { avatar: user.avatar }, 'Avatar updated');
+    const user = await userService.uploadAvatar(req.user.id, req.file.buffer, req.file.mimetype);
+    success(res, { avatar: user.avatar, user: user.toPublicProfile() }, 'Avatar updated');
   } catch (e) { next(e); }
 };
 
 const uploadCV = async (req, res, next) => {
   try {
     if (!req.file) return require('../utils/apiResponse').badRequest(res, 'No file uploaded');
-    const user = await userService.uploadCV(req.user.id, req.file.buffer);
-    success(res, { cvUrl: user.cvUrl }, 'CV updated');
+    const user = await userService.uploadCV(req.user.id, req.file.buffer, req.file.mimetype);
+    success(res, { cvUrl: user.cvUrl, user: user.toPublicProfile() }, 'CV updated');
   } catch (e) { next(e); }
 };
 

@@ -90,7 +90,28 @@ export const Universities = () => {
             unis.map(u => (
               <div key={u._id} className="glass" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  {u.logo ? <img src={u.logo} alt="Logo" style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} /> : <div style={{ width: '48px', height: '48px', background: 'var(--grey-200)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: 'var(--text-muted)' }}>🎓</div>}
+                  {u.logo ? (
+                    <img 
+                      src={u.logo} 
+                      alt={u.name || 'Logo'} 
+                      style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div style={{ 
+                    width: '48px', height: '48px', 
+                    background: 'var(--bg-elevated)', 
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: 'var(--r-md)', 
+                    display: u.logo ? 'none' : 'flex', 
+                    alignItems: 'center', justifyContent: 'center', 
+                    fontWeight: 600, fontSize: '1.2rem', color: 'var(--text-primary)' 
+                  }}>
+                    🎓
+                  </div>
                   <div>
                     <h3 style={{ fontSize: '1.15rem' }}>{u.name}</h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📍 {u.city}, {u.country}</p>

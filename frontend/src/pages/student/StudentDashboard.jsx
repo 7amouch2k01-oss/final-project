@@ -94,7 +94,28 @@ export const StudentDashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {unis.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No universities listed yet.</p> : unis.map(u => (
                 <div key={u._id} className="glass" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  {u.logo ? <img src={u.logo} alt="Logo" style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} /> : <div style={{ width: '48px', height: '48px', background: 'var(--grey-200)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>🎓</div>}
+                  {u.logo ? (
+                    <img 
+                      src={u.logo} 
+                      alt={u.name || 'Logo'} 
+                      style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div style={{ 
+                    width: '48px', height: '48px', 
+                    background: 'var(--bg-elevated)', 
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: 'var(--r-md)', 
+                    display: u.logo ? 'none' : 'flex', 
+                    alignItems: 'center', justifyContent: 'center', 
+                    color: 'var(--text-primary)', fontSize: '1.2rem' 
+                  }}>
+                    🎓
+                  </div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ color: 'var(--text-primary)' }}>{u.name}</h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>📍 {u.city}, {u.country} | Tuition: {u.tuitionFee?.amount} {u.tuitionFee?.currency}/{u.tuitionFee?.period}</p>
@@ -114,7 +135,28 @@ export const StudentDashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {stages.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No internships listed yet.</p> : stages.map(s => (
                 <div key={s._id} className="glass" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  {s.companyLogo ? <img src={s.companyLogo} alt="Logo" style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} /> : <div style={{ width: '48px', height: '48px', background: 'var(--grey-200)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>💼</div>}
+                  {s.companyLogo ? (
+                    <img 
+                      src={s.companyLogo} 
+                      alt={s.company || 'Logo'} 
+                      style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div style={{ 
+                    width: '48px', height: '48px', 
+                    background: 'var(--bg-elevated)', 
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: 'var(--r-md)', 
+                    display: s.companyLogo ? 'none' : 'flex', 
+                    alignItems: 'center', justifyContent: 'center', 
+                    color: 'var(--text-primary)', fontSize: '1.2rem' 
+                  }}>
+                    💼
+                  </div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ color: 'var(--text-primary)' }}>{s.title}</h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>🏢 {s.company} | 📍 {s.location || 'Remote'} | ⏱️ {s.duration}</p>
