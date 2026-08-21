@@ -28,6 +28,7 @@ const paymentRoutes      = require('./routes/payments');
 const adminRoutes        = require('./routes/admin');
 const institutionRoutes  = require('./routes/institutions');
 const proRoutes          = require('./routes/pro');
+const communityRoutes    = require('./routes/community');
 
 // ─── Connect to MongoDB ────────────────────────────────────────────────────────
 connectDB();
@@ -127,6 +128,7 @@ app.use('/api/payments',      paymentRoutes);
 app.use('/api/admin',         adminRoutes);
 app.use('/api/institutions',  institutionRoutes);
 app.use('/api/pro',           proRoutes);
+app.use('/api/community',     communityRoutes);
 
 // ─── Single Deployment: Serve Built Frontend & Admin SPAs ──────────────────
 const fs = require('fs');

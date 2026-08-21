@@ -84,8 +84,12 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    // ── Job Seeker ────────────────────────────────────────────────────────────
+    // ── Job Seeker & Social Follow System ────────────────────────────────────
     savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    headline:  { type: String, default: '' }, // e.g. "Full Stack MERN Developer | Available for hire"
+    hourlyRate:{ type: Number, default: 0 },
 
     // ── Company Info (citizen with recruit rights) ────────────────────────────
     company: {
