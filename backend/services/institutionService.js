@@ -185,16 +185,12 @@ const getListings = async (institutionId) => {
 const createListing = async (institution, { type, data }) => {
   data.recruiterId = institution._id;
 
-  if (type === 'university' || institution.type === 'university' || institution.type === 'school') {
-    if (type === 'stage') {
-      const stage = await Stage.create({ ...data, company: institution.name });
-      return { type: 'stage', item: stage };
-    }
+  if (type === 'university') {
     const uni = await University.create({
-      name: institution.name,
-      country: institution.country || 'Tunisia',
-      city: institution.location || 'Tunis',
-      logo: institution.logo,
+      name: data.name || institution.name,
+      country: data.country || institution.country || 'Tunisia',
+      city: data.city || institution.location || 'Tunis',
+      logo: institution.logo || '',
       ...data,
     });
     return { type: 'university', item: uni };
@@ -203,7 +199,7 @@ const createListing = async (institution, { type, data }) => {
   if (type === 'stage') {
     const stage = await Stage.create({
       company: institution.name,
-      companyLogo: institution.logo,
+      companyLogo: institution.logo || '',
       ...data,
     });
     return { type: 'stage', item: stage };
@@ -212,7 +208,7 @@ const createListing = async (institution, { type, data }) => {
   // default to Job
   const job = await Job.create({
     company: institution.name,
-    companyLogo: institution.logo,
+    companyLogo: institution.logo || '',
     ...data,
   });
   return { type: 'job', item: job };

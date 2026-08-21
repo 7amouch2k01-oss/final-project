@@ -4,12 +4,13 @@ import StudentDashboard from './student/StudentDashboard';
 import CitizenDashboard from './citizen/CitizenDashboard';
 
 export const Dashboard = () => {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
 
-  // Admin accounts must use the isolated admin panel — NOT this app
+  // If user is admin, redirect directly to the dedicated admin panel
   useEffect(() => {
     if (user?.role === 'admin') {
-      logout(); // clear their session from the public app
+      const targetUrl = window.location.port === '5173' ? 'http://localhost:5174/admin/dashboard' : '/admin/dashboard';
+      window.location.href = targetUrl;
     }
   }, [user]);
 
@@ -17,18 +18,18 @@ export const Dashboard = () => {
     return <div className="page flex-center"><p>Loading session…</p></div>;
   }
 
-  // Admin: show a redirect notice instead of any dashboard
+  // Admin redirect fallback notice
   if (user.role === 'admin') {
+    const adminUrl = window.location.port === '5173' ? 'http://localhost:5174/admin/dashboard' : '/admin/dashboard';
     return (
-      <div className="page flex-center" style={{ flexDirection: 'column', gap: '20px', textAlign: 'center' }}>
+      <div className="page flex-center" style={{ flexDirection: 'column', gap: '20px', textAlign: 'center', minHeight: '60vh' }}>
         <div style={{ fontSize: '3rem' }}>🔐</div>
         <h2>Admin Panel Access</h2>
-        <p style={{ maxWidth: '400px' }}>
-          Admin accounts are managed in a separate, secure control panel.
-          You have been signed out of this app.
+        <p style={{ maxWidth: '440px', color: 'var(--text-secondary)' }}>
+          Redirecting you to the secure TuniAdmin Control Panel...
         </p>
         <a
-          href="http://localhost:5174"
+          href={adminUrl}
           className="btn btn-primary"
           style={{ textDecoration: 'none' }}
         >

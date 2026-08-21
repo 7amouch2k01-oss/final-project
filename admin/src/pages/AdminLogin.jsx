@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../store/adminStore';
 
 export default function AdminLogin() {
@@ -6,13 +7,18 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!email || !password) { setError('All fields are required.'); return; }
     const res = await login(email, password);
-    if (!res.success) setError(res.error || 'Login failed.');
+    if (res.success) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      setError(res.error || 'Login failed.');
+    }
   };
 
   return (

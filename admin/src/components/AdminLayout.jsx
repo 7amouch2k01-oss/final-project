@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../store/adminStore';
 
 const NAV = [
-  { label: 'Overview',          path: '/',             icon: '📊' },
+  { label: 'Overview',          path: '/dashboard',    icon: '📊' },
   { label: 'Users',             path: '/users',        icon: '👥' },
   { label: 'Institutions',      path: '/institutions', icon: '🏛️' },
   { label: 'Recruiter Requests',path: '/recruiters',   icon: '🏢' },

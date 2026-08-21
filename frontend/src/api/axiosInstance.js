@@ -8,6 +8,20 @@ const api = axios.create({
 // Interceptor to add access token to headers
 api.interceptors.request.use(
   (config) => {
+    // If Authorization header is already explicitly provided on the request config, don't overwrite it
+    if (config.headers?.Authorization) {
+      return config;
+    }
+
+    // If calling institution endpoints, prioritize institutionToken
+    if (config.url?.startsWith('/institutions')) {
+      const instToken = localStorage.getItem('institutionToken');
+      if (instToken) {
+        config.headers.Authorization = `Bearer ${instToken}`;
+        return config;
+      }
+    }
+
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

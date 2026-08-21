@@ -1,6 +1,7 @@
 const Application  = require('../models/Application');
 const Notification = require('../models/Notification');
 const User         = require('../models/User');
+const Institution  = require('../models/Institution');
 const University   = require('../models/University');
 const Stage        = require('../models/Stage');
 const Job          = require('../models/Job');
@@ -89,12 +90,25 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
 
   // 4. Create application
   const targetModel = resolved.name;
+  
+  // Resolve owner institution / recruiter
+  let institutionId = listing.institutionId || null;
+  let recruiterId = listing.recruiterId || null;
+
+  // Check if listing.recruiterId refers to an Institution
+  if (!institutionId && recruiterId) {
+    const isInst = await Institution.exists({ _id: recruiterId });
+    if (isInst) {
+      institutionId = recruiterId;
+    }
+  }
+
   const application = await Application.create({
     applicantId,
     targetId,
     targetModel,
-    institutionId: listing.institutionId || null,
-    recruiterId: listing.recruiterId || null,
+    institutionId,
+    recruiterId,
     coverLetter: coverLetter || '',
     documents,
     statusHistory: [{ status: 'pending', note: 'Application submitted.' }],
