@@ -8,24 +8,24 @@ const { success, created } = require('../utils/apiResponse');
 const getUniversities    = async (req, res, next) => { try { success(res, await universityService.getAll(req.query)); } catch(e){next(e);} };
 const getUniversity      = async (req, res, next) => { try { success(res, { university: await universityService.getById(req.params.id) }); } catch(e){next(e);} };
 const createUniversity   = async (req, res, next) => { try { const u = await universityService.create(req.user.id, req.body, req.file?.buffer); created(res, { university: u }, 'University created'); } catch(e){next(e);} };
-const updateUniversity   = async (req, res, next) => { try { const u = await universityService.update(req.params.id, req.user.id, req.body, req.file?.buffer); success(res, { university: u }, 'University updated'); } catch(e){next(e);} };
-const deleteUniversity   = async (req, res, next) => { try { await universityService.remove(req.params.id, req.user.id); success(res, {}, 'University deleted'); } catch(e){next(e);} };
+const updateUniversity   = async (req, res, next) => { try { const u = await universityService.update(req.params.id, req.user.id, req.body, req.file?.buffer, req.user.role); success(res, { university: u }, 'University updated'); } catch(e){next(e);} };
+const deleteUniversity   = async (req, res, next) => { try { await universityService.remove(req.params.id, req.user.id, req.user.role); success(res, {}, 'University deleted'); } catch(e){next(e);} };
 const myUniversities     = async (req, res, next) => { try { success(res, { universities: await universityService.getMyListings(req.user.id) }); } catch(e){next(e);} };
 
 // ══════════════════════════ STAGES ════════════════════════════════════════════
 const getStages    = async (req, res, next) => { try { success(res, await stageService.getAll(req.query)); } catch(e){next(e);} };
 const getStage     = async (req, res, next) => { try { success(res, { stage: await stageService.getById(req.params.id) }); } catch(e){next(e);} };
 const createStage  = async (req, res, next) => { try { const s = await stageService.create(req.user.id, req.body, req.file?.buffer); created(res, { stage: s }, 'Stage created'); } catch(e){next(e);} };
-const updateStage  = async (req, res, next) => { try { const s = await stageService.update(req.params.id, req.user.id, req.body, req.file?.buffer); success(res, { stage: s }, 'Stage updated'); } catch(e){next(e);} };
-const deleteStage  = async (req, res, next) => { try { await stageService.remove(req.params.id, req.user.id); success(res, {}, 'Stage deleted'); } catch(e){next(e);} };
+const updateStage  = async (req, res, next) => { try { const s = await stageService.update(req.params.id, req.user.id, req.body, req.file?.buffer, req.user.role); success(res, { stage: s }, 'Stage updated'); } catch(e){next(e);} };
+const deleteStage  = async (req, res, next) => { try { await stageService.remove(req.params.id, req.user.id, req.user.role); success(res, {}, 'Stage deleted'); } catch(e){next(e);} };
 const myStages     = async (req, res, next) => { try { success(res, { stages: await stageService.getMyListings(req.user.id) }); } catch(e){next(e);} };
 
 // ══════════════════════════ JOBS ══════════════════════════════════════════════
 const getJobs    = async (req, res, next) => { try { success(res, await jobService.getAll(req.query)); } catch(e){next(e);} };
 const getJob     = async (req, res, next) => { try { success(res, { job: await jobService.getById(req.params.id) }); } catch(e){next(e);} };
 const createJob  = async (req, res, next) => { try { const j = await jobService.create(req.user.id, req.body, req.file?.buffer); created(res, { job: j }, 'Job created'); } catch(e){next(e);} };
-const updateJob  = async (req, res, next) => { try { const j = await jobService.update(req.params.id, req.user.id, req.body, req.file?.buffer); success(res, { job: j }, 'Job updated'); } catch(e){next(e);} };
-const deleteJob  = async (req, res, next) => { try { await jobService.remove(req.params.id, req.user.id); success(res, {}, 'Job deleted'); } catch(e){next(e);} };
+const updateJob  = async (req, res, next) => { try { const j = await jobService.update(req.params.id, req.user.id, req.body, req.file?.buffer, req.user.role); success(res, { job: j }, 'Job updated'); } catch(e){next(e);} };
+const deleteJob  = async (req, res, next) => { try { await jobService.remove(req.params.id, req.user.id, req.user.role); success(res, {}, 'Job deleted'); } catch(e){next(e);} };
 const myJobs     = async (req, res, next) => { try { success(res, { jobs: await jobService.getMyListings(req.user.id) }); } catch(e){next(e);} };
 
 // ══════════════════════════ APPLICATIONS ══════════════════════════════════════

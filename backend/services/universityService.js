@@ -58,8 +58,10 @@ const create = async (recruiterId, data, logoBuffer) => {
 };
 
 // ── Update university ─────────────────────────────────────────────────────────
-const update = async (id, recruiterId, data, logoBuffer) => {
-  const uni = await University.findOne({ _id: id, recruiterId, deletedAt: null });
+const update = async (id, recruiterId, data, logoBuffer, role) => {
+  const query = { _id: id, deletedAt: null };
+  if (role !== 'admin') query.recruiterId = recruiterId; // admin bypasses ownership check
+  const uni = await University.findOne(query);
   if (!uni) { const e = new Error('University not found or not yours'); e.statusCode = 404; throw e; }
 
   if (logoBuffer) {
@@ -71,13 +73,16 @@ const update = async (id, recruiterId, data, logoBuffer) => {
 };
 
 // ── Soft-delete university ────────────────────────────────────────────────────
-const remove = async (id, recruiterId) => {
-  const uni = await University.findOne({ _id: id, recruiterId });
+const remove = async (id, recruiterId, role) => {
+  const query = { _id: id };
+  if (role !== 'admin') query.recruiterId = recruiterId; // admin bypasses ownership check
+  const uni = await University.findOne(query);
   if (!uni) { const e = new Error('University not found or not yours'); e.statusCode = 404; throw e; }
   uni.deletedAt = new Date();
   uni.isActive  = false;
   await uni.save();
 };
+
 
 // ── Get recruiter's own listings ──────────────────────────────────────────────
 const getMyListings = async (recruiterId) => {

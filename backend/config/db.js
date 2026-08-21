@@ -8,6 +8,8 @@ const connectDB = async () => {
     // Auto-ensure default super admin account exists
     const User = require('../models/User');
     const University = require('../models/University');
+    const Stage = require('../models/Stage');
+    const Job = require('../models/Job');
     const adminEmail = process.env.ADMIN_DEFAULT_EMAIL || 'admin@tunistudy.tn';
     let adminUser = await User.findOne({ email: adminEmail });
     if (!adminUser) {
@@ -20,15 +22,24 @@ const connectDB = async () => {
         isActive: true,
       });
       console.log(`👑 Default admin created (${adminEmail})`);
+    } else if (adminUser.role !== 'admin' || !adminUser.isActive) {
+      adminUser.role = 'admin';
+      adminUser.isActive = true;
+      await adminUser.save();
     }
 
-    // Auto-seed initial catalog if database is fresh/empty
-    const uniCount = await University.countDocuments({ deletedAt: null });
-    if (uniCount === 0) {
-      console.log('🌱 Fresh database detected. Auto-seeding catalog...');
+    // Auto-seed initial catalog if database has 0 universities, stages, or jobs
+    const [uniCount, stageCount, jobCount] = await Promise.all([
+      University.countDocuments({ deletedAt: null }),
+      Stage.countDocuments({ deletedAt: null }),
+      Job.countDocuments({ deletedAt: null }),
+    ]);
+
+    if (uniCount === 0 || stageCount === 0 || jobCount === 0) {
+      console.log('🌱 Catalog data missing. Auto-seeding catalog...');
       const seedFunc = require('../seed');
       if (typeof seedFunc === 'function') {
-        await seedFunc(false); // seed without wiping admin
+        await seedFunc(false); // seed without wiping existing data
       }
     }
   } catch (error) {

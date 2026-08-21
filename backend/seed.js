@@ -18,22 +18,26 @@ const Notification = require('./models/Notification');
 
 const SEED_PASSWORD = 'Password123!';
 
-const seed = async () => {
+const seed = async (clearExisting = true) => {
   try {
-    console.log('🔌 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB Connected.');
+    if (mongoose.connection.readyState !== 1) {
+      console.log('🔌 Connecting to MongoDB...');
+      await mongoose.connect(process.env.MONGO_URI);
+      console.log('✅ MongoDB Connected.');
+    }
 
-    console.log('🧹 Cleaning database collections...');
-    await Promise.all([
-      User.deleteMany({}),
-      University.deleteMany({}),
-      Stage.deleteMany({}),
-      Job.deleteMany({}),
-      Application.deleteMany({}),
-      Notification.deleteMany({}),
-    ]);
-    console.log('✅ Databases cleared.');
+    if (clearExisting) {
+      console.log('🧹 Cleaning database collections...');
+      await Promise.all([
+        User.deleteMany({}),
+        University.deleteMany({}),
+        Stage.deleteMany({}),
+        Job.deleteMany({}),
+        Application.deleteMany({}),
+        Notification.deleteMany({}),
+      ]);
+      console.log('✅ Databases cleared.');
+    }
 
     // ── 1. SEED USERS ────────────────────────────────────────────────────────
     console.log('👤 Seeding users...');

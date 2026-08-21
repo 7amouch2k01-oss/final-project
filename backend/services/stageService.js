@@ -49,8 +49,10 @@ const create = async (recruiterId, data, logoBuffer) => {
   return Stage.create({ ...data, recruiterId, companyLogo });
 };
 
-const update = async (id, recruiterId, data, logoBuffer) => {
-  const stage = await Stage.findOne({ _id: id, recruiterId, deletedAt: null });
+const update = async (id, recruiterId, data, logoBuffer, role) => {
+  const query = { _id: id, deletedAt: null };
+  if (role !== 'admin') query.recruiterId = recruiterId;
+  const stage = await Stage.findOne(query);
   if (!stage) { const e = new Error('Stage not found or not yours'); e.statusCode = 404; throw e; }
   if (logoBuffer) data.companyLogo = await uploadToCloudinary(logoBuffer, 'stages', 'image');
   Object.assign(stage, data);
@@ -58,8 +60,10 @@ const update = async (id, recruiterId, data, logoBuffer) => {
   return stage;
 };
 
-const remove = async (id, recruiterId) => {
-  const stage = await Stage.findOne({ _id: id, recruiterId });
+const remove = async (id, recruiterId, role) => {
+  const query = { _id: id };
+  if (role !== 'admin') query.recruiterId = recruiterId;
+  const stage = await Stage.findOne(query);
   if (!stage) { const e = new Error('Stage not found or not yours'); e.statusCode = 404; throw e; }
   stage.deletedAt = new Date(); stage.isActive = false;
   await stage.save();

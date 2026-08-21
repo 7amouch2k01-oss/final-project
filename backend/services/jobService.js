@@ -54,8 +54,10 @@ const create = async (recruiterId, data, logoBuffer) => {
   return Job.create({ ...data, recruiterId, companyLogo });
 };
 
-const update = async (id, recruiterId, data, logoBuffer) => {
-  const job = await Job.findOne({ _id: id, recruiterId, deletedAt: null });
+const update = async (id, recruiterId, data, logoBuffer, role) => {
+  const query = { _id: id, deletedAt: null };
+  if (role !== 'admin') query.recruiterId = recruiterId;
+  const job = await Job.findOne(query);
   if (!job) { const e = new Error('Job not found or not yours'); e.statusCode = 404; throw e; }
   if (logoBuffer) data.companyLogo = await uploadToCloudinary(logoBuffer, 'jobs', 'image');
   Object.assign(job, data);
@@ -63,8 +65,10 @@ const update = async (id, recruiterId, data, logoBuffer) => {
   return job;
 };
 
-const remove = async (id, recruiterId) => {
-  const job = await Job.findOne({ _id: id, recruiterId });
+const remove = async (id, recruiterId, role) => {
+  const query = { _id: id };
+  if (role !== 'admin') query.recruiterId = recruiterId;
+  const job = await Job.findOne(query);
   if (!job) { const e = new Error('Job not found or not yours'); e.statusCode = 404; throw e; }
   job.deletedAt = new Date(); job.isActive = false;
   await job.save();
