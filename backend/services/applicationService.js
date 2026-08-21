@@ -1,55 +1,112 @@
 const Application  = require('../models/Application');
 const Notification = require('../models/Notification');
+const User         = require('../models/User');
+const University   = require('../models/University');
+const Stage        = require('../models/Stage');
+const Job          = require('../models/Job');
 const { uploadToCloudinary } = require('../config/cloudinary');
 
 // ── Resolve which model owns the listing ──────────────────────────────────────
 const getListingModel = (targetType) => {
-  const map = { University: 'University', Stage: 'Stage', Job: 'Job' };
-  if (!map[targetType]) { const e = new Error('Invalid target type'); e.statusCode = 400; throw e; }
-  return require('../models/' + map[targetType]);
+  if (!targetType) return null;
+  const str = String(targetType).trim().toLowerCase();
+  if (str === 'university') return { model: University, name: 'University' };
+  if (str === 'stage') return { model: Stage, name: 'Stage' };
+  if (str === 'job') return { model: Job, name: 'Job' };
+  return null;
 };
 
 // ── Apply to a listing ────────────────────────────────────────────────────────
-const apply = async ({ applicantId, targetId, targetType, targetModel: targetModelFromReq, coverLetter }, docBuffers, io) => {
-  // 1. Verify listing exists and is active
-  const ListingModel = getListingModel(targetType);
-  const listing = await ListingModel.findOne({ _id: targetId, isActive: true, deletedAt: null });
-  if (!listing) { const e = new Error('Listing not found or no longer active'); e.statusCode = 404; throw e; }
-
-  // 2. Prevent duplicate applications (unique index handles this too)
-  const existing = await Application.findOne({ applicantId, targetId });
-  if (existing) { const e = new Error('You have already applied to this listing'); e.statusCode = 409; throw e; }
-
-  // 3. Upload documents to Cloudinary
-  let documents = [];
-  if (docBuffers && docBuffers.length) {
-    documents = await Promise.all(
-      docBuffers.map(buf => uploadToCloudinary(buf, 'applications', 'raw'))
-    );
+const apply = async ({ applicantId, targetId, targetType, targetModel: targetModelFromReq, coverLetter, documents: docUrls, cvUrl }, docBuffers, io) => {
+  if (!targetId) {
+    const e = new Error('targetId is required to apply');
+    e.statusCode = 400;
+    throw e;
   }
 
-  // 4. Create application — resolve targetModel (required by Mongoose polymorphic refPath)
-  const resolvedModel = targetModelFromReq || targetType
-    || (listing.tuitionFee !== undefined ? 'University' : listing.domain !== undefined ? 'Stage' : 'Job');
+  // 1. Resolve listing model
+  let resolved = getListingModel(targetType) || getListingModel(targetModelFromReq);
+  let listing = null;
 
+  if (resolved) {
+    listing = await resolved.model.findOne({ _id: targetId, isActive: true, deletedAt: null });
+  }
+
+  // Fallback: try searching across all 3 models if targetType was omitted or mismatched
+  if (!listing) {
+    const [u, s, j] = await Promise.all([
+      University.findOne({ _id: targetId, isActive: true, deletedAt: null }),
+      Stage.findOne({ _id: targetId, isActive: true, deletedAt: null }),
+      Job.findOne({ _id: targetId, isActive: true, deletedAt: null }),
+    ]);
+    if (u) { listing = u; resolved = { model: University, name: 'University' }; }
+    else if (s) { listing = s; resolved = { model: Stage, name: 'Stage' }; }
+    else if (j) { listing = j; resolved = { model: Job, name: 'Job' }; }
+  }
+
+  if (!listing) {
+    const e = new Error('Listing not found or is no longer active');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  // 2. Prevent duplicate applications
+  const existing = await Application.findOne({ applicantId, targetId });
+  if (existing) {
+    const e = new Error('You have already submitted an application to this listing');
+    e.statusCode = 409;
+    throw e;
+  }
+
+  // 3. Collect documents / CV
+  let documents = [];
+
+  if (Array.isArray(docUrls)) {
+    documents.push(...docUrls.filter(Boolean));
+  } else if (typeof docUrls === 'string' && docUrls.trim()) {
+    documents.push(docUrls.trim());
+  }
+
+  if (cvUrl && typeof cvUrl === 'string' && cvUrl.trim() && !documents.includes(cvUrl.trim())) {
+    documents.push(cvUrl.trim());
+  }
+
+  // Upload file buffers if any were submitted
+  if (docBuffers && docBuffers.length) {
+    const uploadedUrls = await Promise.all(
+      docBuffers.map(buf => uploadToCloudinary(buf, 'applications', 'raw'))
+    );
+    documents.push(...uploadedUrls);
+  }
+
+  // If no document was attached, auto-attach user's profile CV if available
+  if (documents.length === 0) {
+    const applicantUser = await User.findById(applicantId).select('cvUrl');
+    if (applicantUser?.cvUrl) {
+      documents.push(applicantUser.cvUrl);
+    }
+  }
+
+  // 4. Create application
+  const targetModel = resolved.name;
   const application = await Application.create({
     applicantId,
     targetId,
-    targetModel: resolvedModel,
+    targetModel,
     institutionId: listing.institutionId || null,
     recruiterId: listing.recruiterId || null,
-    coverLetter,
+    coverLetter: coverLetter || '',
     documents,
-    statusHistory: [{ status: 'pending' }],
+    statusHistory: [{ status: 'pending', note: 'Application submitted.' }],
   });
 
-  // 5. Notify listing owner (recruiter or institution) if available
+  // 5. Notify listing owner
   const ownerId = listing.recruiterId || listing.institutionId;
   if (ownerId) {
     if (io) {
       io.to(ownerId.toString()).emit('application:new', {
         applicationId: application._id,
-        targetType:    resolvedModel,
+        targetType:    targetModel,
         listingTitle:  listing.title || listing.name,
         message:       'A new application has been submitted for your listing',
       });
@@ -93,7 +150,7 @@ const updateStatus = async (applicationId, recruiterId, newStatus, note, io) => 
   if (!app) { const e = new Error('Application not found'); e.statusCode = 404; throw e; }
 
   app.status = newStatus;
-  app.statusHistory.push({ status: newStatus, note });
+  app.statusHistory.push({ status: newStatus, note: note || `Status changed to ${newStatus}` });
   await app.save();
 
   // Notify applicant via Socket.io + DB

@@ -120,7 +120,7 @@ export const StudentDashboard = () => {
                     <h4 style={{ color: 'var(--text-primary)' }}>{u.name}</h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>📍 {u.city}, {u.country} | Tuition: {u.tuitionFee?.amount} {u.tuitionFee?.currency}/{u.tuitionFee?.period}</p>
                   </div>
-                  <Link to={`/universities/${u._id}`} className="btn btn-ghost btn-sm">Details</Link>
+                  <Link to="/universities" className="btn btn-secondary btn-sm">Apply / View</Link>
                 </div>
               ))}
             </div>
@@ -161,7 +161,7 @@ export const StudentDashboard = () => {
                     <h4 style={{ color: 'var(--text-primary)' }}>{s.title}</h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>🏢 {s.company} | 📍 {s.location || 'Remote'} | ⏱️ {s.duration}</p>
                   </div>
-                  <Link to={`/stages/${s._id}`} className="btn btn-ghost btn-sm">Details</Link>
+                  <Link to="/stages" className="btn btn-secondary btn-sm">Apply / View</Link>
                 </div>
               ))}
             </div>

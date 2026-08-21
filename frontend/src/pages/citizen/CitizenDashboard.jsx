@@ -144,7 +144,7 @@ export const CitizenDashboard = () => {
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>🏢 {j.company} | 📍 {j.location} | 💼 {j.contractType} | {j.experienceLevel}</p>
                   </div>
                 </div>
-                <Link to={`/jobs/${j._id}`} className="btn btn-ghost btn-sm">View Job</Link>
+                <Link to="/jobs" className="btn btn-secondary btn-sm">Apply / View</Link>
               </div>
             ))}
           </div>
