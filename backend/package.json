@@ -3,6 +3,7 @@
     "version":  "1.0.0",
     "description":  "",
     "main":  "server.js",
+    "engines": { "node": ">=18.0.0", "npm": ">=9.0.0" },
     "scripts":  {
                     "test":  "echo \u0027No tests yet\u0027",
                     "dev":  "nodemon server.js",
