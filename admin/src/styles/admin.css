@@ -485,10 +485,10 @@ tbody tr:hover { background: var(--surface-raised); }
 }
 
 .laser-beam.beam-1 {
-  animation: sweepVerticalR2L 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: sweepVerticalR2L 110s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 .laser-beam.beam-2 {
-  animation: sweepVerticalR2L 11s cubic-bezier(0.4, 0, 0.2, 1) infinite 4s;
+  animation: sweepVerticalR2L 150s cubic-bezier(0.4, 0, 0.2, 1) infinite 45s;
   background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
 }
 
@@ -507,8 +507,8 @@ tbody tr:hover { background: var(--surface-raised); }
   opacity: 0;
 }
 
-.h-line-1 { top: 25%; animation: sweepHorizontalR2L 7.5s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.5s; }
-.h-line-2 { top: 65%; animation: sweepHorizontalR2L 10s cubic-bezier(0.4, 0, 0.2, 1) infinite 3.5s; }
+.h-line-1 { top: 25%; animation: sweepHorizontalR2L 120s cubic-bezier(0.4, 0, 0.2, 1) infinite 10s; }
+.h-line-2 { top: 65%; animation: sweepHorizontalR2L 165s cubic-bezier(0.4, 0, 0.2, 1) infinite 60s; }
 
 @keyframes sweepHorizontalR2L {
   0% { right: -20%; width: 0px; opacity: 0; }

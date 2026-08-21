@@ -697,13 +697,13 @@ textarea::placeholder { color: var(--text-muted); }
 }
 
 .laser-beam.beam-1 {
-  animation: sweepVerticalR2L 38s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: sweepVerticalR2L 110s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   animation-delay: 0s;
 }
 
 .laser-beam.beam-2 {
-  animation: sweepVerticalR2L 52s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 14s;
+  animation: sweepVerticalR2L 150s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 45s;
   background: linear-gradient(180deg, 
     transparent 0%, 
     rgba(255,255,255,0.1) 20%, 
@@ -715,8 +715,8 @@ textarea::placeholder { color: var(--text-muted); }
 }
 
 .laser-beam.beam-3 {
-  animation: sweepVerticalR2L 44s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 26s;
+  animation: sweepVerticalR2L 130s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 80s;
 }
 
 @keyframes sweepVerticalR2L {
@@ -752,14 +752,14 @@ textarea::placeholder { color: var(--text-muted); }
 
 .h-line-1 {
   top: 18%;
-  animation: sweepHorizontalR2L 36s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 2s;
+  animation: sweepHorizontalR2L 115s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 10s;
 }
 
 .h-line-2 {
   top: 42%;
-  animation: sweepHorizontalR2L 48s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 18s;
+  animation: sweepHorizontalR2L 160s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 60s;
   background: linear-gradient(90deg, 
     transparent 0%, 
     rgba(255,255,255,0.05) 30%, 
@@ -771,14 +771,14 @@ textarea::placeholder { color: var(--text-muted); }
 
 .h-line-3 {
   top: 68%;
-  animation: sweepHorizontalR2L 42s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 9s;
+  animation: sweepHorizontalR2L 135s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 35s;
 }
 
 .h-line-4 {
   top: 88%;
-  animation: sweepHorizontalR2L 56s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 28s;
+  animation: sweepHorizontalR2L 175s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 90s;
 }
 
 @keyframes sweepHorizontalR2L {
@@ -814,7 +814,7 @@ textarea::placeholder { color: var(--text-muted); }
     rgba(225,29,72,0.08) 100%
   );
   border-right: 1px solid rgba(225, 29, 72, 0.25);
-  animation: scanWaveR2L 58s ease-in-out infinite;
+  animation: scanWaveR2L 180s ease-in-out infinite;
 }
 
 @keyframes scanWaveR2L {
@@ -845,11 +845,11 @@ textarea::placeholder { color: var(--text-muted); }
   opacity: 0;
 }
 
-.node-1 { top: 18%; left: 75%; animation: nodePulse 38s infinite 8s; }
-.node-2 { top: 42%; left: 45%; animation: nodePulse 48s infinite 22s; }
-.node-3 { top: 68%; left: 25%; animation: nodePulse 44s infinite 30s; }
-.node-4 { top: 18%; left: 15%; animation: nodePulse 38s infinite 34s; }
-.node-5 { top: 88%; left: 60%; animation: nodePulse 56s infinite 18s; }
+.node-1 { top: 18%; left: 75%; animation: nodePulse 110s infinite 25s; }
+.node-2 { top: 42%; left: 45%; animation: nodePulse 160s infinite 75s; }
+.node-3 { top: 68%; left: 25%; animation: nodePulse 135s infinite 90s; }
+.node-4 { top: 18%; left: 15%; animation: nodePulse 110s infinite 95s; }
+.node-5 { top: 88%; left: 60%; animation: nodePulse 175s infinite 50s; }
 
 @keyframes nodePulse {
   0%, 100% { opacity: 0; transform: scale(0.6); }
