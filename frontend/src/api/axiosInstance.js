@@ -44,7 +44,7 @@ api.interceptors.response.use(
       try {
         // Request a new access token
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh-token`,
+          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`,
           {},
           { withCredentials: true }
         );

@@ -28,18 +28,22 @@ const connectDB = async () => {
       await adminUser.save();
     }
 
-    // Auto-seed initial catalog if database has 0 universities, stages, or jobs
+    // Auto-seed initial catalog only if ALL three catalog collections are empty
     const [uniCount, stageCount, jobCount] = await Promise.all([
       University.countDocuments({ deletedAt: null }),
       Stage.countDocuments({ deletedAt: null }),
       Job.countDocuments({ deletedAt: null }),
     ]);
 
-    if (uniCount === 0 || stageCount === 0 || jobCount === 0) {
-      console.log('🌱 Catalog data missing. Auto-seeding catalog...');
-      const seedFunc = require('../seed');
-      if (typeof seedFunc === 'function') {
-        await seedFunc(false); // seed without wiping existing data
+    if (uniCount === 0 && stageCount === 0 && jobCount === 0) {
+      console.log('🌱 All catalog collections are empty. Auto-seeding catalog...');
+      try {
+        const seedFunc = require('../seed');
+        if (typeof seedFunc === 'function') {
+          await seedFunc(false); // seed without wiping existing data
+        }
+      } catch (seedErr) {
+        console.warn('⚠️ Auto-seed encountered an error (non-fatal):', seedErr.message);
       }
     }
   } catch (error) {
