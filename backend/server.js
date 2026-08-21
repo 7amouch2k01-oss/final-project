@@ -36,6 +36,9 @@ connectDB();
 const app    = express();
 const server = http.createServer(app);
 
+// Enable trust proxy so rate-limiter and secure cookies work behind reverse proxies (Railway / Render)
+app.set('trust proxy', 1);
+
 // Allowed origins for CORS (main app + isolated admin panel)
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
