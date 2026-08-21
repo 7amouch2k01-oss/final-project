@@ -31,7 +31,7 @@ export default function App() {
   useEffect(() => { initialize(); }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin">
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <Routes>
         {/* Public: Login */}

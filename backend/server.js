@@ -1,5 +1,6 @@
 const express       = require('express');
 const http          = require('http');
+const path          = require('path');
 const { Server }    = require('socket.io');
 const mongoose      = require('mongoose');
 const dotenv        = require('dotenv');
@@ -77,10 +78,11 @@ const authLimiter = rateLimit({
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, postman)
+      // In single deployment mode, requests from browser to same host might have no origin or match
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+      // If allowedOrigins contains it, or in production single deployment, accept
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'production') {
+        return callback(null, true);
       }
       return callback(null, true);
     },
@@ -122,6 +124,24 @@ app.use('/api/payments',      paymentRoutes);
 app.use('/api/admin',         adminRoutes);
 app.use('/api/institutions',  institutionRoutes);
 app.use('/api/pro',           proRoutes);
+
+// ─── Single Deployment: Serve Built Frontend & Admin SPAs ──────────────────
+const frontendDist = path.join(__dirname, '../frontend/dist');
+const adminDist    = path.join(__dirname, '../admin/dist');
+
+// 1. Serve Admin SPA at /admin
+app.use('/admin', express.static(adminDist));
+app.get('/admin*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(adminDist, 'index.html'));
+});
+
+// 2. Serve Main Frontend SPA at /
+app.use(express.static(frontendDist));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(frontendDist, 'index.html'));
+});
 
 // ─── 404 + Global error handler ───────────────────────────────────────────────
 app.use(notFoundHandler);
