@@ -26,8 +26,12 @@ FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy backend and production node_modules
-COPY --from=builder /app/backend ./backend
+# Copy backend files and dependencies directly to /app
+COPY --from=builder /app/backend/ ./
+COPY --from=builder /app/backend/node_modules ./node_modules
+
+# Also copy a duplicate under /app/backend so both /app/server.js and /app/backend/server.js exist
+COPY --from=builder /app/backend/ ./backend/
 COPY --from=builder /app/backend/node_modules ./backend/node_modules
 
 # Copy compiled frontend and admin assets
@@ -36,4 +40,4 @@ COPY --from=builder /app/admin/dist ./admin/dist
 
 EXPOSE 5000
 
-CMD ["node", "backend/server.js"]
+CMD ["node", "server.js"]

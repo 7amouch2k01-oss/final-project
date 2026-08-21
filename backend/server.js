@@ -126,8 +126,14 @@ app.use('/api/institutions',  institutionRoutes);
 app.use('/api/pro',           proRoutes);
 
 // ─── Single Deployment: Serve Built Frontend & Admin SPAs ──────────────────
-const frontendDist = path.join(__dirname, '../frontend/dist');
-const adminDist    = path.join(__dirname, '../admin/dist');
+const fs = require('fs');
+const frontendDist = fs.existsSync(path.join(__dirname, '../frontend/dist')) 
+  ? path.join(__dirname, '../frontend/dist') 
+  : path.join(__dirname, 'frontend/dist');
+
+const adminDist = fs.existsSync(path.join(__dirname, '../admin/dist')) 
+  ? path.join(__dirname, '../admin/dist') 
+  : path.join(__dirname, 'admin/dist');
 
 // 1. Serve Admin SPA at /admin
 app.use('/admin', express.static(adminDist));
