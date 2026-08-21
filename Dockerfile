@@ -1,4 +1,4 @@
-﻿FROM node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -25,7 +25,6 @@ FROM node:20-alpine
 
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=5000
 
 # Copy backend and production node_modules
 COPY --from=builder /app/backend ./backend
