@@ -65,13 +65,33 @@ const rankApplicants = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── Free Trial & Payments ──────────────────────────────────────────────────
+const startTrial = async (req, res, next) => {
+  try {
+    const result = await proService.activateFreeTrial(req.user.id);
+    success(res, result, '1-Day Free Trial activated! Enjoy full Pro access.');
+  } catch (e) { next(e); }
+};
+
+const purchasePro = async (req, res, next) => {
+  try {
+    const { packageType, paymentMethod, paymentDetails } = req.body;
+    const result = await proService.processProPurchase(req.user.id, {
+      packageType: packageType || 'all',
+      paymentMethod: paymentMethod || 'carte_bancaire',
+      paymentDetails,
+    });
+    success(res, result, 'Payment processed successfully! Your Pro feature is active.');
+  } catch (e) { next(e); }
+};
+
 // ── Upgrade to Pro ─────────────────────────────────────────────────────────
 const upgradePro = async (req, res, next) => {
   try {
     const isInst = !!req.institution;
     const targetId = isInst ? req.institution._id : req.user.id;
     const result = await proService.upgradeToProPlan(targetId, isInst, req.body.plan || 'pro');
-    success(res, result, '⭐ Pro Plan activated successfully!');
+    success(res, result, 'Pro Plan activated successfully!');
   } catch (e) { next(e); }
 };
 
@@ -83,5 +103,7 @@ module.exports = {
   calculateScore,
   getAICareerAdvice,
   rankApplicants,
+  startTrial,
+  purchasePro,
   upgradePro,
 };

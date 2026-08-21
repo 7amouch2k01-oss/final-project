@@ -96,13 +96,17 @@ const userSchema = new mongoose.Schema(
       location:    { type: String },
     },
 
-    // ── Stripe Subscription ───────────────────────────────────────────────────
+    // ── Pro / Trial / Payments Subscription ──────────────────────────────────
     subscription: {
       plan: {
         type: String,
         enum: ['free', 'premium', 'pro', 'business'],
         default: 'free',
       },
+      trialUsed:            { type: Boolean, default: false },
+      trialExpiresAt:       { type: Date },
+      unlockedFeatures:     [{ type: String }], // 'tasks', 'calculator', 'advisor', 'all'
+      paymentMethod:        { type: String },   // 'd17', 'flouci', 'carte_bancaire', 'international', 'trial'
       stripeCustomerId:     { type: String },
       stripeSubscriptionId: { type: String },
       expiresAt:            { type: Date },

@@ -253,6 +253,69 @@ const rankApplicantsForListing = async (institutionId, listingId, listingRequire
 };
 
 // ── Subscription & Pro Activation ──────────────────────────────────────────
+const activateFreeTrial = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) { const e = new Error('User not found'); e.statusCode = 404; throw e; }
+
+  if (user.subscription?.trialUsed) {
+    const e = new Error('You have already used your 1-day free trial.');
+    e.statusCode = 400;
+    throw e;
+  }
+
+  const oneDayLater = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  user.subscription = {
+    ...user.subscription,
+    plan: 'pro',
+    trialUsed: true,
+    trialExpiresAt: oneDayLater,
+    expiresAt: oneDayLater,
+    unlockedFeatures: ['all'],
+    paymentMethod: 'trial',
+  };
+
+  await user.save();
+  return {
+    success: true,
+    plan: user.subscription.plan,
+    trialExpiresAt: user.subscription.trialExpiresAt,
+    unlockedFeatures: user.subscription.unlockedFeatures,
+  };
+};
+
+const processProPurchase = async (userId, { packageType, paymentMethod, paymentDetails }) => {
+  const user = await User.findById(userId);
+  if (!user) { const e = new Error('User not found'); e.statusCode = 404; throw e; }
+
+  // Map packageType to unlockedFeatures array
+  // packageType: 'all' | 'advisor' | 'tasks' | 'calculator'
+  let newFeatures = user.subscription?.unlockedFeatures || [];
+  if (packageType === 'all') {
+    newFeatures = ['all'];
+  } else if (!newFeatures.includes('all') && !newFeatures.includes(packageType)) {
+    newFeatures.push(packageType);
+  }
+
+  const oneYearLater = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+  user.subscription = {
+    ...user.subscription,
+    plan: 'pro',
+    expiresAt: oneYearLater,
+    unlockedFeatures: newFeatures,
+    paymentMethod: paymentMethod || 'carte_bancaire',
+  };
+
+  await user.save();
+  return {
+    success: true,
+    plan: user.subscription.plan,
+    expiresAt: user.subscription.expiresAt,
+    unlockedFeatures: user.subscription.unlockedFeatures,
+    paymentMethod: user.subscription.paymentMethod,
+    user: user.toPublicProfile(),
+  };
+};
+
 const upgradeToProPlan = async (userIdOrInstId, isInstitution = false, plan = 'pro') => {
   if (isInstitution) {
     const inst = await Institution.findByIdAndUpdate(
@@ -265,7 +328,11 @@ const upgradeToProPlan = async (userIdOrInstId, isInstitution = false, plan = 'p
 
   const user = await User.findByIdAndUpdate(
     userIdOrInstId,
-    { 'subscription.plan': plan, 'subscription.expiresAt': new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) },
+    { 
+      'subscription.plan': plan, 
+      'subscription.expiresAt': new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      'subscription.unlockedFeatures': ['all']
+    },
     { new: true }
   );
   return { type: 'user', plan: user.subscription.plan };
@@ -279,5 +346,7 @@ module.exports = {
   calculateAcademicScore,
   getAICareerAdvice,
   rankApplicantsForListing,
+  activateFreeTrial,
+  processProPurchase,
   upgradeToProPlan,
 };

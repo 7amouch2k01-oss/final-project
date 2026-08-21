@@ -12,6 +12,8 @@ router.delete('/student/tasks/:id',    protect, ctrl.deleteTask);
 
 router.post('/student/calculate-score',protect, ctrl.calculateScore);
 router.post('/student/ai-advisor',     protect, ctrl.getAICareerAdvice);
+router.post('/student/trial',          protect, ctrl.startTrial);
+router.post('/student/purchase',       protect, ctrl.purchasePro);
 router.post('/student/upgrade',        protect, ctrl.upgradePro);
 
 // ── Institution Pro AI Routes ───────────────────────────────────────────────
