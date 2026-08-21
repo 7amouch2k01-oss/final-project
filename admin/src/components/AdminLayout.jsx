@@ -16,10 +16,29 @@ export default function AdminLayout({ children }) {
   const { admin, logout } = useAdminStore();
   const navigate = useNavigate();
   const [mode, setMode] = useState(() => localStorage.getItem('admin-theme-mode') || 'dark');
+  const [pendingCounts, setPendingCounts] = useState({ institutions: 0, recruiters: 0 });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-mode', mode);
   }, [mode]);
+
+  useEffect(() => {
+    const fetchBadges = async () => {
+      try {
+        const [instRes, recruitRes] = await Promise.all([
+          api.get('/admin/institutions?status=pending'),
+          api.get('/admin/recruit-requests'),
+        ]);
+        setPendingCounts({
+          institutions: instRes.data.data?.institutions?.length || 0,
+          recruiters: recruitRes.data.data?.requests?.length || 0,
+        });
+      } catch (e) {}
+    };
+    fetchBadges();
+    const interval = setInterval(fetchBadges, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleMode = () => {
     const next = mode === 'dark' ? 'light' : 'dark';
@@ -52,17 +71,41 @@ export default function AdminLayout({ children }) {
 
         <nav className="sidebar-nav">
           <div className="nav-section-label">Navigation</div>
-          {NAV.map(item => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-            >
-              <span className="icon">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
+          {NAV.map(item => {
+            const badgeCount = item.path === '/institutions' 
+              ? pendingCounts.institutions 
+              : item.path === '/recruiters' 
+              ? (pendingCounts.recruiters + pendingCounts.institutions) 
+              : 0;
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                </div>
+                {badgeCount > 0 && (
+                  <span style={{ 
+                    background: '#ef4444', 
+                    color: '#fff', 
+                    fontSize: '0.68rem', 
+                    padding: '1px 6px', 
+                    borderRadius: '10px', 
+                    fontWeight: 800,
+                    boxShadow: '0 0 8px rgba(239,68,68,0.5)' 
+                  }}>
+                    {badgeCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="sidebar-footer">
