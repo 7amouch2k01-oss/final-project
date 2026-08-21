@@ -1,9 +1,19 @@
 const Job = require('../models/Job');
 const { uploadToCloudinary } = require('../config/cloudinary');
+const { escapeRegExp } = require('../utils/string');
 
 const buildFilter = (query) => {
   const filter = { isActive: true, deletedAt: null };
-  if (query.search)          filter.$text          = { $search: query.search };
+  if (query.search) {
+    const escaped = escapeRegExp(query.search);
+    filter.$or = [
+      { title: new RegExp(escaped, 'i') },
+      { company: new RegExp(escaped, 'i') },
+      { description: new RegExp(escaped, 'i') },
+      { location: new RegExp(escaped, 'i') },
+      { tags: new RegExp(escaped, 'i') },
+    ];
+  }
   if (query.type)            filter.type           = query.type;
   if (query.contractType)    filter.contractType   = query.contractType;
   if (query.experienceLevel) filter.experienceLevel = query.experienceLevel;

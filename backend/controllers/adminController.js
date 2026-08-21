@@ -52,9 +52,17 @@ const broadcast = async (req, res, next) => {
 
 const getAllListings = async (req, res, next) => { try { success(res, await adminService.getAllListings(req.query)); } catch(e){next(e);} };
 
+const deleteListing = async (req, res, next) => {
+  try {
+    const { type, id } = req.params;
+    await adminService.deleteListing(type, id);
+    success(res, {}, 'Listing removed successfully');
+  } catch(e){next(e);}
+};
+
 module.exports = {
   getStats, getAllUsers, changeRole, banUser, unbanUser,
   getInstitutions, approveInstitution, rejectInstitution,
   getRecruitRequests, approveRecruit, rejectRecruit,
-  broadcast, getAllListings,
+  broadcast, getAllListings, deleteListing,
 };

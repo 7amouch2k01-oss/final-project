@@ -23,5 +23,6 @@ router.patch('/recruit-requests/:id/reject',  ctrl.rejectRecruit);
 
 router.post('/broadcast',             ctrl.broadcast);
 router.get('/listings',               ctrl.getAllListings);
+router.delete('/listings/:type/:id',  ctrl.deleteListing);
 
 module.exports = router;

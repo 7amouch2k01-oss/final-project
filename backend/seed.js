@@ -890,13 +890,19 @@ const seed = async () => {
     console.log('  7. Citizen (Emna): emna.bouazizi@outlook.com');
     console.log('────────────────────────────────────────────────\n');
 
-    await mongoose.disconnect();
-    console.log('🔌 Disconnected from MongoDB.');
-    process.exit(0);
+    if (require.main === module) {
+      await mongoose.disconnect();
+      console.log('🔌 Disconnected from MongoDB.');
+      process.exit(0);
+    }
   } catch (err) {
     console.error('❌ Database seeding failed:', err.message);
-    process.exit(1);
+    if (require.main === module) process.exit(1);
   }
 };
 
-seed();
+if (require.main === module) {
+  seed();
+}
+
+module.exports = seed;

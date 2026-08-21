@@ -244,9 +244,21 @@ const getAllListings = async (query) => {
   return { data, total, type: 'job' };
 };
 
+// ── Delete / Archive Listing (Admin) ──────────────────────────────────────────
+const deleteListing = async (type, id) => {
+  if (type === 'university') {
+    await University.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false });
+  } else if (type === 'stage') {
+    await Stage.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false });
+  } else {
+    await Job.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false });
+  }
+  return { success: true };
+};
+
 module.exports = {
   getStats, getAllUsers, changeUserRole, toggleBan,
   getInstitutions, approveInstitution, rejectInstitution,
   getPendingRecruitRequests, approveRecruit, rejectRecruit,
-  broadcastNotification, getAllListings,
+  broadcastNotification, getAllListings, deleteListing,
 };

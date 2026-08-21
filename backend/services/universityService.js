@@ -5,7 +5,15 @@ const { escapeRegExp } = require('../utils/string');
 // ── Build filter query from request params ────────────────────────────────────
 const buildFilter = (query) => {
   const filter = { isActive: true, deletedAt: null };
-  if (query.search)  filter.$text    = { $search: query.search };
+  if (query.search) {
+    const escaped = escapeRegExp(query.search);
+    filter.$or = [
+      { name: new RegExp(escaped, 'i') },
+      { description: new RegExp(escaped, 'i') },
+      { fields: new RegExp(escaped, 'i') },
+      { city: new RegExp(escaped, 'i') },
+    ];
+  }
   if (query.country) filter.country  = new RegExp(escapeRegExp(query.country), 'i');
   if (query.city)    filter.city     = new RegExp(escapeRegExp(query.city), 'i');
   if (query.field)   filter.fields   = new RegExp(escapeRegExp(query.field), 'i');

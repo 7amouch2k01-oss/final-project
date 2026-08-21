@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Recruiters from './pages/Recruiters';
 import Institutions from './pages/Institutions';
+import Universities from './pages/Universities';
+import Listings from './pages/Listings';
+import Settings from './pages/Settings';
 import './styles/admin.css';
 
 // Guard: Only authenticated admins can see protected routes
@@ -42,11 +45,9 @@ export default function App() {
         <Route path="/users"        element={<ProtectedRoute><Users        /></ProtectedRoute>} />
         <Route path="/institutions" element={<ProtectedRoute><Institutions /></ProtectedRoute>} />
         <Route path="/recruiters"   element={<ProtectedRoute><Recruiters   /></ProtectedRoute>} />
-
-        {/* Stub pages — expand later */}
-        <Route path="/universities" element={<ProtectedRoute><PlaceholderPage title="Universities" icon="🏛️" /></ProtectedRoute>} />
-        <Route path="/listings"     element={<ProtectedRoute><PlaceholderPage title="Jobs & Stages" icon="💼" /></ProtectedRoute>} />
-        <Route path="/settings"     element={<ProtectedRoute><PlaceholderPage title="Settings" icon="⚙️" /></ProtectedRoute>} />
+        <Route path="/universities" element={<ProtectedRoute><Universities /></ProtectedRoute>} />
+        <Route path="/listings"     element={<ProtectedRoute><Listings     /></ProtectedRoute>} />
+        <Route path="/settings"     element={<ProtectedRoute><Settings     /></ProtectedRoute>} />
 
         {/* Catch-all: send unknown routes to dashboard if authed, else to login */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
