@@ -96,8 +96,8 @@ app.use(
 // ─── Body parsers ─────────────────────────────────────────────────────────────
 // NOTE: Stripe webhook needs raw body — must be BEFORE express.json()
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 // ─── HTTP logger ──────────────────────────────────────────────────────────────
