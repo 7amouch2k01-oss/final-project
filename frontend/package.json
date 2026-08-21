@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "serve dist --single -l $PORT",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -17,6 +18,7 @@
     "react-dom": "^19.2.8",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.18.2",
+    "serve": "^14.2.6",
     "socket.io-client": "^4.8.3",
     "zustand": "^5.0.14"
   },
