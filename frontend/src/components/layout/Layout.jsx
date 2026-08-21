@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import AnimatedBackgroundGrid from '../common/AnimatedBackgroundGrid';
+import AIAssistantModal from '../common/AIAssistantModal';
 
 export const Layout = ({ children }) => {
   return (
@@ -14,6 +15,9 @@ export const Layout = ({ children }) => {
         {children}
       </main>
       <Footer />
+
+      {/* Floating TuniGuide AI Assistant */}
+      <AIAssistantModal />
     </div>
   );
 };
