@@ -137,14 +137,14 @@ const adminDist = fs.existsSync(path.join(__dirname, '../admin/dist'))
 
 // 1. Serve Admin SPA at /admin
 app.use('/admin', express.static(adminDist));
-app.get('/admin*', (req, res, next) => {
+app.get(/^\/admin(\/.*)?$/, (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(adminDist, 'index.html'));
 });
 
 // 2. Serve Main Frontend SPA at /
 app.use(express.static(frontendDist));
-app.get('*', (req, res, next) => {
+app.get('{*splat}', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
