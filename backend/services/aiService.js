@@ -146,7 +146,7 @@ const chatWithGemini = async ({ message, history, userName, userRole, liveContex
   if (!client) return null; // fall back to rule-based
 
   const model = client.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3.6-flash',
     systemInstruction: PLATFORM_SYSTEM_PROMPT + (liveContext ? liveContext : ''),
   });
 
