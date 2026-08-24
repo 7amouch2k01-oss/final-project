@@ -43,34 +43,40 @@ const seed = async (clearExisting = true) => {
     console.log('👤 Seeding users...');
     
     // Admins
-    const superAdmin = await User.create({
-      name: 'Platform Super Admin',
-      email: 'admin@tunistudy.tn',
-      password: SEED_PASSWORD,
-      role: 'admin',
-      isActive: true,
-    });
+    let superAdmin = await User.findOne({ email: 'admin@tunistudy.tn' });
+    if (!superAdmin) {
+      superAdmin = await User.create({
+        name: 'Platform Super Admin',
+        email: 'admin@tunistudy.tn',
+        password: SEED_PASSWORD,
+        role: 'admin',
+        isActive: true,
+      });
+    }
 
     // Recruiters (Citizens with approved recruit rights)
-    const recruiterVermeg = await User.create({
-      name: 'Houssem (Vermeg HR)',
-      email: 'hr@vermeg.com',
-      password: SEED_PASSWORD,
-      role: 'citizen',
-      isActive: true,
-      recruitRights: {
-        status: 'approved',
-        requestedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        reviewedAt: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000),
-      },
-      company: {
-        name: 'Vermeg',
-        description: 'Financial software publisher, global leader in software solutions for insurance and finance.',
-        website: 'https://www.vermeg.com',
-        location: 'Les Berges du Lac, Tunis',
-        logo: 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
-      }
-    });
+    let recruiterVermeg = await User.findOne({ email: 'hr@vermeg.com' });
+    if (!recruiterVermeg) {
+      recruiterVermeg = await User.create({
+        name: 'Houssem (Vermeg HR)',
+        email: 'hr@vermeg.com',
+        password: SEED_PASSWORD,
+        role: 'citizen',
+        isActive: true,
+        recruitRights: {
+          status: 'approved',
+          requestedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          reviewedAt: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000),
+        },
+        company: {
+          name: 'Vermeg',
+          description: 'Financial software publisher, global leader in software solutions for insurance and finance.',
+          website: 'https://www.vermeg.com',
+          location: 'Les Berges du Lac, Tunis',
+          logo: 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
+        }
+      });
+    }
 
     const recruiterInstadeep = await User.create({
       name: 'Amira (Instadeep Talent)',

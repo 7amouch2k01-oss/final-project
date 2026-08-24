@@ -14,28 +14,44 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, usersRes, instRes, recruitRes] = await Promise.all([
+      const [statsRes, usersRes, instRes, recruitRes] = await Promise.allSettled([
         api.get('/admin/stats'),
         api.get('/admin/users?limit=5'),
         api.get('/admin/institutions?status=pending'),
         api.get('/admin/recruit-requests'),
       ]);
       
-      const sData = statsRes.data.data;
-      setStats({
-        users: sData.users?.total || 0,
-        institutions: sData.institutions?.total || 0,
-        pendingInstitutions: sData.institutions?.pending || 0,
-        universities: sData.listings?.universities || 0,
-        jobs: sData.listings?.jobs || 0,
-        stages: sData.listings?.stages || 0,
-        applications: sData.applications?.total || 0,
-        pendingRecruitRequests: sData.pendingRecruitRequests || 0,
-      });
+      if (statsRes.status === 'fulfilled') {
+        const sData = statsRes.value.data.data;
+        setStats({
+          users: sData.users?.total || 0,
+          institutions: sData.institutions?.total || 0,
+          pendingInstitutions: sData.institutions?.pending || 0,
+          universities: sData.listings?.universities || 0,
+          jobs: sData.listings?.jobs || 0,
+          stages: sData.listings?.stages || 0,
+          applications: sData.applications?.total || 0,
+          pendingRecruitRequests: sData.pendingRecruitRequests || 0,
+        });
+      } else {
+        console.error('Stats error:', statsRes.reason);
+      }
 
-      setRecentUsers(usersRes.data.data.users || []);
-      setPendingInstitutions(instRes.data.data.institutions || []);
-      setPendingRecruiters(recruitRes.data.data.requests || []);
+      if (usersRes.status === 'fulfilled') {
+        setRecentUsers(usersRes.value.data.data.users || []);
+      }
+      if (instRes.status === 'fulfilled') {
+        setPendingInstitutions(instRes.value.data.data.institutions || []);
+      }
+      if (recruitRes.status === 'fulfilled') {
+        setPendingRecruiters(recruitRes.value.data.data.requests || []);
+      }
+
+      // If all failed, show toast
+      if (statsRes.status === 'rejected' && usersRes.status === 'rejected') {
+        const errMsg = statsRes.reason?.response?.data?.message || 'Failed to load latest live data from database';
+        toast.error(errMsg);
+      }
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
       toast.error('Failed to load latest live data from database');

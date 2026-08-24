@@ -62,20 +62,20 @@ app.set('io', io);
 app.use(helmet());
 app.disable('x-powered-by');
 
-// Global rate limiter (100 req / 15 min per IP)
+// Global rate limiter (1000 req / 15 min per IP)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use(globalLimiter);
 
-// Stricter limiter for auth routes (20 req / 15 min)
+// Auth limiter for auth routes (100 req / 15 min)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 100,
   message: { success: false, message: 'Too many login attempts, please try again later.' },
 });
 
