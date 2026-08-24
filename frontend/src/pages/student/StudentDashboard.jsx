@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axiosInstance';
 import { Link } from 'react-router-dom';
 import CompleteProfileModal from '../../components/common/CompleteProfileModal';
+import toast from 'react-hot-toast';
 
 export const StudentDashboard = () => {
   const { user } = useAuthStore();
@@ -11,116 +12,219 @@ export const StudentDashboard = () => {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [uploadingDocAppId, setUploadingDocAppId] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      const [uniRes, stageRes, appRes] = await Promise.all([
+        api.get('/universities?limit=4'),
+        api.get('/stages?limit=4'),
+        api.get('/applications/mine')
+      ]);
+      setUnis(uniRes.data.data.universities || []);
+      setStages(stageRes.data.data.stages || []);
+      setApps(appRes.data.data.applications || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [uniRes, stageRes, appRes] = await Promise.all([
-          api.get('/universities?limit=3'),
-          api.get('/stages?limit=3'),
-          api.get('/applications/mine')
-        ]);
-        setUnis(uniRes.data.data.universities);
-        setStages(stageRes.data.data.stages);
-        setApps(appRes.data.data.applications);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  // Calculate profile completion percentage
+  // Calculate profile completion percentage (Flexible post-bac path: 100% reached with Bac + CV + Core Info)
   const calculateProfileScore = () => {
-    let score = 25; // base for email + account
+    if (user?.isProfileComplete) return 100;
+    let score = 20;
     if (user?.name) score += 15;
-    if (user?.bio) score += 20;
+    if (user?.bio) score += 15;
     if (user?.skills?.length > 0) score += 15;
-    if (user?.education?.length > 0 || user?.experience?.length > 0) score += 15;
-    if (user?.cvUrl) score += 10;
+    if (user?.baccalaureate?.school && user?.baccalaureate?.proofDocUrl) score += 20;
+    if (user?.cvUrl) score += 15;
     return Math.min(100, score);
   };
 
   const profileScore = calculateProfileScore();
 
+  // Upload missing document in response to an institution request
+  const handleUploadMissingFile = async (e, appId) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploadingDocAppId(appId);
+    try {
+      await api.post(`/applications/${appId}/missing-doc`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Requested document uploaded and submitted to admissions team!');
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload document');
+    } finally {
+      setUploadingDocAppId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="page flex-center">
-        <div className="animate-spin" style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>⟳</div>
-        <div style={{ marginLeft: '12px', color: 'var(--text-muted)' }}>Loading...</div>
+        <div className="animate-spin" style={{ fontSize: '1.8rem', color: 'var(--red)' }}>⟳</div>
+        <div style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>Loading Dashboard...</div>
       </div>
     );
   }
 
+  // Collect active messages / interview bookings across applications
+  const activeCommunications = apps.filter(a => a.messages && a.messages.length > 0);
+
   return (
-    <div className="page container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      {/* Hero Welcome banner */}
-      <div className="glass" style={{ padding: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+    <div className="page container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '60px' }}>
+      
+      {/* Header Banner */}
+      <div className="card glass" style={{ padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
         <div>
-          <div className="section-label">Student & Applicant Portal</div>
-          <h2 style={{ fontSize: '2rem', marginBottom: '8px' }}>Welcome, {user.name} 👋</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Find your dream university course or seek internship (stage) opportunities right here.</p>
+          <div className="section-label">Student Workspace</div>
+          <h2 style={{ fontSize: '1.8rem', margin: '4px 0 6px', fontWeight: 800 }}>Welcome, {user.name}</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0 }}>
+            Track your higher education applications, view interview schedules, and discover accredited programmes.
+          </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <Link 
             to="/student/pro"
             className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--red-border)', color: 'var(--red-bright)' }}
+            style={{ fontSize: '0.86rem', padding: '9px 16px' }}
           >
-            <span>⭐</span> Pro Student Hub
+            Pro Student Hub
           </Link>
           <button 
             onClick={() => setIsProfileModalOpen(true)} 
             className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ fontSize: '0.86rem', padding: '9px 16px' }}
           >
-            <span>📝</span> Complete Profile
+            {profileScore < 100 ? 'Complete Profile (100%)' : 'Edit Profile'}
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }} className="dashboard-grid">
-        {/* Left column: listings */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }} className="dashboard-grid">
+        {/* Left column: Direct Communications & Listings */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Active Communications & Interview Hub */}
+          {activeCommunications.length > 0 && (
+            <div className="card glass" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid var(--red-border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, color: 'var(--red)' }}>
+                  Interviews & Institution Messages ({activeCommunications.length})
+                </h3>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {activeCommunications.map(app => (
+                  <div key={app._id} style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <strong style={{ fontSize: '0.92rem' }}>{app.targetId?.name || app.targetId?.title || 'Listing'}</strong>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                          Status: <strong style={{ textTransform: 'capitalize' }}>{app.status?.replace('_', ' ')}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Messages thread */}
+                    {app.messages.map((m, idx) => (
+                      <div key={idx} style={{ padding: '10px', background: 'var(--bg-surface)', borderRadius: '6px', fontSize: '0.82rem', marginTop: '4px' }}>
+                        <div style={{ fontWeight: 600, color: m.sender === 'institution' ? 'var(--red)' : '#10b981', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>{m.senderName || m.sender}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(m.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p style={{ margin: '4px 0 6px', color: 'var(--text-secondary)' }}>{m.message}</p>
+
+                        {/* If Meeting Booking */}
+                        {m.type === 'meeting_booking' && m.meetingDetails && (
+                          <div style={{ padding: '8px 12px', background: 'rgba(96, 165, 250, 0.1)', border: '1px solid rgba(96, 165, 250, 0.3)', borderRadius: '6px', marginTop: '6px' }}>
+                            <div style={{ fontWeight: 600, color: '#60a5fa' }}>Scheduled Interview</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                              Date: <strong>{new Date(m.meetingDetails.date).toLocaleDateString()}</strong> at <strong>{m.meetingDetails.time}</strong>
+                            </div>
+                            {m.meetingDetails.link && (
+                              <a href={m.meetingDetails.link} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ marginTop: '6px', fontSize: '0.76rem', display: 'inline-block' }}>
+                                Join Meeting Link ↗
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {/* If Missing Document Request */}
+                        {m.type === 'file_request' && (
+                          <div style={{ padding: '8px 12px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '6px', marginTop: '6px' }}>
+                            <div style={{ fontWeight: 600, color: '#fbbf24' }}>
+                              Requested Document: {m.missingDocType}
+                            </div>
+                            {m.uploadedDocUrl ? (
+                              <div style={{ fontSize: '0.76rem', color: '#10b981', marginTop: '4px' }}>
+                                ✓ Document uploaded and delivered
+                              </div>
+                            ) : (
+                              <div style={{ marginTop: '8px' }}>
+                                <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', fontSize: '0.76rem' }}>
+                                  {uploadingDocAppId === app._id ? 'Uploading...' : 'Upload & Submit Missing Document'}
+                                  <input 
+                                    type="file" 
+                                    accept=".pdf,image/*,.doc,.docx" 
+                                    onChange={e => handleUploadMissingFile(e, app._id)} 
+                                    style={{ display: 'none' }} 
+                                    disabled={uploadingDocAppId === app._id}
+                                  />
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Featured Universities */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3>Featured Universities</h3>
-              <Link to="/universities" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Browse all →</Link>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Featured Universities</h3>
+              <Link to="/universities" style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--red)' }}>Browse all →</Link>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {unis.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No universities listed yet.</p> : unis.map(u => (
-                <div key={u._id} className="glass" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  {u.logo ? (
-                    <img 
-                      src={u.logo} 
-                      alt={u.name || 'Logo'} 
-                      style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} 
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div style={{ 
-                    width: '48px', height: '48px', 
-                    background: 'var(--bg-elevated)', 
-                    border: '1px solid var(--glass-border)',
-                    borderRadius: 'var(--r-md)', 
-                    display: u.logo ? 'none' : 'flex', 
-                    alignItems: 'center', justifyContent: 'center', 
-                    color: 'var(--text-primary)', fontSize: '1.2rem' 
-                  }}>
-                    🎓
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+              {unis.map(u => (
+                <div key={u._id} className="card glass" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {u.logo ? (
+                        <img src={u.logo} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      ) : (
+                        <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{u.name?.substring(0, 2).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{ fontSize: '0.92rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</h4>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{u.city}, {u.country}</span>
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ color: 'var(--text-primary)' }}>{u.name}</h4>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>📍 {u.city}, {u.country} | Tuition: {u.tuitionFee?.amount} {u.tuitionFee?.currency}/{u.tuitionFee?.period}</p>
-                  </div>
-                  <Link to="/universities" className="btn btn-secondary btn-sm">Apply / View</Link>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '4px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {u.description}
+                  </p>
+                  <Link to="/universities" className="btn btn-secondary btn-sm" style={{ marginTop: 'auto', justifyContent: 'center', fontSize: '0.78rem' }}>
+                    View & Apply
+                  </Link>
                 </div>
               ))}
             </div>
@@ -128,122 +232,123 @@ export const StudentDashboard = () => {
 
           {/* Internships */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3>Latest Internship Listings (Stages)</h3>
-              <Link to="/stages" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Browse all →</Link>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Internship Opportunities (Stages)</h3>
+              <Link to="/stages" style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--red)' }}>Browse all →</Link>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {stages.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No internships listed yet.</p> : stages.map(s => (
-                <div key={s._id} className="glass" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  {s.companyLogo ? (
-                    <img 
-                      src={s.companyLogo} 
-                      alt={s.company || 'Logo'} 
-                      style={{ width: '48px', height: '48px', borderRadius: 'var(--r-md)', objectFit: 'cover' }} 
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div style={{ 
-                    width: '48px', height: '48px', 
-                    background: 'var(--bg-elevated)', 
-                    border: '1px solid var(--glass-border)',
-                    borderRadius: 'var(--r-md)', 
-                    display: s.companyLogo ? 'none' : 'flex', 
-                    alignItems: 'center', justifyContent: 'center', 
-                    color: 'var(--text-primary)', fontSize: '1.2rem' 
-                  }}>
-                    💼
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+              {stages.map(s => (
+                <div key={s._id} className="card glass" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {s.companyLogo ? (
+                        <img src={s.companyLogo} alt={s.company} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      ) : (
+                        <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{s.company?.substring(0, 2).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{ fontSize: '0.92rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</h4>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{s.company} · {s.duration}</span>
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ color: 'var(--text-primary)' }}>{s.title}</h4>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>🏢 {s.company} | 📍 {s.location || 'Remote'} | ⏱️ {s.duration}</p>
-                  </div>
-                  <Link to="/stages" className="btn btn-secondary btn-sm">Apply / View</Link>
+                  <Link to="/stages" className="btn btn-secondary btn-sm" style={{ marginTop: 'auto', justifyContent: 'center', fontSize: '0.78rem' }}>
+                    View & Apply
+                  </Link>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Right column: Profile status & Applications */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Profile Completion Widget */}
-          <div className="glass" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Right column: Profile Strength & Applications Tracker */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Profile Strength Card */}
+          <div className="card glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: 0 }}>Profile Strength</h4>
-              <span className="badge badge-accent">{profileScore}%</span>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>Profile Strength</h4>
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: profileScore === 100 ? '#10b981' : 'var(--red)' }}>
+                {profileScore}%
+              </span>
             </div>
 
-            {/* Progress bar */}
-            <div style={{ width: '100%', height: '6px', background: 'var(--grey-200)', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
-              <div style={{ width: `${profileScore}%`, height: '100%', background: 'linear-gradient(90deg, var(--red), var(--red-hover))', transition: 'width 0.4s ease' }} />
+            <div style={{ width: '100%', height: '6px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
+              <div style={{ width: `${profileScore}%`, height: '100%', background: profileScore === 100 ? '#10b981' : 'var(--red)', transition: 'width 0.4s ease' }} />
             </div>
 
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
               {profileScore < 100 
-                ? 'Complete your profile with education, skills, and CV to boost your application acceptance rate.' 
-                : '🎉 Excellent! Your profile is 100% complete.'}
+                ? 'Complete your Baccalaureate proof, CV, and skills to reach 100% and boost your acceptance rate.' 
+                : 'Your profile is 100% verified and active!'}
             </p>
 
             <button 
               onClick={() => setIsProfileModalOpen(true)} 
               className="btn btn-secondary btn-sm"
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%', justifyContent: 'center', fontSize: '0.8rem' }}
             >
-              {profileScore < 100 ? '⚙️ Complete Missing Info' : '✏️ Edit Profile'}
+              {profileScore < 100 ? 'Complete Profile (100%)' : 'Update Profile'}
             </button>
           </div>
 
-          {/* Applications status */}
-          <div className="glass" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3>Your Applications</h3>
+          {/* Applications status tracker */}
+          <div className="card glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>My Applications ({apps.length})</h4>
             {apps.length === 0 ? (
-              <p style={{ fontSize: '0.9rem', textAlign: 'center', color: 'var(--text-muted)' }}>No applications submitted yet.</p>
+              <p style={{ fontSize: '0.82rem', textAlign: 'center', color: 'var(--text-muted)', margin: '12px 0' }}>No applications submitted yet.</p>
             ) : (
-              apps.map(a => (
-                <div key={a._id} style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{a.targetId?.name || a.targetId?.title || 'Listing'}</div>
-                    <button
-                      onClick={async () => {
-                        if (window.confirm('Withdraw and remove this application?')) {
-                          try {
-                            await api.delete(`/applications/${a._id}`);
-                            setApps(apps.filter(appItem => appItem._id !== a._id));
-                            toast.success('Application removed successfully');
-                          } catch (err) {
-                            toast.error('Failed to remove application');
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {apps.map(a => (
+                  <div key={a._id} style={{ padding: '10px', background: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--glass-border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.84rem' }}>{a.targetId?.name || a.targetId?.title || 'Listing'}</div>
+                      <button
+                        onClick={async () => {
+                          if (window.confirm('Withdraw this application?')) {
+                            try {
+                              await api.delete(`/applications/${a._id}`);
+                              setApps(apps.filter(appItem => appItem._id !== a._id));
+                              toast.success('Application removed');
+                            } catch (err) {
+                              toast.error('Failed to remove application');
+                            }
                           }
-                        }
-                      }}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem' }}
-                      title="Withdraw application"
-                    >
-                      🗑️
-                    </button>
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{a.targetModel}</span>
+                      <span style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: 'var(--r-full)',
+                        textTransform: 'uppercase',
+                        background: a.status === 'accepted' ? 'rgba(52, 211, 153, 0.15)' : a.status === 'rejected' ? 'rgba(225, 29, 72, 0.15)' : a.status === 'under_review' ? 'rgba(96, 165, 250, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                        color: a.status === 'accepted' ? '#10b981' : a.status === 'rejected' ? 'var(--red)' : a.status === 'under_review' ? '#60a5fa' : '#fbbf24',
+                      }}>
+                        {a.status?.replace('_', ' ')}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                    <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{a.targetType || a.targetModel}</span>
-                    <span className={`status-${a.status}`}>
-                      {a.status?.replace('_', ' ')}
-                    </span>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Complete Profile Modal */}
       <CompleteProfileModal 
         isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
+        onClose={() => { setIsProfileModalOpen(false); fetchData(); }} 
       />
     </div>
   );
 };
+
 export default StudentDashboard;

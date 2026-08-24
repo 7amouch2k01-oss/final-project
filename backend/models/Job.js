@@ -7,11 +7,24 @@ const jobSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    institutionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Institution',
+    },
 
     title:       { type: String, required: true, trim: true },
     company:     { type: String, required: true, trim: true },
-    companyLogo: { type: String, default: '' },   // Cloudinary URL
+    companyLogo: { type: String, default: '' },   // Brand logo URL
     description: { type: String, required: true },
+
+    // Multiple specific tracks/programmes if any
+    programmes: [
+      {
+        name:        { type: String, required: true },
+        degree:      { type: String, default: '' },
+        description: { type: String, default: '' },
+      }
+    ],
 
     requirements:  [{ type: String }],
     responsibilities: [{ type: String }],
@@ -30,7 +43,7 @@ const jobSchema = new mongoose.Schema(
       max:      { type: Number },
       currency: { type: String, default: 'TND' },
       period:   { type: String, enum: ['month', 'year'], default: 'month' },
-      isHidden: { type: Boolean, default: false }, // "Competitive salary"
+      isHidden: { type: Boolean, default: false },
     },
 
     contractType: {
@@ -48,9 +61,12 @@ const jobSchema = new mongoose.Schema(
     // Tags / Skills required
     tags: [{ type: String, trim: true }],
 
-    deadline:   { type: Date },
+    applicationStartDate: { type: Date, default: Date.now },
+    applicationEndDate:   { type: Date },
+    deadline:             { type: Date },
+
     isActive:   { type: Boolean, default: true },
-    isFeatured: { type: Boolean, default: false }, // paid
+    isFeatured: { type: Boolean, default: false },
 
     // View count for analytics
     views: { type: Number, default: 0 },
@@ -61,7 +77,7 @@ const jobSchema = new mongoose.Schema(
 );
 
 jobSchema.index({ title: 'text', description: 'text', company: 'text', tags: 'text' });
-jobSchema.index({ isActive: 1, isFeatured: -1, createdAt: -1 });
+jobSchema.index({ isActive: 1, isFeatured: -1, applicationEndDate: 1, createdAt: -1 });
 jobSchema.index({ type: 1, contractType: 1, experienceLevel: 1 });
 
 module.exports = mongoose.model('Job', jobSchema);

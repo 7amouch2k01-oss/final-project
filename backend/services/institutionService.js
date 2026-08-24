@@ -27,7 +27,7 @@ const register = async ({ name, type, email, password, location, country, websit
     website,
     phone,
     description,
-    status: 'pending', // Requires admin approval
+    status: 'pending',
   });
 
   return institution;
@@ -79,17 +79,17 @@ const getDashboardStats = async (institutionId) => {
   const inst = await Institution.findById(institutionId);
   if (!inst) { const e = new Error('Institution not found'); e.statusCode = 404; throw e; }
 
-  // Count active listings based on type
+  const now = new Date();
   const [unisCount, stagesCount, jobsCount] = await Promise.all([
-    University.countDocuments({ recruiterId: institutionId, isActive: true }),
-    Stage.countDocuments({ recruiterId: institutionId, isActive: true }),
-    Job.countDocuments({ recruiterId: institutionId, isActive: true }),
+    University.countDocuments({ recruiterId: institutionId, isActive: true, deletedAt: null, $or: [{ applicationEndDate: { $exists: false } }, { applicationEndDate: null }, { applicationEndDate: { $gte: now } }] }),
+    Stage.countDocuments({ recruiterId: institutionId, isActive: true, deletedAt: null, $or: [{ applicationEndDate: { $exists: false } }, { applicationEndDate: null }, { applicationEndDate: { $gte: now } }] }),
+    Job.countDocuments({ recruiterId: institutionId, isActive: true, deletedAt: null, $or: [{ applicationEndDate: { $exists: false } }, { applicationEndDate: null }, { applicationEndDate: { $gte: now } }] }),
   ]);
 
-  // Count applications
-  const [totalApps, pendingApps, acceptedApps, rejectedApps] = await Promise.all([
+  const [totalApps, pendingApps, underReviewApps, acceptedApps, rejectedApps] = await Promise.all([
     Application.countDocuments({ institutionId }),
     Application.countDocuments({ institutionId, status: 'pending' }),
+    Application.countDocuments({ institutionId, status: 'under_review' }),
     Application.countDocuments({ institutionId, status: 'accepted' }),
     Application.countDocuments({ institutionId, status: 'rejected' }),
   ]);
@@ -103,6 +103,7 @@ const getDashboardStats = async (institutionId) => {
       jobsCount,
       totalApps,
       pendingApps,
+      underReviewApps,
       acceptedApps,
       rejectedApps,
     },
@@ -117,7 +118,7 @@ const getApplicants = async (institutionId, { status, search, limit = 50 }) => {
   const applications = await Application.find(query)
     .populate({
       path: 'applicantId',
-      select: 'name email avatar bio skills languages education experience baccalaureate cvUrl graduationDate',
+      select: 'name email avatar bio skills languages education postBacPath formationDetails otherDetails experience baccalaureate cvUrl graduationDate',
     })
     .populate('targetId')
     .sort({ createdAt: -1 })
@@ -129,7 +130,8 @@ const getApplicants = async (institutionId, { status, search, limit = 50 }) => {
 // ── Update Application Status (Approve, Reject, Pending + Notes) ───────────
 const updateApplicationStatus = async (institutionId, applicationId, { status, recruiterNote }, io) => {
   const app = await Application.findOne({ _id: applicationId, institutionId })
-    .populate('applicantId', 'name email');
+    .populate('applicantId', 'name email')
+    .populate('targetId', 'title name');
 
   if (!app) {
     const e = new Error('Application not found');
@@ -148,20 +150,20 @@ const updateApplicationStatus = async (institutionId, applicationId, { status, r
 
   await app.save();
 
-  // Create notification for student/candidate
   if (app.applicantId?._id) {
+    const statusLabel = { pending: 'Pending', under_review: 'Under Review', accepted: 'Accepted', rejected: 'Rejected' };
     const notif = await Notification.create({
       userId: app.applicantId._id,
-      title: `Application ${status.toUpperCase()}`,
-      message: `Your application has been marked as ${status}. ${recruiterNote ? `Note: ${recruiterNote}` : ''}`,
+      title: `Application ${statusLabel[status] || status}`,
+      message: `Your application to "${app.targetId?.title || app.targetId?.name || 'Listing'}" status has been updated to: ${statusLabel[status] || status}. ${recruiterNote ? `Note: ${recruiterNote}` : ''}`,
       type: 'application_status',
       link: '/dashboard',
     });
 
     if (io) {
-      io.to(app.applicantId._id.toString()).emit('application:updated', {
+      io.to(app.applicantId._id.toString()).emit('application:status_changed', {
         applicationId: app._id,
-        status,
+        newStatus: status,
         message: notif.message,
       });
     }
@@ -170,27 +172,53 @@ const updateApplicationStatus = async (institutionId, applicationId, { status, r
   return app;
 };
 
-// ── Get Listings Created by Institution ────────────────────────────────────
+// ── Get Listings Created by Institution (Active & Ended/Expired) ───────────
 const getListings = async (institutionId) => {
-  const [unis, stages, jobs] = await Promise.all([
+  const now = new Date();
+  const [allUnis, allStages, allJobs] = await Promise.all([
     University.find({ recruiterId: institutionId, deletedAt: null }).sort({ createdAt: -1 }),
     Stage.find({ recruiterId: institutionId, deletedAt: null }).sort({ createdAt: -1 }),
     Job.find({ recruiterId: institutionId, deletedAt: null }).sort({ createdAt: -1 }),
   ]);
 
-  return { universities: unis, stages, jobs };
+  const isExpired = (item) => {
+    if (!item.isActive) return true;
+    if (item.applicationEndDate && new Date(item.applicationEndDate) < now) return true;
+    return false;
+  };
+
+  const activeUnis   = allUnis.filter(u => !isExpired(u));
+  const endedUnis    = allUnis.filter(u => isExpired(u));
+
+  const activeStages = allStages.filter(s => !isExpired(s));
+  const endedStages  = allStages.filter(s => isExpired(s));
+
+  const activeJobs   = allJobs.filter(j => !isExpired(j));
+  const endedJobs    = allJobs.filter(j => isExpired(j));
+
+  return { 
+    universities: activeUnis, 
+    stages: activeStages, 
+    jobs: activeJobs,
+    endedListings: {
+      universities: endedUnis,
+      stages: endedStages,
+      jobs: endedJobs,
+    }
+  };
 };
 
 // ── Create Listing ─────────────────────────────────────────────────────────
 const createListing = async (institution, { type, data }) => {
   data.recruiterId = institution._id;
+  data.institutionId = institution._id;
 
   if (type === 'university') {
     const uni = await University.create({
       name: data.name || institution.name,
       country: data.country || institution.country || 'Tunisia',
       city: data.city || institution.location || 'Tunis',
-      logo: institution.logo || '',
+      logo: data.logo || institution.logo || '',
       ...data,
     });
     return { type: 'university', item: uni };
@@ -199,16 +227,15 @@ const createListing = async (institution, { type, data }) => {
   if (type === 'stage') {
     const stage = await Stage.create({
       company: institution.name,
-      companyLogo: institution.logo || '',
+      companyLogo: data.companyLogo || institution.logo || '',
       ...data,
     });
     return { type: 'stage', item: stage };
   }
 
-  // default to Job
   const job = await Job.create({
     company: institution.name,
-    companyLogo: institution.logo || '',
+    companyLogo: data.companyLogo || institution.logo || '',
     ...data,
   });
   return { type: 'job', item: job };

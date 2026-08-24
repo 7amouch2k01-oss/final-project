@@ -18,7 +18,7 @@ const getListingModel = (targetType) => {
 };
 
 // ── Apply to a listing ────────────────────────────────────────────────────────
-const apply = async ({ applicantId, targetId, targetType, targetModel: targetModelFromReq, coverLetter, documents: docUrls, cvUrl }, docBuffers, io) => {
+const apply = async ({ applicantId, targetId, targetType, targetModel: targetModelFromReq, selectedProgramme, coverLetter, documents: docUrls, cvUrl }, docBuffers, io) => {
   if (!targetId) {
     const e = new Error('targetId is required to apply');
     e.statusCode = 400;
@@ -33,7 +33,6 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
     listing = await resolved.model.findOne({ _id: targetId, isActive: true, deletedAt: null });
   }
 
-  // Fallback: try searching across all 3 models if targetType was omitted or mismatched
   if (!listing) {
     const [u, s, j] = await Promise.all([
       University.findOne({ _id: targetId, isActive: true, deletedAt: null }),
@@ -46,8 +45,15 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
   }
 
   if (!listing) {
-    const e = new Error('Listing not found or is no longer active');
+    const e = new Error('Listing not found or has expired / closed');
     e.statusCode = 404;
+    throw e;
+  }
+
+  // Check application date expiration if set
+  if (listing.applicationEndDate && new Date(listing.applicationEndDate) < new Date()) {
+    const e = new Error('Application deadline for this listing has ended');
+    e.statusCode = 400;
     throw e;
   }
 
@@ -80,22 +86,18 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
     documents.push(...uploadedUrls);
   }
 
-  // If no document was attached, auto-attach user's profile CV if available
-  if (documents.length === 0) {
-    const applicantUser = await User.findById(applicantId).select('cvUrl');
-    if (applicantUser?.cvUrl) {
-      documents.push(applicantUser.cvUrl);
-    }
+  // Auto-attach user's profile CV if available
+  const applicantUser = await User.findById(applicantId).select('name email cvUrl avatar role');
+  if (documents.length === 0 && applicantUser?.cvUrl) {
+    documents.push(applicantUser.cvUrl);
   }
 
   // 4. Create application
   const targetModel = resolved.name;
   
-  // Resolve owner institution / recruiter
   let institutionId = listing.institutionId || null;
   let recruiterId = listing.recruiterId || null;
 
-  // Check if listing.recruiterId refers to an Institution
   if (!institutionId && recruiterId) {
     const isInst = await Institution.exists({ _id: recruiterId });
     if (isInst) {
@@ -107,6 +109,7 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
     applicantId,
     targetId,
     targetModel,
+    selectedProgramme: selectedProgramme || '',
     institutionId,
     recruiterId,
     coverLetter: coverLetter || '',
@@ -122,75 +125,246 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
         applicationId: application._id,
         targetType:    targetModel,
         listingTitle:  listing.title || listing.name,
+        applicantName: applicantUser?.name || 'An applicant',
         message:       'A new application has been submitted for your listing',
       });
     }
     try {
       await Notification.create({
         userId:  ownerId,
-        title:   '📩 New Application',
-        message: `Someone applied to "${listing.title || listing.name}"`,
+        title:   'New Application Received',
+        message: `${applicantUser?.name || 'Applicant'} applied to "${listing.title || listing.name}"`,
         type:    'application_new',
-        link:    `/recruiter/applications/${application._id}`,
+        link:    `/institution/dashboard`,
       });
-    } catch (_) { /* notification failure is non-fatal */ }
+    } catch (_) {}
   }
 
   return application;
 };
 
-// ── Get applicant's own applications ─────────────────────────────────────────
+// ── Get applicant's own applications with message threads ─────────────────────
 const getMyApplications = async (applicantId) => {
   return Application.find({ applicantId })
     .populate('targetId')
+    .populate('institutionId', 'name type logo city country email')
+    .populate('recruiterId', 'name email company avatar')
     .sort({ createdAt: -1 });
 };
 
-// ── Get all applicants for a listing (recruiter) ──────────────────────────────
-const getListingApplicants = async (listingId, recruiterId) => {
-  return Application.find({ targetId: listingId, recruiterId })
-    .populate('applicantId', 'name email avatar cvUrl skills bio education experience')
+// ── Get all applicants for a listing ──────────────────────────────────────────
+const getListingApplicants = async (listingId, reviewerId) => {
+  return Application.find({ targetId: listingId })
+    .populate('applicantId', 'name email avatar cvUrl skills bio education postBacPath formationDetails baccalaureate experience')
     .sort({ createdAt: -1 });
 };
 
-// ── Update application status (recruiter) ─────────────────────────────────────
-const updateStatus = async (applicationId, recruiterId, newStatus, note, io) => {
+// ── Mark Application As Under Review when Institution/Recruiter opens it ───────
+const markUnderReview = async (applicationId, reviewerId, io) => {
+  const app = await Application.findById(applicationId).populate('targetId', 'title name');
+  if (!app) {
+    const e = new Error('Application not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  // If status is currently pending, auto-transition to under_review
+  if (app.status === 'pending') {
+    app.status = 'under_review';
+    app.viewedByRecruiterAt = new Date();
+    app.statusHistory.push({
+      status: 'under_review',
+      changedAt: new Date(),
+      note: 'Application opened and profile viewed by recruitment team.'
+    });
+    await app.save();
+
+    // Notify applicant live
+    if (io) {
+      io.to(app.applicantId.toString()).emit('application:status_changed', {
+        applicationId: app._id,
+        newStatus: 'under_review',
+        listingTitle: app.targetId?.title || app.targetId?.name || 'Your application',
+        message: 'Your application is now Under Review by the admissions / hiring team.',
+      });
+    }
+
+    try {
+      await Notification.create({
+        userId:  app.applicantId,
+        title:   'Application Under Review',
+        message: `Your application to "${app.targetId?.title || app.targetId?.name || 'Listing'}" is now being actively reviewed!`,
+        type:    'application_status',
+        link:    `/dashboard`,
+      });
+    } catch (_) {}
+  }
+
+  return app;
+};
+
+// ── Send Message / Meeting Booking / Missing Doc Request ───────────────────────
+const sendApplicationMessage = async ({ applicationId, senderId, senderName, senderRole, message, type, missingDocType, meetingDetails }, io) => {
+  const app = await Application.findById(applicationId)
+    .populate('applicantId', 'name email')
+    .populate('targetId', 'title name');
+
+  if (!app) {
+    const e = new Error('Application not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  const newMsg = {
+    sender: senderRole || 'institution',
+    senderId,
+    senderName: senderName || 'Admissions / Hiring Team',
+    message: message || '',
+    type: type || 'text',
+    missingDocType: missingDocType || '',
+    meetingDetails: meetingDetails || null,
+    createdAt: new Date(),
+  };
+
+  app.messages.push(newMsg);
+  await app.save();
+
+  // Notify recipient
+  const isFromApplicant = senderRole === 'applicant';
+  const recipientId = isFromApplicant 
+    ? (app.institutionId || app.recruiterId)
+    : app.applicantId;
+
+  if (recipientId && io) {
+    io.to(recipientId.toString()).emit('application:message', {
+      applicationId: app._id,
+      message: newMsg,
+      listingTitle: app.targetId?.title || app.targetId?.name,
+    });
+  }
+
+  if (recipientId) {
+    try {
+      const notifTitle = type === 'meeting_booking' 
+        ? 'Interview / Meeting Scheduled'
+        : type === 'file_request'
+        ? 'Missing Document Requested'
+        : 'New Message on Application';
+
+      await Notification.create({
+        userId:  recipientId,
+        title:   notifTitle,
+        message: message ? message.substring(0, 120) : 'You have an update on your application.',
+        type:    'application_message',
+        link:    isFromApplicant ? `/institution/dashboard` : `/dashboard`,
+      });
+    } catch (_) {}
+  }
+
+  return app;
+};
+
+// ── Upload Missing Document on an Application ─────────────────────────────────
+const uploadMissingDocument = async ({ applicationId, applicantId, docUrl }, docBuffer, io) => {
+  const app = await Application.findOne({ _id: applicationId, applicantId })
+    .populate('applicantId', 'name')
+    .populate('targetId', 'title name');
+
+  if (!app) {
+    const e = new Error('Application not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  let finalUrl = docUrl;
+  if (docBuffer) {
+    finalUrl = await uploadToCloudinary(docBuffer, 'applications', 'raw');
+  }
+
+  if (!finalUrl) {
+    const e = new Error('No document provided');
+    e.statusCode = 400;
+    throw e;
+  }
+
+  if (!app.documents.includes(finalUrl)) {
+    app.documents.push(finalUrl);
+  }
+
+  // Update latest file_request message in the thread
+  for (let i = app.messages.length - 1; i >= 0; i--) {
+    if (app.messages[i].type === 'file_request' && !app.messages[i].uploadedDocUrl) {
+      app.messages[i].uploadedDocUrl = finalUrl;
+      break;
+    }
+  }
+
+  // Add confirmation message
+  app.messages.push({
+    sender: 'applicant',
+    senderId: applicantId,
+    senderName: app.applicantId?.name || 'Applicant',
+    message: 'Uploaded the requested missing document.',
+    type: 'text',
+    uploadedDocUrl: finalUrl,
+    createdAt: new Date(),
+  });
+
+  await app.save();
+
+  // Notify recruiter/institution
+  const ownerId = app.institutionId || app.recruiterId;
+  if (ownerId && io) {
+    io.to(ownerId.toString()).emit('application:doc_uploaded', {
+      applicationId: app._id,
+      docUrl: finalUrl,
+      applicantName: app.applicantId?.name,
+    });
+  }
+
+  return app;
+};
+
+// ── Update Application Status (Accept / Reject) ───────────────────────────────
+const updateStatus = async (applicationId, reviewerId, newStatus, note, io) => {
   const allowed = ['pending', 'under_review', 'accepted', 'rejected'];
   if (!allowed.includes(newStatus)) {
     const e = new Error('Invalid status'); e.statusCode = 400; throw e;
   }
 
-  const app = await Application.findOne({ _id: applicationId, recruiterId });
+  const app = await Application.findById(applicationId).populate('targetId', 'title name');
   if (!app) { const e = new Error('Application not found'); e.statusCode = 404; throw e; }
 
   app.status = newStatus;
-  app.statusHistory.push({ status: newStatus, note: note || `Status changed to ${newStatus}` });
+  app.statusHistory.push({ status: newStatus, note: note || `Status updated to ${newStatus}` });
   await app.save();
 
-  // Notify applicant via Socket.io + DB
+  // Notify applicant
   const applicantIdStr = app.applicantId.toString();
-  const statusLabel = { pending: 'Pending', under_review: 'Under Review', accepted: '✅ Accepted', rejected: '❌ Rejected' };
+  const statusLabel = { pending: 'Pending', under_review: 'Under Review', accepted: 'Accepted', rejected: 'Rejected' };
 
   if (io) {
     io.to(applicantIdStr).emit('application:status_changed', {
       applicationId: app._id,
       newStatus,
-      message: `Your application status changed to: ${statusLabel[newStatus]}`,
+      message: `Your application to "${app.targetId?.title || app.targetId?.name || 'Listing'}" was marked as: ${statusLabel[newStatus]}`,
     });
   }
 
-  await Notification.create({
-    userId:  app.applicantId,
-    title:   `Application ${statusLabel[newStatus]}`,
-    message: `Your application status has been updated to: ${statusLabel[newStatus]}`,
-    type:    'application_status',
-    link:    `/applications/${app._id}`,
-  });
+  try {
+    await Notification.create({
+      userId:  app.applicantId,
+      title:   `Application ${statusLabel[newStatus]}`,
+      message: `Your application to "${app.targetId?.title || app.targetId?.name || 'Listing'}" status has been updated to: ${statusLabel[newStatus]}`,
+      type:    'application_status',
+      link:    `/dashboard`,
+    });
+  } catch (_) {}
 
   return app;
 };
 
-// ── Remove / Withdraw Application (applicant) ───────────────────────────────
+// ── Remove / Withdraw Application ─────────────────────────────────────────────
 const withdrawApplication = async (applicationId, applicantId) => {
   const app = await Application.findOneAndDelete({ _id: applicationId, applicantId });
   if (!app) { const e = new Error('Application not found'); e.statusCode = 404; throw e; }
@@ -201,6 +375,9 @@ module.exports = {
   apply,
   getMyApplications,
   getListingApplicants,
+  markUnderReview,
+  sendApplicationMessage,
+  uploadMissingDocument,
   updateStatus,
   withdrawApplication,
 };

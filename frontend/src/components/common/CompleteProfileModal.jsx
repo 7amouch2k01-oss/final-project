@@ -4,7 +4,7 @@ import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 export const CompleteProfileModal = ({ isOpen, onClose }) => {
-  const { user, setUser, graduate } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const isStudent = user?.role === 'student';
 
   const [activeTab, setActiveTab] = useState(isStudent ? 'baccalaureate' : 'general');
@@ -22,18 +22,33 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const bac = user?.baccalaureate || {};
   const [bacSchool, setBacSchool] = useState(bac.school || '');
   const [bacYear, setBacYear] = useState(bac.year || new Date().getFullYear());
-  const [bacSection, setBacSection] = useState(bac.section || 'Informatique');
+  const [bacSection, setBacSection] = useState(bac.section || 'Sciences de l\'Informatique');
   const [bacGrade, setBacGrade] = useState(bac.grade || '');
   const [bacProofDocUrl, setBacProofDocUrl] = useState(bac.proofDocUrl || '');
 
-  // ── Education (Current or Past Studies) ────────────────────────
+  // ── Flexible Post-Baccalaureate / Higher Education ────────────
+  // Options: 'university', 'formation', 'other', 'none'
   const firstEdu = user?.education?.[0] || {};
-  const [hasHigherEdu, setHasHigherEdu] = useState(!!firstEdu.school || false);
+  const initialPath = user?.postBacPath || (firstEdu.school ? 'university' : user?.formationDetails?.instituteName ? 'formation' : 'none');
+  const [postBacChoice, setPostBacChoice] = useState(initialPath);
+
+  // 1. University details
   const [eduSchool, setEduSchool] = useState(firstEdu.school || '');
   const [eduDegree, setEduDegree] = useState(firstEdu.degree || '');
   const [eduField, setEduField] = useState(firstEdu.field || '');
   const [eduIsCurrent, setEduIsCurrent] = useState(firstEdu.isCurrent !== undefined ? firstEdu.isCurrent : true);
   const [eduGradCertUrl, setEduGradCertUrl] = useState(firstEdu.graduationCertUrl || '');
+
+  // 2. Formation Professionnelle details
+  const formation = user?.formationDetails || {};
+  const [formationInstitute, setFormationInstitute] = useState(formation.instituteName || '');
+  const [formationProgram, setFormationProgram] = useState(formation.programName || '');
+  const [formationCertUrl, setFormationCertUrl] = useState(formation.certUrl || '');
+
+  // 3. Other details
+  const other = user?.otherDetails || {};
+  const [otherDescription, setOtherDescription] = useState(other.description || '');
+  const [otherDocUrl, setOtherDocUrl] = useState(other.proofDocUrl || '');
 
   // ── Experience (for Citizen / Job seeker) ──────────────────────
   const firstExp = user?.experience?.[0] || {};
@@ -49,7 +64,6 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error('File size must be under 10MB');
       return;
@@ -57,7 +71,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folder', type === 'bac' ? 'bac_proofs' : type === 'grad' ? 'graduation_certs' : 'documents');
+    formData.append('folder', type === 'bac' ? 'bac_proofs' : type === 'grad' ? 'graduation_certs' : type === 'formation' ? 'formation_certs' : 'documents');
 
     setUploadingDoc(true);
     try {
@@ -68,16 +82,22 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
 
       if (type === 'bac') {
         setBacProofDocUrl(url);
-        toast.success('Baccalaureate proof document uploaded! 📄');
+        toast.success('Baccalaureate proof document uploaded successfully.');
       } else if (type === 'grad') {
         setEduGradCertUrl(url);
-        toast.success('Graduation certificate uploaded! 🎓');
+        toast.success('Graduation certificate uploaded.');
+      } else if (type === 'formation') {
+        setFormationCertUrl(url);
+        toast.success('Formation certificate uploaded.');
+      } else if (type === 'other') {
+        setOtherDocUrl(url);
+        toast.success('Supporting document uploaded.');
       } else if (type === 'cv') {
         setCvUrl(url);
-        toast.success('CV / Resume document uploaded! 💼');
+        toast.success('CV / Resume document uploaded.');
       } else if (type === 'exp') {
         setExpCertUrl(url);
-        toast.success('Experience proof certificate uploaded! 📜');
+        toast.success('Experience proof certificate uploaded.');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'File upload failed');
@@ -90,18 +110,23 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Verification check for student
     if (isStudent) {
       if (!bacSchool.trim() || !bacYear || !bacSection || !bacProofDocUrl) {
-        toast.error('⚠️ For students, Baccalaureate details and proof document upload are strictly mandatory.');
+        toast.error('Baccalaureate details and official proof document upload are required.');
         setActiveTab('baccalaureate');
         return;
       }
-      if (hasHigherEdu && !eduIsCurrent && !eduGradCertUrl) {
-        toast.error('⚠️ If your higher study is completed, you must upload your graduation certificate.');
+      if (postBacChoice === 'university' && !eduIsCurrent && !eduGradCertUrl) {
+        toast.error('If your higher study is completed, please upload your graduation certificate.');
         setActiveTab('education');
         return;
       }
+    }
+
+    if (!cvUrl.trim()) {
+      toast.error('Please upload your CV / Resume document to complete your profile.');
+      setActiveTab('general');
+      return;
     }
 
     setLoading(true);
@@ -115,20 +140,32 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
         skills: skillsArray,
         languages: languagesArray,
         cvUrl,
+        isProfileComplete: true,
+        postBacPath: postBacChoice,
         baccalaureate: {
           school: bacSchool,
           year: Number(bacYear),
           section: bacSection,
           grade: bacGrade,
           proofDocUrl: bacProofDocUrl,
+          isVerified: !!bacProofDocUrl,
         },
-        education: hasHigherEdu && eduSchool.trim() ? [{
+        education: postBacChoice === 'university' && eduSchool.trim() ? [{
           school: eduSchool,
           degree: eduDegree,
           field: eduField,
           isCurrent: eduIsCurrent,
           graduationCertUrl: eduIsCurrent ? '' : eduGradCertUrl,
         }] : [],
+        formationDetails: postBacChoice === 'formation' ? {
+          instituteName: formationInstitute,
+          programName: formationProgram,
+          certUrl: formationCertUrl,
+        } : {},
+        otherDetails: postBacChoice === 'other' ? {
+          description: otherDescription,
+          proofDocUrl: otherDocUrl,
+        } : {},
         experience: expCompany.trim() ? [{
           company: expCompany,
           title: expTitle,
@@ -139,7 +176,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
 
       const res = await api.patch('/users', updateData);
       setUser(res.data.data.user);
-      toast.success('Profile and documents saved successfully! 🎉');
+      toast.success('Profile completed to 100% and verified!');
       onClose();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update profile');
@@ -149,9 +186,9 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop animate-fade-in" onClick={onClose}>
       <div 
-        className="modal animate-scale-in" 
+        className="modal" 
         onClick={e => e.stopPropagation()} 
         style={{ maxWidth: '720px', maxHeight: '92vh', overflowY: 'auto', padding: '32px' }}
       >
@@ -159,18 +196,18 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '16px' }}>
           <div>
             <div className="section-label">Verified Profile Hub</div>
-            <h3 style={{ fontSize: '1.45rem', margin: 0 }}>
-              {isStudent ? '🎓 Student & Baccalaureate Verification' : '💼 Professional & Citizen Profile'}
+            <h3 style={{ fontSize: '1.4rem', margin: '4px 0 0', fontWeight: 700 }}>
+              {isStudent ? 'Student & Academic Verification' : 'Professional Profile Verification'}
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
               {isStudent 
-                ? 'Tunisian Baccalaureate proof is required to apply for universities & internships.'
-                : 'Complete your background and credentials to apply for top jobs.'}
+                ? 'Upload your Baccalaureate proof and choose your academic or vocational path to reach 100%.'
+                : 'Complete your credentials and CV to unlock full dashboard privileges.'}
             </p>
           </div>
           <button 
             onClick={onClose} 
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer' }}
           >
             ✕
           </button>
@@ -194,7 +231,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 cursor: 'pointer',
               }}
             >
-              📜 1. Baccalaureate (Mandatory)
+              1. Baccalaureate (Required)
             </button>
           )}
 
@@ -213,7 +250,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
               cursor: 'pointer',
             }}
           >
-            🏛️ {isStudent ? '2. University / Higher Studies' : '🎓 Higher Education'}
+            {isStudent ? '2. Post-Bac Path (Flexible)' : 'Education & Training'}
           </button>
 
           <button
@@ -231,7 +268,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
               cursor: 'pointer',
             }}
           >
-            👤 {isStudent ? '3. Personal & CV' : '👤 Personal Info & CV'}
+            {isStudent ? '3. Personal Info & CV' : 'Personal Info & CV'}
           </button>
 
           {!isStudent && (
@@ -250,7 +287,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 cursor: 'pointer',
               }}
             >
-              💼 Work Experience & Certs
+              Work Experience
             </button>
           )}
         </div>
@@ -258,16 +295,13 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
         {/* Form Body */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* ════ TAB 1: BACCALAUREATE (MANDATORY FOR STUDENTS) ════ */}
+          {/* ════ TAB 1: BACCALAUREATE (REQUIRED FOR STUDENTS) ════ */}
           {activeTab === 'baccalaureate' && isStudent && (
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ padding: '14px 18px', background: 'var(--red-subtle)', border: '1px solid var(--red-border)', borderRadius: 'var(--r-md)', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <span style={{ fontSize: '1.5rem' }}>🛡️</span>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--red-bright)' }}>Baccalaureate Gatekeeper</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    To ensure trust on TuniStudy, students must have graduated with a Tunisian Baccalaureate. You must upload your official diploma or grade transcript proof.
-                  </div>
+              <div style={{ padding: '14px 18px', background: 'var(--red-subtle)', border: '1px solid var(--red-border)', borderRadius: 'var(--r-md)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--red)' }}>Tunisian Baccalaureate Verification</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  Please supply your high school graduation details and upload your diploma or grade transcript copy.
                 </div>
               </div>
 
@@ -342,23 +376,17 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 }}>
                   {bacProofDocUrl ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ color: '#34d399', fontSize: '1.4rem' }}>✓</span>
-                      <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#34d399' }}>Baccalaureate Document Attached</div>
-                        <a href={bacProofDocUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', color: 'var(--red)' }}>View Attached File ↗</a>
-                      </div>
+                      <span style={{ color: '#10b981', fontWeight: 700 }}>[Document Attached]</span>
+                      <a href={bacProofDocUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--red)', fontWeight: 600 }}>View File</a>
                     </div>
                   ) : (
-                    <>
-                      <div style={{ fontSize: '1.8rem' }}>📄</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        Upload your Bac Diploma, Relevé de Notes, or Attestation de Réussite
-                      </div>
-                    </>
+                    <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                      Upload your Bac Diploma, Relevé de Notes, or Attestation de Réussite
+                    </div>
                   )}
 
                   <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', marginTop: '6px' }}>
-                    {uploadingDoc ? '⏳ Uploading...' : bacProofDocUrl ? '🔄 Replace File' : '📤 Upload Document (PDF/JPG)'}
+                    {uploadingDoc ? 'Uploading...' : bacProofDocUrl ? 'Replace File' : 'Upload Document (PDF/JPG)'}
                     <input 
                       type="file" 
                       accept=".pdf,image/png,image/jpeg,image/webp" 
@@ -372,32 +400,68 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* ════ TAB 2: HIGHER EDUCATION & ONGOING STUDIES ════ */}
+          {/* ════ TAB 2: FLEXIBLE POST-BAC PATH ════ */}
           {activeTab === 'education' && (
-            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
-                <input 
-                  type="checkbox" 
-                  id="hasHigherEdu" 
-                  checked={hasHigherEdu} 
-                  onChange={e => setHasHigherEdu(e.target.checked)} 
-                  style={{ width: '18px', height: '18px', accentColor: 'var(--red)' }}
-                />
-                <label htmlFor="hasHigherEdu" style={{ fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>
-                  {isStudent ? 'Are you currently studying or enrolled in a University / Institute?' : 'Add Higher Education Degree / Studies'}
-                </label>
+            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div style={{ padding: '14px 18px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
+                  What are you currently doing after the Baccalaureate?
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  You do not need to attend university to complete your profile. Select your exact track below to reach 100%.
+                </p>
               </div>
 
-              {hasHigherEdu && (
+              {/* Radio Selector for Post-Bac Track */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
+                {[
+                  { id: 'university', label: 'University / Faculty', desc: 'Higher education degree' },
+                  { id: 'formation', label: 'Formation / Training', desc: 'Vocational institute / BTP / BTS' },
+                  { id: 'other', label: 'Other Activities', desc: 'Certifications / Freelance' },
+                  { id: 'none', label: 'None / Self-study', desc: 'Direct career search' },
+                ].map(opt => (
+                  <div
+                    key={opt.id}
+                    onClick={() => setPostBacChoice(opt.id)}
+                    style={{
+                      padding: '12px',
+                      borderRadius: 'var(--r-md)',
+                      background: postBacChoice === opt.id ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                      border: `1px solid ${postBacChoice === opt.id ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input 
+                        type="radio" 
+                        name="postBacChoice" 
+                        checked={postBacChoice === opt.id} 
+                        onChange={() => setPostBacChoice(opt.id)}
+                        style={{ accentColor: 'var(--red)' }}
+                      />
+                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: postBacChoice === opt.id ? 'var(--red)' : 'var(--text-primary)' }}>
+                        {opt.label}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '6px 0 0 20px' }}>
+                      {opt.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Path 1: University */}
+              {postBacChoice === 'university' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
                   <div className="form-group">
-                    <label className="form-label">University / School / Institute Name *</label>
+                    <label className="form-label">University / Faculty Name *</label>
                     <input 
                       type="text" 
                       value={eduSchool} 
                       onChange={e => setEduSchool(e.target.value)} 
-                      placeholder="e.g. INSAT, ESPRIT, Faculté de Médecine de Tunis, TBS..."
-                      required={hasHigherEdu}
+                      placeholder="e.g. INSAT, ESPRIT, Faculté des Sciences de Tunis, TBS..."
+                      required
                     />
                   </div>
 
@@ -412,7 +476,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Field of Study / Major</label>
+                      <label className="form-label">Field of Study</label>
                       <input 
                         type="text" 
                         value={eduField} 
@@ -422,11 +486,10 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                     </div>
                   </div>
 
-                  {/* Study Status Radio: Ongoing vs Finished */}
                   <div style={{ padding: '12px', background: 'var(--bg-surface)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
                     <label className="form-label" style={{ marginBottom: '8px' }}>Study Status</label>
                     <div style={{ display: 'flex', gap: '20px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
                         <input 
                           type="radio" 
                           name="studyStatus" 
@@ -434,9 +497,9 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                           onChange={() => setEduIsCurrent(true)}
                           style={{ accentColor: 'var(--red)' }}
                         />
-                        🟢 Ongoing (Current Academic Year)
+                        Ongoing Studies
                       </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
                         <input 
                           type="radio" 
                           name="studyStatus" 
@@ -444,53 +507,96 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                           onChange={() => setEduIsCurrent(false)}
                           style={{ accentColor: 'var(--red)' }}
                         />
-                        🎓 Completed / Graduated
+                        Graduated / Completed
                       </label>
                     </div>
                   </div>
 
-                  {/* If Finished → Mandatory Graduation File Upload */}
                   {!eduIsCurrent && (
-                    <div className="form-group" style={{ marginTop: '8px' }}>
-                      <label className="form-label" style={{ color: 'var(--red-bright)' }}>
-                        Official Graduation Certificate / Diploma Proof *
-                      </label>
-                      <div style={{
-                        padding: '16px',
-                        border: '2px dashed var(--red-border)',
-                        borderRadius: 'var(--r-md)',
-                        background: 'var(--red-subtle)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '8px',
-                        textAlign: 'center'
-                      }}>
-                        {eduGradCertUrl ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ color: '#34d399', fontSize: '1.2rem' }}>✓</span>
-                            <span style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 600 }}>Graduation Certificate Attached</span>
-                            <a href={eduGradCertUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', color: 'var(--red)' }}>[View ↗]</a>
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                            Upload your official Degree / Attestation de Réussite (PDF or Image)
-                          </div>
-                        )}
-
+                    <div className="form-group">
+                      <label className="form-label">Graduation Certificate Proof *</label>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                         <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                          {uploadingDoc ? '⏳ Uploading...' : eduGradCertUrl ? '🔄 Replace Certificate' : '📤 Upload Graduation Proof'}
-                          <input 
-                            type="file" 
-                            accept=".pdf,image/png,image/jpeg,image/webp" 
-                            onChange={e => handleFileUpload(e, 'grad')} 
-                            style={{ display: 'none' }} 
-                            disabled={uploadingDoc}
-                          />
+                          {uploadingDoc ? 'Uploading...' : eduGradCertUrl ? 'Replace Certificate' : 'Upload Graduation Proof'}
+                          <input type="file" accept=".pdf,image/*" onChange={e => handleFileUpload(e, 'grad')} style={{ display: 'none' }} />
                         </label>
+                        {eduGradCertUrl && <span style={{ fontSize: '0.8rem', color: '#10b981' }}>Certificate Attached</span>}
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Path 2: Formation Professionnelle */}
+              {postBacChoice === 'formation' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
+                  <div className="form-group">
+                    <label className="form-label">Training Center / Institute (Centre de Formation) *</label>
+                    <input 
+                      type="text" 
+                      value={formationInstitute} 
+                      onChange={e => setFormationInstitute(e.target.value)} 
+                      placeholder="e.g. GoMyCode, CSFIA Ariana, ATFP Sousse..."
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Program / Speciality *</label>
+                    <input 
+                      type="text" 
+                      value={formationProgram} 
+                      onChange={e => setFormationProgram(e.target.value)} 
+                      placeholder="e.g. Full-Stack Web Development, Data Analytics, Design..."
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Formation Certificate / Proof (Optional)</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                        {uploadingDoc ? 'Uploading...' : formationCertUrl ? 'Replace Certificate' : 'Upload Formation Document'}
+                        <input type="file" accept=".pdf,image/*" onChange={e => handleFileUpload(e, 'formation')} style={{ display: 'none' }} />
+                      </label>
+                      {formationCertUrl && <span style={{ fontSize: '0.8rem', color: '#10b981' }}>Document Attached</span>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Path 3: Other */}
+              {postBacChoice === 'other' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
+                  <div className="form-group">
+                    <label className="form-label">Describe what you are currently doing / learning</label>
+                    <textarea 
+                      rows="3" 
+                      value={otherDescription} 
+                      onChange={e => setOtherDescription(e.target.value)} 
+                      placeholder="e.g. Self-studying programming and UI design, participating in online certifications..."
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Attach Supporting Document (Optional)</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                        {uploadingDoc ? 'Uploading...' : otherDocUrl ? 'Replace Document' : 'Upload File'}
+                        <input type="file" accept=".pdf,image/*" onChange={e => handleFileUpload(e, 'other')} style={{ display: 'none' }} />
+                      </label>
+                      {otherDocUrl && <span style={{ fontSize: '0.8rem', color: '#10b981' }}>File Attached</span>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Path 4: None */}
+              {postBacChoice === 'none' && (
+                <div style={{ padding: '16px', background: 'rgba(52, 211, 153, 0.05)', borderRadius: 'var(--r-md)', border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#10b981' }}>
+                    Profile will be completed to 100%
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                    No higher education degree is required. Once your Baccalaureate certificate, CV, and core skills are saved in step 3, your profile verification will reach 100%.
+                  </p>
                 </div>
               )}
             </div>
@@ -511,7 +617,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Bio / Profile Headline</label>
+                <label className="form-label">Bio / Profile Summary</label>
                 <textarea 
                   rows="3" 
                   value={bio} 
@@ -522,12 +628,13 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
-                  <label className="form-label">Key Skills (comma separated)</label>
+                  <label className="form-label">Key Skills (comma separated) *</label>
                   <input 
                     type="text" 
                     value={skills} 
                     onChange={e => setSkills(e.target.value)} 
-                    placeholder="e.g. JavaScript, Python, UI/UX, Accounting" 
+                    placeholder="e.g. React, Node.js, UI/UX, Python" 
+                    required
                   />
                 </div>
 
@@ -542,22 +649,37 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* CV File Upload */}
+              {/* CV File Upload (Required for 100%) */}
               <div className="form-group">
-                <label className="form-label">Curriculum Vitae (CV / Resume Document)</label>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <input 
-                    type="text" 
-                    value={cvUrl} 
-                    onChange={e => setCvUrl(e.target.value)} 
-                    placeholder="Paste URL or upload file directly →" 
-                    style={{ flex: 1 }}
-                  />
-                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    {uploadingDoc ? '⏳ Uploading...' : '📄 Upload CV File'}
+                <label className="form-label">Curriculum Vitae (CV / Resume Document) *</label>
+                <div style={{
+                  padding: '16px',
+                  border: '2px dashed var(--glass-border-hover)',
+                  borderRadius: 'var(--r-md)',
+                  background: cvUrl ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-elevated)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <div>
+                    {cvUrl ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.88rem' }}>Profile CV Attached</span>
+                        <a href={cvUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', color: 'var(--red)', fontWeight: 600 }}>[View File]</a>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                        Upload your CV (PDF or Word) to auto-attach on all future applications.
+                      </div>
+                    )}
+                  </div>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                    {uploadingDoc ? 'Uploading...' : cvUrl ? 'Replace CV' : 'Upload CV File'}
                     <input 
                       type="file" 
-                      accept=".pdf,image/png,image/jpeg" 
+                      accept=".pdf,image/png,image/jpeg,.doc,.docx" 
                       onChange={e => handleFileUpload(e, 'cv')} 
                       style={{ display: 'none' }} 
                       disabled={uploadingDoc}
@@ -601,27 +723,14 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 />
               </div>
 
-              {/* Work cert upload */}
               <div className="form-group">
                 <label className="form-label">Work Certificate / Attestation de Travail (Optional)</label>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <input 
-                    type="text" 
-                    value={expCertUrl} 
-                    onChange={e => setExpCertUrl(e.target.value)} 
-                    placeholder="Certificate URL or upload file →" 
-                    style={{ flex: 1 }}
-                  />
-                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    {uploadingDoc ? '⏳ Uploading...' : '📜 Upload Proof'}
-                    <input 
-                      type="file" 
-                      accept=".pdf,image/png,image/jpeg" 
-                      onChange={e => handleFileUpload(e, 'exp')} 
-                      style={{ display: 'none' }} 
-                      disabled={uploadingDoc}
-                    />
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                    {uploadingDoc ? 'Uploading...' : expCertUrl ? 'Replace Certificate' : 'Upload Proof'}
+                    <input type="file" accept=".pdf,image/*" onChange={e => handleFileUpload(e, 'exp')} style={{ display: 'none' }} />
                   </label>
+                  {expCertUrl && <span style={{ fontSize: '0.8rem', color: '#10b981' }}>Certificate Attached</span>}
                 </div>
               </div>
             </div>
@@ -633,7 +742,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
               Cancel
             </button>
             <button type="submit" disabled={loading || uploadingDoc} className="btn btn-primary">
-              {loading ? '⏳ Verifying & Saving...' : '💾 Save & Verify Profile'}
+              {loading ? 'Saving Profile...' : 'Save & Complete Profile (100%)'}
             </button>
           </div>
         </form>

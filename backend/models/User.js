@@ -72,6 +72,22 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    // ── Flexible Post-Baccalaureate Path (Optional: university, formation, other, or none) ──
+    postBacPath: {
+      type: String,
+      enum: ['university', 'formation', 'other', 'none'],
+      default: 'none',
+    },
+    formationDetails: {
+      instituteName: { type: String, default: '' },
+      programName:   { type: String, default: '' },
+      certUrl:       { type: String, default: '' },
+    },
+    otherDetails: {
+      description: { type: String, default: '' },
+      proofDocUrl: { type: String, default: '' },
+    },
+
     experience: [
       {
         company:     { type: String, required: true },

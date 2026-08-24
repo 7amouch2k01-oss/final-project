@@ -4,16 +4,33 @@ const { escapeRegExp } = require('../utils/string');
 
 // ── Build filter query from request params ────────────────────────────────────
 const buildFilter = (query) => {
-  const filter = { isActive: true, deletedAt: null };
+  const filter = { 
+    isActive: true, 
+    deletedAt: null,
+    $and: [
+      {
+        $or: [
+          { applicationEndDate: { $exists: false } },
+          { applicationEndDate: null },
+          { applicationEndDate: { $gte: new Date() } }
+        ]
+      }
+    ]
+  };
+
   if (query.search) {
     const escaped = escapeRegExp(query.search);
-    filter.$or = [
-      { name: new RegExp(escaped, 'i') },
-      { description: new RegExp(escaped, 'i') },
-      { fields: new RegExp(escaped, 'i') },
-      { city: new RegExp(escaped, 'i') },
-    ];
+    filter.$and.push({
+      $or: [
+        { name: new RegExp(escaped, 'i') },
+        { description: new RegExp(escaped, 'i') },
+        { fields: new RegExp(escaped, 'i') },
+        { city: new RegExp(escaped, 'i') },
+        { 'programmes.name': new RegExp(escaped, 'i') },
+      ]
+    });
   }
+
   if (query.country) filter.country  = new RegExp(escapeRegExp(query.country), 'i');
   if (query.city)    filter.city     = new RegExp(escapeRegExp(query.city), 'i');
   if (query.field)   filter.fields   = new RegExp(escapeRegExp(query.field), 'i');
@@ -27,7 +44,6 @@ const getAll = async (query) => {
   const skip  = (page - 1) * limit;
   const filter = buildFilter(query);
 
-  // Featured first, then newest
   const [universities, total] = await Promise.all([
     University.find(filter)
       .sort({ isFeatured: -1, createdAt: -1 })
@@ -47,9 +63,9 @@ const getById = async (id) => {
   return uni;
 };
 
-// ── Create university (approved recruiter) ────────────────────────────────────
+// ── Create university (approved recruiter / institution) ──────────────────────
 const create = async (recruiterId, data, logoBuffer) => {
-  let logoUrl = '';
+  let logoUrl = data.logo || '';
   if (logoBuffer) {
     logoUrl = await uploadToCloudinary(logoBuffer, 'universities', 'image');
   }
@@ -60,7 +76,7 @@ const create = async (recruiterId, data, logoBuffer) => {
 // ── Update university ─────────────────────────────────────────────────────────
 const update = async (id, recruiterId, data, logoBuffer, role) => {
   const query = { _id: id, deletedAt: null };
-  if (role !== 'admin') query.recruiterId = recruiterId; // admin bypasses ownership check
+  if (role !== 'admin') query.recruiterId = recruiterId;
   const uni = await University.findOne(query);
   if (!uni) { const e = new Error('University not found or not yours'); e.statusCode = 404; throw e; }
 
@@ -75,7 +91,7 @@ const update = async (id, recruiterId, data, logoBuffer, role) => {
 // ── Soft-delete university ────────────────────────────────────────────────────
 const remove = async (id, recruiterId, role) => {
   const query = { _id: id };
-  if (role !== 'admin') query.recruiterId = recruiterId; // admin bypasses ownership check
+  if (role !== 'admin') query.recruiterId = recruiterId;
   const uni = await University.findOne(query);
   if (!uni) { const e = new Error('University not found or not yours'); e.statusCode = 404; throw e; }
   uni.deletedAt = new Date();
@@ -83,8 +99,7 @@ const remove = async (id, recruiterId, role) => {
   await uni.save();
 };
 
-
-// ── Get recruiter's own listings ──────────────────────────────────────────────
+// ── Get recruiter's own listings (including expired for ended posts tab) ──────
 const getMyListings = async (recruiterId) => {
   return University.find({ recruiterId, deletedAt: null }).sort({ createdAt: -1 });
 };

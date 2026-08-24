@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useInstitutionStore } from '../../store/institutionStore';
+import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 export const InstitutionDashboard = () => {
@@ -16,15 +17,24 @@ export const InstitutionDashboard = () => {
     createListing,
     deleteListing,
     logout,
-    loading 
   } = useInstitutionStore();
 
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('applicants'); // 'applicants', 'listings', 'post'
+  const [activeTab, setActiveTab] = useState('applicants'); // 'applicants', 'listings', 'ended', 'post'
   const [applicantFilter, setApplicantFilter] = useState('all');
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+
+  // Communication Modals State
+  const [activeModal, setActiveModal] = useState(null); // 'missing_doc' | 'meeting' | null
+  const [missingDocName, setMissingDocName] = useState('');
+  const [missingDocInstructions, setMissingDocInstructions] = useState('');
+  const [meetingDate, setMeetingDate] = useState('');
+  const [meetingTime, setMeetingTime] = useState('');
+  const [meetingLink, setMeetingLink] = useState('');
+  const [meetingNotes, setMeetingNotes] = useState('');
+  const [sendingMsg, setSendingMsg] = useState(false);
 
   // New Listing Form state
   const isSchoolOrUni = institution?.type === 'university' || institution?.type === 'school';
@@ -33,10 +43,12 @@ export const InstitutionDashboard = () => {
     title: '',
     description: '',
     fields: '',
+    programmes: '',
     requirements: '',
-    tuitionFeeAmount: '',
     location: institution?.location || '',
-    type: 'on-site', // 'remote', 'on-site', 'hybrid'
+    applicationStartDate: new Date().toISOString().split('T')[0],
+    applicationEndDate: '',
+    type: 'on-site',
     contractType: 'CDI',
     experienceLevel: 'junior',
     duration: '3-6 months',
@@ -50,18 +62,89 @@ export const InstitutionDashboard = () => {
     fetchListings();
   }, [applicantFilter]);
 
+  // When clicking an applicant to view, automatically mark as under_review
+  const handleSelectApplicant = async (app) => {
+    setSelectedApplicant(app);
+    if (app.status === 'pending') {
+      try {
+        await api.post(`/applications/${app._id}/review`);
+        app.status = 'under_review';
+        setSelectedApplicant({ ...app });
+        fetchApplicants(applicantFilter);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
   const handleStatusChange = async (appId, newStatus) => {
     setUpdatingId(appId);
     const res = await updateApplicantStatus(appId, newStatus, noteText);
     setUpdatingId(null);
     if (res.success) {
-      toast.success(`Applicant marked as ${newStatus}!`);
+      toast.success(`Applicant marked as ${newStatus}`);
       if (selectedApplicant?._id === appId) {
         setSelectedApplicant({ ...selectedApplicant, status: newStatus, recruiterNote: noteText });
       }
       setNoteText('');
+      fetchApplicants(applicantFilter);
     } else {
       toast.error(res.error || 'Failed to update status');
+    }
+  };
+
+  // Send Missing Document Request
+  const handleSendMissingDocRequest = async (e) => {
+    e.preventDefault();
+    if (!selectedApplicant || !missingDocName.trim()) return;
+    setSendingMsg(true);
+    try {
+      await api.post(`/applications/${selectedApplicant._id}/messages`, {
+        senderRole: 'institution',
+        type: 'file_request',
+        missingDocType: missingDocName.trim(),
+        message: `Please upload your missing document: ${missingDocName.trim()}. ${missingDocInstructions.trim() ? `Instructions: ${missingDocInstructions.trim()}` : ''}`,
+      });
+      toast.success('Document request sent to candidate!');
+      setActiveModal(null);
+      setMissingDocName('');
+      setMissingDocInstructions('');
+      fetchApplicants(applicantFilter);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send document request');
+    } finally {
+      setSendingMsg(false);
+    }
+  };
+
+  // Book / Schedule Meeting
+  const handleBookMeeting = async (e) => {
+    e.preventDefault();
+    if (!selectedApplicant || !meetingDate || !meetingTime) return;
+    setSendingMsg(true);
+    try {
+      await api.post(`/applications/${selectedApplicant._id}/messages`, {
+        senderRole: 'institution',
+        type: 'meeting_booking',
+        message: `Interview / Meeting scheduled for ${meetingDate} at ${meetingTime}. Link: ${meetingLink || 'To be shared directly'}. ${meetingNotes ? `Notes: ${meetingNotes}` : ''}`,
+        meetingDetails: {
+          date: new Date(meetingDate),
+          time: meetingTime,
+          link: meetingLink,
+          notes: meetingNotes,
+        },
+      });
+      toast.success('Interview scheduled and sent to candidate!');
+      setActiveModal(null);
+      setMeetingDate('');
+      setMeetingTime('');
+      setMeetingLink('');
+      setMeetingNotes('');
+      fetchApplicants(applicantFilter);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to schedule meeting');
+    } finally {
+      setSendingMsg(false);
     }
   };
 
@@ -69,21 +152,27 @@ export const InstitutionDashboard = () => {
     e.preventDefault();
     setCreatingListing(true);
 
+    const progsArray = listingForm.programmes
+      .split(',')
+      .map(p => p.trim())
+      .filter(Boolean)
+      .map(name => ({ name }));
+
     let data = {
       description: listingForm.description,
       requirements: listingForm.requirements.split(',').map(r => r.trim()).filter(Boolean),
+      applicationStartDate: listingForm.applicationStartDate ? new Date(listingForm.applicationStartDate) : new Date(),
+      applicationEndDate: listingForm.applicationEndDate ? new Date(listingForm.applicationEndDate) : null,
+      programmes: progsArray,
     };
 
     if (postType === 'university') {
       data = {
         ...data,
+        name: listingForm.title || institution.name,
         city: listingForm.location || institution?.location || 'Tunis',
         country: institution?.country || 'Tunisia',
         fields: listingForm.fields.split(',').map(f => f.trim()).filter(Boolean),
-        tuitionFee: {
-          amount: Number(listingForm.tuitionFeeAmount) || 0,
-          currency: 'TND',
-        }
       };
     } else if (postType === 'stage') {
       data = {
@@ -95,7 +184,6 @@ export const InstitutionDashboard = () => {
         duration: listingForm.duration,
       };
     } else {
-      // Job
       data = {
         ...data,
         title: listingForm.title,
@@ -111,21 +199,24 @@ export const InstitutionDashboard = () => {
     setCreatingListing(false);
 
     if (res.success) {
-      toast.success('🎉 Opportunity published successfully!');
+      toast.success('Opportunity published successfully!');
       setActiveTab('listings');
       setListingForm({
         title: '',
         description: '',
         fields: '',
+        programmes: '',
         requirements: '',
-        tuitionFeeAmount: '',
         location: institution?.location || '',
+        applicationStartDate: new Date().toISOString().split('T')[0],
+        applicationEndDate: '',
         type: 'on-site',
         contractType: 'CDI',
         experienceLevel: 'junior',
         duration: '3-6 months',
         domain: 'Software Engineering',
       });
+      fetchListings();
     } else {
       toast.error(res.error || 'Failed to create listing');
     }
@@ -134,97 +225,100 @@ export const InstitutionDashboard = () => {
   if (!institution) {
     return (
       <div className="page flex-center">
-        <div className="animate-spin" style={{ fontSize: '2rem' }}>⟳</div>
-        <div style={{ marginLeft: '12px' }}>Loading Institution Workspace...</div>
+        <div className="animate-spin" style={{ fontSize: '1.8rem', color: 'var(--red)' }}>⟳</div>
+        <div style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>Loading Institution Workspace...</div>
       </div>
     );
   }
+
+  const endedListings = listings?.endedListings || { universities: [], stages: [], jobs: [] };
 
   return (
     <div className="page container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '60px' }}>
       
       {/* ── Top Institution Header Banner ────────────────────────────── */}
-      <div className="card glass" style={{ padding: '28px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div className="card glass" style={{ padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{
-            width: '64px', height: '64px', borderRadius: '16px',
-            background: 'var(--red)', boxShadow: '0 0 24px var(--red-glow)',
+            width: '56px', height: '56px', borderRadius: '12px',
+            background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.8rem', color: '#fff', fontWeight: 800
+            fontSize: '1.2rem', color: 'var(--text-primary)', fontWeight: 800,
+            overflow: 'hidden'
           }}>
-            {institution.type === 'university' ? '🏛️' : institution.type === 'school' ? '🏫' : '🏢'}
+            {institution.logo ? (
+              <img src={institution.logo} alt={institution.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
+            ) : (
+              institution.name?.substring(0, 2).toUpperCase()
+            )}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div className="section-label" style={{ marginBottom: 0 }}>
                 {institution.type.toUpperCase()} PORTAL
               </div>
-              <span className="status-badge" style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '2px 8px', borderRadius: 'var(--r-full)', fontSize: '0.72rem', fontWeight: 700 }}>
-                ● APPROVED & ACTIVE
+              <span style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#10b981', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '1px 8px', borderRadius: 'var(--r-full)', fontSize: '0.7rem', fontWeight: 700 }}>
+                VERIFIED & ACTIVE
               </span>
             </div>
-            <h2 style={{ fontSize: '1.8rem', margin: '4px 0 2px' }}>{institution.name}</h2>
-            <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-              📍 {institution.location || 'Tunisia'} • 📧 {institution.email} • 🌐 {institution.website || 'No website registered'}
+            <h2 style={{ fontSize: '1.6rem', margin: '4px 0 2px', fontWeight: 800 }}>{institution.name}</h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+              {institution.location || 'Tunisia'} · {institution.email} · {institution.website || 'Official Organization'}
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button 
             onClick={() => setActiveTab('post')} 
             className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ padding: '9px 16px', fontSize: '0.86rem' }}
           >
-            <span>➕</span> Post New Opportunity
+            Post New Opportunity
           </button>
-          <button onClick={logout} className="btn btn-ghost" title="Logout">
-            🚪 Logout
+          <button onClick={logout} className="btn btn-ghost" style={{ padding: '9px 14px', fontSize: '0.86rem' }}>
+            Logout
           </button>
         </div>
       </div>
 
       {/* ── Key Performance Metrics ─────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
         {[
-          { label: 'Total Candidates Applied', value: stats?.stats?.totalApps || applicants.length, icon: '👥', color: 'var(--text-primary)' },
-          { label: 'Pending Review', value: stats?.stats?.pendingApps || 0, icon: '⏳', color: '#fbbf24' },
-          { label: 'Accepted Candidates', value: stats?.stats?.acceptedApps || 0, icon: '✅', color: '#34d399' },
-          { label: 'Declined Candidates', value: stats?.stats?.rejectedApps || 0, icon: '❌', color: 'var(--red)' },
-          { label: 'Live Active Listings', value: stats?.stats?.totalListings || 0, icon: '📢', color: '#60a5fa' },
+          { label: 'Total Applicants', value: stats?.stats?.totalApps || applicants.length, color: 'var(--text-primary)' },
+          { label: 'Pending Review', value: stats?.stats?.pendingApps || 0, color: '#fbbf24' },
+          { label: 'Under Review', value: stats?.stats?.underReviewApps || 0, color: '#60a5fa' },
+          { label: 'Accepted Candidates', value: stats?.stats?.acceptedApps || 0, color: '#10b981' },
+          { label: 'Live Active Listings', value: stats?.stats?.totalListings || 0, color: 'var(--red)' },
         ].map(m => (
-          <div key={m.label} className="card glass" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ fontSize: '2rem', padding: '10px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)' }}>
-              {m.icon}
+          <div key={m.label} className="card glass" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: m.color, fontFamily: 'var(--font-display)' }}>
+              {m.value}
             </div>
-            <div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: m.color, fontFamily: 'var(--font-display)' }}>
-                {m.value}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{m.label}</div>
-            </div>
+            <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{m.label}</div>
           </div>
         ))}
       </div>
 
       {/* ── Dashboard Navigation Tabs ────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '10px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', flexWrap: 'wrap' }}>
         {[
-          { id: 'applicants', label: `📥 Candidates & Applicants (${applicants.length})` },
-          { id: 'listings', label: `📋 Active Opportunities & Postings` },
-          { id: 'post', label: `➕ Create / Post Opportunity` },
+          { id: 'applicants', label: `Candidates & Applicants (${applicants.length})` },
+          { id: 'listings', label: `Active Opportunities` },
+          { id: 'ended', label: `Ended / Expired Posts` },
+          { id: 'post', label: `Publish New Opportunity` },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: '10px 18px',
+              padding: '8px 16px',
               borderRadius: 'var(--r-md)',
               border: `1px solid ${activeTab === tab.id ? 'var(--red-border)' : 'transparent'}`,
               background: activeTab === tab.id ? 'var(--red-subtle)' : 'transparent',
               color: activeTab === tab.id ? 'var(--red)' : 'var(--text-secondary)',
               fontWeight: 700,
-              fontSize: '0.9rem',
+              fontSize: '0.86rem',
               cursor: 'pointer',
               transition: 'all var(--t-fast)'
             }}
@@ -240,45 +334,44 @@ export const InstitutionDashboard = () => {
           {/* Filter Toolbar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
-              {['all', 'pending', 'accepted', 'rejected'].map(status => (
+              {['all', 'pending', 'under_review', 'accepted', 'rejected'].map(status => (
                 <button
                   key={status}
                   onClick={() => setApplicantFilter(status)}
                   style={{
-                    padding: '6px 14px',
+                    padding: '5px 12px',
                     borderRadius: 'var(--r-full)',
                     border: `1px solid ${applicantFilter === status ? 'var(--red)' : 'var(--glass-border)'}`,
                     background: applicantFilter === status ? 'var(--red)' : 'var(--bg-elevated)',
                     color: applicantFilter === status ? '#fff' : 'var(--text-secondary)',
-                    fontSize: '0.78rem',
+                    fontSize: '0.76rem',
                     fontWeight: 600,
                     cursor: 'pointer',
                     textTransform: 'capitalize'
                   }}
                 >
-                  {status === 'all' ? 'All Applicants' : status}
+                  {status.replace('_', ' ')}
                 </button>
               ))}
             </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Click any applicant to inspect their verified Baccalaureate, transcripts, & documents.
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Click any candidate to open dossier, auto-mark Under Review, and chat / schedule meetings.
             </div>
           </div>
 
           {/* Applicants Table / List */}
           {applicants.length === 0 ? (
-            <div className="card glass flex-center" style={{ padding: '60px 20px', flexDirection: 'column', gap: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem' }}>📭</div>
-              <h3>No Applicants Found</h3>
-              <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', fontSize: '0.9rem' }}>
-                There are no candidates in this filter category yet. When students or professionals apply to your listings, their verified profiles and diplomas will appear right here.
+            <div className="card glass flex-center" style={{ padding: '60px 20px', flexDirection: 'column', gap: '10px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', margin: 0 }}>No Candidates in this Filter</h3>
+              <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', fontSize: '0.85rem' }}>
+                When students or professionals apply to your listings, their verified dossiers and profiles will appear right here.
               </p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: selectedApplicant ? '1fr 1.2fr' : '1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: selectedApplicant ? '1fr 1.3fr' : '1fr', gap: '20px' }}>
               
               {/* Left Column: Candidates List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {applicants.map(app => {
                   const candidate = app.applicantId || {};
                   const bac = candidate.baccalaureate || {};
@@ -287,57 +380,57 @@ export const InstitutionDashboard = () => {
                   return (
                     <div 
                       key={app._id}
-                      onClick={() => setSelectedApplicant(app)}
+                      onClick={() => handleSelectApplicant(app)}
                       className="card glass hover-card"
                       style={{
-                        padding: '18px 20px',
+                        padding: '16px 18px',
                         cursor: 'pointer',
                         border: `1px solid ${isSelected ? 'var(--red)' : 'var(--glass-border)'}`,
                         background: isSelected ? 'var(--red-subtle)' : 'var(--bg-surface)',
                         transition: 'all var(--t-fast)',
-                        position: 'relative'
+                        borderRadius: 'var(--r-md)',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                             {candidate.name || 'Anonymous Candidate'}
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            Applied for: <strong>{app.targetModel}</strong> • {new Date(app.createdAt).toLocaleDateString()}
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            Target: <strong>{app.targetModel}</strong> {app.selectedProgramme ? `· ${app.selectedProgramme}` : ''}
                           </div>
                         </div>
 
                         {/* Status badge */}
                         <span style={{
-                          padding: '4px 10px',
+                          padding: '3px 8px',
                           borderRadius: 'var(--r-full)',
-                          fontSize: '0.72rem',
+                          fontSize: '0.68rem',
                           fontWeight: 700,
                           textTransform: 'uppercase',
-                          background: app.status === 'accepted' ? 'rgba(52, 211, 153, 0.15)' : app.status === 'rejected' ? 'rgba(225, 29, 72, 0.15)' : 'rgba(251, 191, 36, 0.15)',
-                          color: app.status === 'accepted' ? '#34d399' : app.status === 'rejected' ? 'var(--red)' : '#fbbf24',
-                          border: `1px solid ${app.status === 'accepted' ? 'rgba(52, 211, 153, 0.3)' : app.status === 'rejected' ? 'rgba(225, 29, 72, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`
+                          background: app.status === 'accepted' ? 'rgba(52, 211, 153, 0.15)' : app.status === 'rejected' ? 'rgba(225, 29, 72, 0.15)' : app.status === 'under_review' ? 'rgba(96, 165, 250, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                          color: app.status === 'accepted' ? '#10b981' : app.status === 'rejected' ? 'var(--red)' : app.status === 'under_review' ? '#60a5fa' : '#fbbf24',
+                          border: '1px solid var(--glass-border)',
                         }}>
-                          {app.status}
+                          {app.status.replace('_', ' ')}
                         </span>
                       </div>
 
                       {/* Candidate quick metrics */}
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
                         {bac.school && (
-                          <span style={{ fontSize: '0.74rem', background: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--glass-border)' }}>
-                            📜 Bac {bac.section || ''} ({bac.year || ''})
+                          <span style={{ fontSize: '0.72rem', background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: '4px' }}>
+                            Bac {bac.section || ''} ({bac.year || ''})
                           </span>
                         )}
-                        {candidate.education?.[0]?.school && (
-                          <span style={{ fontSize: '0.74rem', background: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--glass-border)' }}>
-                            🎓 {candidate.education[0].school}
+                        {candidate.postBacPath && (
+                          <span style={{ fontSize: '0.72rem', background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: '4px', textTransform: 'capitalize' }}>
+                            Path: {candidate.postBacPath}
                           </span>
                         )}
                         {candidate.cvUrl && (
-                          <span style={{ fontSize: '0.74rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', padding: '3px 8px', borderRadius: 'var(--r-sm)' }}>
-                            📄 CV Attached
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', padding: '2px 6px', borderRadius: '4px' }}>
+                            Profile CV Attached
                           </span>
                         )}
                       </div>
@@ -346,232 +439,202 @@ export const InstitutionDashboard = () => {
                 })}
               </div>
 
-              {/* Right Column: Detailed Candidate Inspection Drawer */}
+              {/* Right Column: Detailed Candidate Inspection & Communication Drawer */}
               {selectedApplicant && (
-                <div className="card glass animate-scale-in" style={{ padding: '24px', position: 'sticky', top: '90px', height: 'fit-content', maxHeight: '82vh', overflowY: 'auto' }}>
+                <div className="card glass animate-scale-in" style={{ padding: '24px', position: 'sticky', top: '90px', height: 'fit-content', maxHeight: '84vh', overflowY: 'auto' }}>
                   
                   {/* Top Bar */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      Application ID: #{selectedApplicant._id.slice(-6)}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      Dossier #{selectedApplicant._id.slice(-6)}
                     </div>
                     <button 
                       onClick={() => setSelectedApplicant(null)}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem' }}
                     >
                       ✕
                     </button>
                   </div>
 
-                  {/* Candidate Profile Details */}
+                  {/* Candidate Details */}
                   {(() => {
                     const c = selectedApplicant.applicantId || {};
                     const bac = c.baccalaureate || {};
 
                     return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {/* Header info */}
                         <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                              <h3 style={{ fontSize: '1.4rem', margin: '0 0 4px' }}>{c.name}</h3>
-                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>📧 {c.email}</div>
-                            </div>
-                            
-                            {/* AI Match Button / Score */}
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const token = localStorage.getItem('institutionToken');
-                                try {
-                                  toast.loading('🤖 Running AI Candidate Match Analysis...', { id: 'ai-match' });
-                                  const res = await api.post(`/pro/institution/rank-applicants/${selectedApplicant.targetId?._id || selectedApplicant.targetId}`, {}, {
-                                    headers: { Authorization: `Bearer ${token}` }
-                                  });
-                                  const ranked = res.data.data.rankedApplicants?.find(r => r.applicationId === selectedApplicant._id);
-                                  toast.success('AI Matching Complete! ⭐', { id: 'ai-match' });
-                                  if (ranked) {
-                                    setSelectedApplicant({ ...selectedApplicant, aiAnalysis: ranked });
-                                  } else {
-                                    setSelectedApplicant({
-                                      ...selectedApplicant,
-                                      aiAnalysis: {
-                                        matchScore: 92,
-                                        recommendation: '⭐ Top Candidate / Strong Fit',
-                                        strengths: ['Verified Baccalaureate', 'Strong University Record', 'Official CV Attached'],
-                                        gaps: [],
-                                      }
-                                    });
-                                  }
-                                } catch (e) {
-                                  // Fallback simulation
-                                  toast.success('AI Match Analysis Generated!', { id: 'ai-match' });
-                                  setSelectedApplicant({
-                                    ...selectedApplicant,
-                                    aiAnalysis: {
-                                      matchScore: 94,
-                                      recommendation: '⭐ Top Candidate / Strong Fit',
-                                      strengths: ['Verified Baccalaureate Record', 'University Background Matches Listing', 'Official CV Attached'],
-                                      gaps: [],
-                                    }
-                                  });
-                                }
-                              }}
-                              className="btn btn-secondary btn-sm"
-                              style={{ border: '1px solid var(--red-border)', color: 'var(--red-bright)', fontSize: '0.78rem' }}
-                            >
-                              🤖 Run AI Match Analysis
-                            </button>
-                          </div>
-                          {c.bio && <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>"{c.bio}"</p>}
+                          <h3 style={{ fontSize: '1.3rem', margin: '0 0 2px', fontWeight: 700 }}>{c.name}</h3>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{c.email}</div>
+                          {c.bio && <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '6px', fontStyle: 'italic' }}>"{c.bio}"</p>}
                         </div>
 
-                        {/* AI Match Card (if analyzed) */}
-                        {selectedApplicant.aiAnalysis && (
-                          <div style={{
-                            padding: '16px',
-                            background: 'linear-gradient(135deg, rgba(225,29,72,0.1) 0%, var(--bg-elevated) 100%)',
-                            border: '1px solid var(--red-border)',
-                            borderRadius: 'var(--r-md)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px'
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--red-bright)' }}>
-                                🤖 AI Match Score
-                              </span>
-                              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--red-bright)', fontFamily: 'var(--font-display)' }}>
-                                {selectedApplicant.aiAnalysis.matchScore}% Match
-                              </span>
-                            </div>
-                            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#34d399' }}>
-                              {selectedApplicant.aiAnalysis.recommendation}
-                            </div>
-                            <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                              <strong>Key Match Factors:</strong>
-                              <ul style={{ paddingLeft: '16px', margin: '4px 0 0' }}>
-                                {selectedApplicant.aiAnalysis.strengths?.map((st, sIdx) => (
-                                  <li key={sIdx}>✓ {st}</li>
-                                ))}
-                              </ul>
-                            </div>
+                        {/* Selected Program / Track */}
+                        {selectedApplicant.selectedProgramme && (
+                          <div style={{ padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.84rem' }}>
+                            <strong>Selected Programme:</strong> {selectedApplicant.selectedProgramme}
                           </div>
                         )}
 
                         {/* Verified Baccalaureate Dossier */}
-                        <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--red-bright)' }}>
-                              📜 Official Baccalaureate Record
+                        <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--red)' }}>
+                              Official Baccalaureate Record
                             </div>
-                            <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>VERIFIED</span>
+                            <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700 }}>VERIFIED</span>
                           </div>
 
                           {bac.school ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.82rem' }}>
                               <div><strong>High School:</strong> {bac.school}</div>
                               <div><strong>Year & Section:</strong> {bac.year} — {bac.section}</div>
-                              {bac.grade && <div><strong>Mention / Score:</strong> {bac.grade}</div>}
+                              {bac.grade && <div><strong>Score / Mention:</strong> {bac.grade}</div>}
                               
-                              {bac.proofDocUrl ? (
-                                <div style={{ marginTop: '8px' }}>
+                              {bac.proofDocUrl && (
+                                <div style={{ marginTop: '6px' }}>
                                   <a 
                                     href={bac.proofDocUrl} 
                                     target="_blank" 
                                     rel="noreferrer"
                                     className="btn btn-secondary btn-sm"
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                                    style={{ fontSize: '0.76rem', padding: '4px 10px' }}
                                   >
-                                    📄 Inspect Baccalaureate Proof File ↗
+                                    Inspect Baccalaureate Proof Document ↗
                                   </a>
                                 </div>
-                              ) : (
-                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No proof file uploaded</div>
                               )}
                             </div>
                           ) : (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Candidate did not enter Baccalaureate credentials.</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No Baccalaureate proof entered.</div>
                           )}
                         </div>
 
-                        {/* Higher Education History */}
-                        <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
-                          <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: '8px' }}>
-                            🎓 University / Higher Studies
+                        {/* Post-Bac Education / Formation */}
+                        <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: '6px' }}>
+                            Post-Baccalaureate Education & Path
                           </div>
                           {c.education && c.education.length > 0 ? (
                             c.education.map((edu, idx) => (
-                              <div key={idx} style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <div><strong>{edu.school}</strong> • {edu.degree}</div>
+                              <div key={idx} style={{ fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <div><strong>{edu.school}</strong> · {edu.degree}</div>
                                 <div style={{ color: 'var(--text-secondary)' }}>Major: {edu.field}</div>
-                                <div style={{ fontSize: '0.78rem', color: edu.isCurrent ? '#34d399' : 'var(--text-muted)' }}>
-                                  Status: {edu.isCurrent ? '🟢 Currently Enrolled' : '🎓 Completed / Graduated'}
+                                <div style={{ fontSize: '0.74rem', color: edu.isCurrent ? '#10b981' : 'var(--text-muted)' }}>
+                                  Status: {edu.isCurrent ? 'Ongoing Studies' : 'Completed / Graduated'}
                                 </div>
-                                {edu.graduationCertUrl && (
-                                  <a href={edu.graduationCertUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', color: 'var(--red)', marginTop: '4px' }}>
-                                    View Graduation Certificate ↗
-                                  </a>
-                                )}
                               </div>
                             ))
+                          ) : c.formationDetails?.instituteName ? (
+                            <div style={{ fontSize: '0.82rem' }}>
+                              <div><strong>{c.formationDetails.instituteName}</strong></div>
+                              <div style={{ color: 'var(--text-secondary)' }}>Program: {c.formationDetails.programName}</div>
+                            </div>
                           ) : (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>No higher education listed</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Self-taught / Direct career search</div>
                           )}
                         </div>
 
-                        {/* Skills & CV */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Skills & CV Document</div>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {/* Skills & Attached CV */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>Candidate CV & Profile Skills</div>
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                             {c.skills && c.skills.length > 0 ? (
                               c.skills.map((s, idx) => (
-                                <span key={idx} style={{ fontSize: '0.75rem', background: 'var(--bg-raised)', padding: '3px 8px', borderRadius: 'var(--r-sm)' }}>
+                                <span key={idx} style={{ fontSize: '0.72rem', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>
                                   {s}
                                 </span>
                               ))
                             ) : (
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No skills tagged</span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>No skills listed</span>
                             )}
                           </div>
-                          {c.cvUrl && (
-                            <div style={{ marginTop: '6px' }}>
-                              <a href={c.cvUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">
-                                💼 Download / View Full CV ↗
+                          {(selectedApplicant.documents?.[0] || c.cvUrl) && (
+                            <div style={{ marginTop: '4px' }}>
+                              <a href={selectedApplicant.documents?.[0] || c.cvUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ fontSize: '0.78rem' }}>
+                                View Attached Candidate CV ↗
                               </a>
                             </div>
                           )}
                         </div>
 
-                        {/* Cover Letter */}
+                        {/* Cover Note */}
                         {selectedApplicant.coverLetter && (
-                          <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', fontSize: '0.85rem' }}>
-                            <div style={{ fontWeight: 700, marginBottom: '4px' }}>Candidate Message / Cover Letter:</div>
+                          <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '8px', fontSize: '0.82rem' }}>
+                            <div style={{ fontWeight: 700, marginBottom: '2px' }}>Candidate Application Note:</div>
                             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{selectedApplicant.coverLetter}</p>
                           </div>
                         )}
 
-                        {/* Recruiter Note Input */}
+                        {/* Direct Interactive Communication Section */}
+                        <div style={{ padding: '14px', background: 'var(--bg-surface)', border: '1px solid var(--glass-border)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>
+                            Direct Communication & Interview Hub
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              onClick={() => setActiveModal('missing_doc')}
+                              className="btn btn-secondary btn-sm"
+                              style={{ flex: 1, fontSize: '0.76rem', justifyContent: 'center' }}
+                            >
+                              Request Missing File
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveModal('meeting')}
+                              className="btn btn-secondary btn-sm"
+                              style={{ flex: 1, fontSize: '0.76rem', justifyContent: 'center' }}
+                            >
+                              Book Interview / Meeting
+                            </button>
+                          </div>
+
+                          {/* Message Thread History if any */}
+                          {selectedApplicant.messages && selectedApplicant.messages.length > 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                              {selectedApplicant.messages.map((m, idx) => (
+                                <div key={idx} style={{ padding: '8px 10px', borderRadius: '6px', background: 'var(--bg-elevated)', fontSize: '0.78rem' }}>
+                                  <div style={{ fontWeight: 700, display: 'flex', justifyContent: 'space-between', color: m.sender === 'institution' ? 'var(--red)' : '#10b981' }}>
+                                    <span>{m.senderName || m.sender}</span>
+                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{new Date(m.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                                  <div style={{ marginTop: '2px', color: 'var(--text-secondary)' }}>{m.message}</div>
+                                  {m.uploadedDocUrl && (
+                                    <a href={m.uploadedDocUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.72rem', color: '#60a5fa', display: 'block', marginTop: '4px' }}>
+                                      [View Uploaded Document ↗]
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Internal Note Input */}
                         <div className="form-group">
-                          <label className="form-label">Internal Institution Note (optional)</label>
-                          <textarea 
-                            rows="2"
+                          <label className="form-label" style={{ fontSize: '0.78rem' }}>Internal Admission Note (optional)</label>
+                          <input 
+                            type="text"
                             value={noteText}
                             onChange={e => setNoteText(e.target.value)}
-                            placeholder="Add feedback, interview score, or admission notes..."
+                            placeholder="Add evaluation score or private notes..."
+                            style={{ fontSize: '0.82rem', padding: '8px 12px' }}
                           />
                         </div>
 
-                        {/* Action Buttons: Accept / Decline / Pending */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                        {/* Action Buttons: Accept / Decline */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', borderTop: '1px solid var(--glass-border)', paddingTop: '12px' }}>
                           <button
                             type="button"
                             disabled={updatingId === selectedApplicant._id}
                             onClick={() => handleStatusChange(selectedApplicant._id, 'accepted')}
                             className="btn btn-sm"
-                            style={{ background: '#059669', color: '#fff', justifyContent: 'center' }}
+                            style={{ background: '#10b981', color: '#fff', justifyContent: 'center' }}
                           >
-                            ✅ Approve / Accept
+                            Accept Application
                           </button>
 
                           <button
@@ -581,17 +644,7 @@ export const InstitutionDashboard = () => {
                             className="btn btn-sm"
                             style={{ background: 'var(--red)', color: '#fff', justifyContent: 'center' }}
                           >
-                            ❌ Decline
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={updatingId === selectedApplicant._id}
-                            onClick={() => handleStatusChange(selectedApplicant._id, 'under_review')}
-                            className="btn btn-secondary btn-sm"
-                            style={{ justifyContent: 'center' }}
-                          >
-                            ⏳ Keep In Review
+                            Decline Application
                           </button>
                         </div>
                       </div>
@@ -604,152 +657,232 @@ export const InstitutionDashboard = () => {
         </div>
       )}
 
-      {/* ════ TAB 2: ACTIVE LISTINGS & OPPORTUNITIES ════ */}
+      {/* ════ TAB 2: ACTIVE OPPORTUNITIES ════ */}
       {activeTab === 'listings' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Your Published Opportunities</h3>
+            <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Active Published Opportunities</h3>
             <button onClick={() => setActiveTab('post')} className="btn btn-primary btn-sm">
-              ➕ Add New Listing
+              Post Opportunity
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            {/* Universities / School Programs */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+            {/* Universities */}
             {listings.universities?.map(u => (
-              <div key={u._id} className="card glass" style={{ padding: '20px' }}>
+              <div key={u._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span className="section-label">University / School Admission</span>
-                  <button onClick={() => deleteListing('university', u._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--red)', padding: '2px 6px' }}>
-                    🗑️ Remove
+                  <span className="section-label" style={{ fontSize: '0.65rem' }}>University Course</span>
+                  <button onClick={() => deleteListing('university', u._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--red)', padding: '2px 6px', fontSize: '0.74rem' }}>
+                    Archive
                   </button>
                 </div>
-                <h4 style={{ fontSize: '1.2rem', margin: '8px 0 4px' }}>{u.name}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{u.description?.slice(0, 120)}...</p>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '12px' }}>
-                  {u.fields?.map((f, i) => (
-                    <span key={i} style={{ fontSize: '0.72rem', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: 'var(--r-sm)' }}>
-                      {f}
+                <h4 style={{ fontSize: '1.05rem', margin: '4px 0', fontWeight: 700 }}>{u.name}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>{u.description?.slice(0, 100)}...</p>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: 'auto' }}>
+                  {u.programmes?.map((p, i) => (
+                    <span key={i} style={{ fontSize: '0.7rem', background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: '4px' }}>
+                      {p.name}
                     </span>
                   ))}
                 </div>
               </div>
             ))}
 
-            {/* Stages / Internships */}
+            {/* Stages */}
             {listings.stages?.map(s => (
-              <div key={s._id} className="card glass" style={{ padding: '20px' }}>
+              <div key={s._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span className="section-label">Stage / Internship</span>
-                  <button onClick={() => deleteListing('stage', s._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--red)', padding: '2px 6px' }}>
-                    🗑️ Remove
+                  <span className="section-label" style={{ fontSize: '0.65rem' }}>Internship / Stage</span>
+                  <button onClick={() => deleteListing('stage', s._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--red)', padding: '2px 6px', fontSize: '0.74rem' }}>
+                    Archive
                   </button>
                 </div>
-                <h4 style={{ fontSize: '1.2rem', margin: '8px 0 4px' }}>{s.title}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{s.description?.slice(0, 120)}...</p>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                  ⏱️ {s.duration} • 📍 {s.location} ({s.type})
+                <h4 style={{ fontSize: '1.05rem', margin: '4px 0', fontWeight: 700 }}>{s.title}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>{s.description?.slice(0, 100)}...</p>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
+                  {s.duration} · {s.location} ({s.type})
                 </div>
               </div>
             ))}
 
             {/* Jobs */}
             {listings.jobs?.map(j => (
-              <div key={j._id} className="card glass" style={{ padding: '20px' }}>
+              <div key={j._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span className="section-label">Job Vacancy</span>
-                  <button onClick={() => deleteListing('job', j._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--red)', padding: '2px 6px' }}>
-                    🗑️ Remove
+                  <span className="section-label" style={{ fontSize: '0.65rem' }}>Job Vacancy</span>
+                  <button onClick={() => deleteListing('job', j._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--red)', padding: '2px 6px', fontSize: '0.74rem' }}>
+                    Archive
                   </button>
                 </div>
-                <h4 style={{ fontSize: '1.2rem', margin: '8px 0 4px' }}>{j.title}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{j.description?.slice(0, 120)}...</p>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                  💼 {j.contractType} • 📍 {j.location} ({j.type})
+                <h4 style={{ fontSize: '1.05rem', margin: '4px 0', fontWeight: 700 }}>{j.title}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>{j.description?.slice(0, 100)}...</p>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
+                  {j.contractType} · {j.location} ({j.type})
                 </div>
               </div>
             ))}
 
             {(!listings.universities?.length && !listings.stages?.length && !listings.jobs?.length) && (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                No active listings published yet. Click "Add New Listing" to publish programs, stages, or jobs.
+                No active listings published yet. Click "Post Opportunity" to publish.
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ════ TAB 3: CREATE / POST NEW OPPORTUNITY ════ */}
+      {/* ════ TAB 3: ENDED / EXPIRED POSTS ════ */}
+      {activeTab === 'ended' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Ended & Expired Posts Archive</h3>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Posts automatically move here after their application end date expires.
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+            {endedListings.universities?.map(u => (
+              <div key={u._id} className="card glass" style={{ padding: '18px', opacity: 0.75 }}>
+                <span className="section-label" style={{ fontSize: '0.65rem' }}>Ended University Course</span>
+                <h4 style={{ fontSize: '1rem', margin: '6px 0', fontWeight: 700 }}>{u.name}</h4>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  Ended on: {new Date(u.applicationEndDate || u.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+
+            {endedListings.stages?.map(s => (
+              <div key={s._id} className="card glass" style={{ padding: '18px', opacity: 0.75 }}>
+                <span className="section-label" style={{ fontSize: '0.65rem' }}>Ended Stage</span>
+                <h4 style={{ fontSize: '1rem', margin: '6px 0', fontWeight: 700 }}>{s.title}</h4>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  Ended on: {new Date(s.applicationEndDate || s.deadline || s.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+
+            {endedListings.jobs?.map(j => (
+              <div key={j._id} className="card glass" style={{ padding: '18px', opacity: 0.75 }}>
+                <span className="section-label" style={{ fontSize: '0.65rem' }}>Ended Job</span>
+                <h4 style={{ fontSize: '1rem', margin: '6px 0', fontWeight: 700 }}>{j.title}</h4>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  Ended on: {new Date(j.applicationEndDate || j.deadline || j.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+
+            {(!endedListings.universities?.length && !endedListings.stages?.length && !endedListings.jobs?.length) && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                No ended or expired posts in your archive.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ════ TAB 4: CREATE / POST NEW OPPORTUNITY ════ */}
       {activeTab === 'post' && (
-        <div className="card glass" style={{ padding: '32px', maxWidth: '780px', margin: '0 auto', width: '100%' }}>
-          <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>Publish Opportunity to Students & Citizens</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '24px' }}>
-            Choose the type of listing to publish. Applications will arrive directly in your candidates drawer.
+        <div className="card glass" style={{ padding: '28px', maxWidth: '720px', margin: '0 auto', width: '100%' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '4px', fontWeight: 700 }}>Publish Opportunity</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', marginBottom: '20px' }}>
+            Publish new university courses, stages, or job opportunities with application start/end dates.
           </p>
 
-          <form onSubmit={handleCreateListingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            
-            {/* Listing Type Radio Selector */}
+          <form onSubmit={handleCreateListingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {/* Type selector */}
             <div className="form-group">
               <label className="form-label">Opportunity Type *</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                 {[
-                  { id: 'university', label: '🏛️ University Course / Admission', desc: 'Programs for students' },
-                  { id: 'stage', label: '💼 Internship / Stage', desc: 'PFE, Summer or Observational' },
-                  { id: 'job', label: '🏢 Job Position / Vacancy', desc: 'Full-time / CDI / CDD hiring' },
+                  { id: 'university', label: 'University Course', desc: 'Higher education' },
+                  { id: 'stage', label: 'Internship / Stage', desc: 'PFE, PFA, Summer' },
+                  { id: 'job', label: 'Job Opening', desc: 'CDI, CDD, Remote' },
                 ].map(t => (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => setPostType(t.id)}
                     style={{
-                      padding: '14px',
+                      padding: '12px',
                       borderRadius: 'var(--r-md)',
-                      border: `2px solid ${postType === t.id ? 'var(--red)' : 'var(--glass-border)'}`,
+                      border: `1px solid ${postType === t.id ? 'var(--red)' : 'var(--glass-border)'}`,
                       background: postType === t.id ? 'var(--red-subtle)' : 'var(--bg-elevated)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       transition: 'all var(--t-fast)'
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: postType === t.id ? 'var(--red)' : 'var(--text-primary)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.84rem', color: postType === t.id ? 'var(--red)' : 'var(--text-primary)' }}>
                       {t.label}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t.desc}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t.desc}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Title / Field */}
+            {/* Title / Name */}
             <div className="form-group">
               <label className="form-label">
-                {postType === 'university' ? 'Academic Fields / Specialities (comma separated) *' : 'Listing Title / Role *'}
+                {postType === 'university' ? 'University / Faculty Title *' : 'Listing Title / Role *'}
               </label>
               <input 
                 type="text"
-                value={postType === 'university' ? listingForm.fields : listingForm.title}
-                onChange={e => postType === 'university' ? setListingForm({ ...listingForm, fields: e.target.value }) : setListingForm({ ...listingForm, title: e.target.value })}
-                placeholder={postType === 'university' ? 'e.g. Computer Science, AI, Business Analytics' : 'e.g. Full Stack Developer Intern (PFE)'}
+                value={listingForm.title}
+                onChange={e => setListingForm({ ...listingForm, title: e.target.value })}
+                placeholder={postType === 'university' ? institution.name : 'e.g. Full Stack Developer Intern (PFE)'}
                 required
               />
             </div>
 
+            {/* Multiple Specific Programmes */}
+            <div className="form-group">
+              <label className="form-label">Specific Programmes / Tracks (comma separated)</label>
+              <input 
+                type="text"
+                value={listingForm.programmes}
+                onChange={e => setListingForm({ ...listingForm, programmes: e.target.value })}
+                placeholder="e.g. Master AI & Data, Licence Software Engineering, Cyber Security"
+              />
+            </div>
+
+            {/* Application Date Range */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="form-group">
+                <label className="form-label">Application Start Date</label>
+                <input 
+                  type="date"
+                  value={listingForm.applicationStartDate}
+                  onChange={e => setListingForm({ ...listingForm, applicationStartDate: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Application End Date (Deadline)</label>
+                <input 
+                  type="date"
+                  value={listingForm.applicationEndDate}
+                  onChange={e => setListingForm({ ...listingForm, applicationEndDate: e.target.value })}
+                />
+              </div>
+            </div>
+
             {/* Description */}
             <div className="form-group">
-              <label className="form-label">Description & Scope *</label>
+              <label className="form-label">Description & Overview *</label>
               <textarea 
                 rows="4"
                 value={listingForm.description}
                 onChange={e => setListingForm({ ...listingForm, description: e.target.value })}
-                placeholder="Detail the opportunity, learning outcomes, responsibilities, or curriculum..."
+                placeholder="Detail the curriculum, prerequisites, responsibilities, or learning outcomes..."
                 required
               />
             </div>
 
             {/* Requirements */}
             <div className="form-group">
-              <label className="form-label">Requirements (comma separated)</label>
+              <label className="form-label">Requirements / Prerequisites (comma separated)</label>
               <input 
                 type="text"
                 value={listingForm.requirements}
@@ -759,38 +892,15 @@ export const InstitutionDashboard = () => {
             </div>
 
             {/* Type Specific Fields */}
-            {postType === 'university' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group">
-                  <label className="form-label">Tuition Fee (TND / Year)</label>
-                  <input 
-                    type="number"
-                    value={listingForm.tuitionFeeAmount}
-                    onChange={e => setListingForm({ ...listingForm, tuitionFeeAmount: e.target.value })}
-                    placeholder="0 for public universities"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Campus Location</label>
-                  <input 
-                    type="text"
-                    value={listingForm.location}
-                    onChange={e => setListingForm({ ...listingForm, location: e.target.value })}
-                    placeholder="e.g. Ariana, Tunis"
-                  />
-                </div>
-              </div>
-            )}
-
             {postType === 'stage' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Domain / Industry</label>
+                  <label className="form-label">Domain</label>
                   <input 
                     type="text"
                     value={listingForm.domain}
                     onChange={e => setListingForm({ ...listingForm, domain: e.target.value })}
-                    placeholder="e.g. Web Development"
+                    placeholder="e.g. Software Engineering"
                   />
                 </div>
                 <div className="form-group">
@@ -799,32 +909,32 @@ export const InstitutionDashboard = () => {
                     type="text"
                     value={listingForm.duration}
                     onChange={e => setListingForm({ ...listingForm, duration: e.target.value })}
-                    placeholder="e.g. 4-6 Months"
+                    placeholder="e.g. 4-6 months"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Work Type</label>
+                  <label className="form-label">Work Mode</label>
                   <select 
                     value={listingForm.type}
                     onChange={e => setListingForm({ ...listingForm, type: e.target.value })}
-                    style={{ width: '100%', padding: '12px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                   >
                     <option value="on-site">On-Site</option>
-                    <option value="remote">Remote</option>
                     <option value="hybrid">Hybrid</option>
+                    <option value="remote">Remote</option>
                   </select>
                 </div>
               </div>
             )}
 
             {postType === 'job' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Contract</label>
+                  <label className="form-label">Contract Type</label>
                   <select 
                     value={listingForm.contractType}
                     onChange={e => setListingForm({ ...listingForm, contractType: e.target.value })}
-                    style={{ width: '100%', padding: '12px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                   >
                     <option value="CDI">CDI</option>
                     <option value="CDD">CDD</option>
@@ -837,38 +947,136 @@ export const InstitutionDashboard = () => {
                   <select 
                     value={listingForm.experienceLevel}
                     onChange={e => setListingForm({ ...listingForm, experienceLevel: e.target.value })}
-                    style={{ width: '100%', padding: '12px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                   >
                     <option value="junior">Junior (0-2 yrs)</option>
                     <option value="mid">Mid-Level (2-5 yrs)</option>
                     <option value="senior">Senior (5+ yrs)</option>
-                    <option value="any">Any Experience</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Work Type</label>
+                  <label className="form-label">Work Mode</label>
                   <select 
                     value={listingForm.type}
                     onChange={e => setListingForm({ ...listingForm, type: e.target.value })}
-                    style={{ width: '100%', padding: '12px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                   >
                     <option value="on-site">On-Site</option>
-                    <option value="remote">Remote</option>
                     <option value="hybrid">Hybrid</option>
+                    <option value="remote">Remote</option>
                   </select>
                 </div>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={creatingListing}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '14px', justifyContent: 'center', fontSize: '1rem', marginTop: '10px' }}
-            >
-              {creatingListing ? '⏳ Publishing...' : '🚀 Publish Opportunity Live'}
+            <button type="submit" disabled={creatingListing} className="btn btn-primary" style={{ marginTop: '8px' }}>
+              {creatingListing ? 'Publishing...' : 'Publish Listing'}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ── Modal 1: Request Missing File Modal ──────────────────────── */}
+      {activeModal === 'missing_doc' && selectedApplicant && (
+        <div className="modal-backdrop animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', padding: '26px' }}>
+            <h3 style={{ fontSize: '1.2rem', margin: '0 0 6px', fontWeight: 700 }}>Request Missing Document</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Candidate will be notified to upload this specific file from their dashboard.
+            </p>
+
+            <form onSubmit={handleSendMissingDocRequest} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group">
+                <label className="form-label">Document Name / Type *</label>
+                <input 
+                  type="text" 
+                  value={missingDocName} 
+                  onChange={e => setMissingDocName(e.target.value)} 
+                  placeholder="e.g. Certified Transcript, Identity Proof, Portfolio"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Instructions for Candidate (optional)</label>
+                <textarea 
+                  rows="3" 
+                  value={missingDocInstructions} 
+                  onChange={e => setMissingDocInstructions(e.target.value)} 
+                  placeholder="e.g. Please provide a stamped PDF copy of your 2nd year transcript."
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+                <button type="button" onClick={() => setActiveModal(null)} className="btn btn-ghost">Cancel</button>
+                <button type="submit" disabled={sendingMsg} className="btn btn-primary">
+                  {sendingMsg ? 'Sending...' : 'Send Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal 2: Book / Schedule Interview Modal ─────────────────── */}
+      {activeModal === 'meeting' && selectedApplicant && (
+        <div className="modal-backdrop animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px', padding: '26px' }}>
+            <h3 style={{ fontSize: '1.2rem', margin: '0 0 6px', fontWeight: 700 }}>Book Interview / Meeting</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Schedule a technical or admission interview with {selectedApplicant.applicantId?.name}.
+            </p>
+
+            <form onSubmit={handleBookMeeting} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Interview Date *</label>
+                  <input 
+                    type="date" 
+                    value={meetingDate} 
+                    onChange={e => setMeetingDate(e.target.value)} 
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Time (e.g. 14:30) *</label>
+                  <input 
+                    type="time" 
+                    value={meetingTime} 
+                    onChange={e => setMeetingTime(e.target.value)} 
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Meeting URL (Google Meet / Teams / Zoom)</label>
+                <input 
+                  type="url" 
+                  value={meetingLink} 
+                  onChange={e => setMeetingLink(e.target.value)} 
+                  placeholder="https://meet.google.com/xyz-abc-def"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Notes & Agenda</label>
+                <textarea 
+                  rows="3" 
+                  value={meetingNotes} 
+                  onChange={e => setMeetingNotes(e.target.value)} 
+                  placeholder="e.g. Technical evaluation (React & Architecture) + Project discussion."
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+                <button type="button" onClick={() => setActiveModal(null)} className="btn btn-ghost">Cancel</button>
+                <button type="submit" disabled={sendingMsg} className="btn btn-primary">
+                  {sendingMsg ? 'Scheduling...' : 'Confirm Schedule'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

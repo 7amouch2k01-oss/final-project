@@ -38,7 +38,6 @@ const renderText = (text, navigate, closeChat) => {
         >{part.label}</button>
       );
     }
-    // Process inline markdown within text
     const html = part.content
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
@@ -48,7 +47,6 @@ const renderText = (text, navigate, closeChat) => {
   });
 };
 
-// Individual message bubble
 const MessageBubble = ({ msg, navigate, closeChat }) => {
   const isUser = msg.sender === 'user';
   return (
@@ -62,7 +60,7 @@ const MessageBubble = ({ msg, navigate, closeChat }) => {
     }}>
       {!isUser && (
         <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', paddingLeft: '4px', fontWeight: 600 }}>
-          🤖 TuniGuide AI
+          TuniGuide AI
         </span>
       )}
       <div style={{
@@ -92,7 +90,6 @@ const MessageBubble = ({ msg, navigate, closeChat }) => {
   );
 };
 
-// Typing indicator
 const TypingIndicator = () => (
   <div style={{
     alignSelf: 'flex-start', display: 'flex', alignItems: 'center',
@@ -125,34 +122,30 @@ export const AIAssistantModal = () => {
 
   const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // Initialize with welcome message
   useEffect(() => {
     const greet = user?.name
-      ? `Hey **${user.name}**! 👋 I'm **TuniGuide AI**, your personal copilot for TuniStudy & TuniJob 🇹🇳\n\nAsk me *anything* — about universities, internships, jobs, how the platform works, or even just say hi! I understand English, French, and Arabic 😊`
-      : `Hey! 👋 I'm **TuniGuide AI**, your smart guide for **TuniStudy & TuniJob** 🇹🇳\n\nAsk me anything about universities, internships (Stages), jobs, or how the platform works — in any language you like!`;
+      ? `Hey **${user.name}**! I'm **TuniGuide AI**, your assistant for TuniStudy & TuniJob.\n\nAsk me anything about universities, internships, jobs, or navigating the platform. I communicate in English, French, and Tunisian Arabic.`
+      : `Welcome! I'm **TuniGuide AI**, your assistant for **TuniStudy & TuniJob**.\n\nAsk me anything about universities, internships (Stages), jobs, or platform features.`;
 
     setMessages([{ sender: 'ai', text: greet, time: now() }]);
   }, [user]);
 
-  // Auto-scroll
   useEffect(() => {
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen, loading]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
 
-  // Load suggestions
   useEffect(() => {
     api.get('/ai/suggestions')
       .then(r => setSuggestions(r.data.data.suggestions || []))
       .catch(() => setSuggestions([
-        '🎓 Find universities in Tunisia',
-        '💼 What internships are available?',
-        '📢 How do I post a Hire-Me gig?',
-        '🎓 How does account graduation work?',
+        'Find accredited universities in Tunisia',
+        'What PFE internships are available?',
+        'How do I post a Hire-Me listing?',
+        'How does Baccalaureate verification work?',
       ]));
   }, [user]);
 
@@ -168,7 +161,7 @@ export const AIAssistantModal = () => {
     try {
       const res = await api.post('/ai/chat', {
         message: text,
-        history: messages.slice(-8), // last 8 messages for context
+        history: messages.slice(-8),
       });
 
       const { answer, suggestions: newSuggestions } = res.data.data;
@@ -177,7 +170,7 @@ export const AIAssistantModal = () => {
     } catch {
       setMessages(prev => [...prev, {
         sender: 'ai',
-        text: `Hmm, I hit a little snag there 😅 Try again in a second — I'm not going anywhere!`,
+        text: `I encountered an issue reaching the server. Please try asking again in a moment.`,
         time: now(),
       }]);
     } finally {
@@ -195,45 +188,44 @@ export const AIAssistantModal = () => {
   const clearChat = () => {
     setMessages([{
       sender: 'ai',
-      text: `Chat cleared! Fresh start 🧹 What can I help you with?`,
+      text: `Chat cleared. What can I assist you with today?`,
       time: now(),
     }]);
   };
 
   return (
     <>
-      {/* Bounce animation keyframes */}
       <style>{`
         @keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
         @keyframes fadeInUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.4)} 70%{box-shadow:0 0 0 8px rgba(220,38,38,0)} }
       `}</style>
 
-      {/* ── Floating Launcher Button ── */}
+      {/* Floating Launcher Button */}
       <button
         onClick={() => { setIsOpen(o => !o); setHasUnread(false); }}
         aria-label="Open TuniGuide AI"
         style={{
           position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
-          padding: '13px 20px', borderRadius: 'var(--r-full)',
+          padding: '12px 18px', borderRadius: 'var(--r-full)',
           background: 'linear-gradient(135deg, var(--red), var(--red-hover))',
           color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
           boxShadow: '0 8px 32px var(--red-glow), 0 4px 12px rgba(0,0,0,0.5)',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
-          fontWeight: 700, fontSize: '0.9rem', transition: 'all 0.2s ease',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+          fontWeight: 700, fontSize: '0.86rem', transition: 'all 0.2s ease',
           animation: hasUnread ? 'pulse 1.5s infinite' : 'none',
         }}
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)'}
         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
       >
-        <span style={{ fontSize: '1.2rem' }}>{isOpen ? '✕' : '🤖'}</span>
-        <span>{isOpen ? 'Close' : 'Ask TuniGuide AI'}</span>
+        <span style={{ fontWeight: 800 }}>AI</span>
+        <span>{isOpen ? 'Close' : 'TuniGuide AI'}</span>
         {!isOpen && (
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
         )}
       </button>
 
-      {/* ── Chat Window ── */}
+      {/* Chat Window */}
       {isOpen && (
         <div
           className="card glass"
@@ -258,31 +250,32 @@ export const AIAssistantModal = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
-                width: '38px', height: '38px', borderRadius: '10px',
+                width: '34px', height: '34px', borderRadius: '8px',
                 background: 'linear-gradient(135deg, var(--red), var(--red-hover))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.2rem', boxShadow: '0 0 14px var(--red-glow)', flexShrink: 0,
-              }}>🤖</div>
+                fontSize: '0.8rem', fontWeight: 800, color: '#fff',
+                boxShadow: '0 0 14px var(--red-glow)', flexShrink: 0,
+              }}>AI</div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>TuniGuide AI</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.7rem', color: '#10b981' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>TuniGuide AI</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', color: '#10b981' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-                  Always online · Speaks EN, FR, عربي
+                  Always online · EN, FR, عربي
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '4px' }}>
               <button onClick={clearChat} title="Clear chat" style={{
                 background: 'none', border: 'none', color: 'var(--text-muted)',
-                cursor: 'pointer', fontSize: '0.95rem', padding: '5px 8px', borderRadius: '8px',
-                transition: 'color 0.2s',
+                cursor: 'pointer', fontSize: '0.78rem', padding: '4px 8px', borderRadius: '6px',
+                transition: 'color 0.2s', fontWeight: 600,
               }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-              >🗑️</button>
+              >Clear</button>
               <button onClick={() => setIsOpen(false)} style={{
                 background: 'none', border: 'none', color: 'var(--text-muted)',
-                cursor: 'pointer', fontSize: '1.1rem', padding: '5px 8px', borderRadius: '8px',
+                cursor: 'pointer', fontSize: '1.1rem', padding: '4px 8px', borderRadius: '6px',
               }}>✕</button>
             </div>
           </div>
@@ -346,11 +339,10 @@ export const AIAssistantModal = () => {
             <textarea
               ref={inputRef}
               rows={1}
-              placeholder="Type anything... (English, French, or Arabic)"
+              placeholder="Ask anything... (English, French, or Arabic)"
               value={input}
               onChange={e => {
                 setInput(e.target.value);
-                // Auto-resize
                 e.target.style.height = 'auto';
                 e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
               }}
@@ -375,14 +367,14 @@ export const AIAssistantModal = () => {
                 background: input.trim() && !loading ? 'var(--red)' : 'var(--bg-base)',
                 color: '#fff', border: 'none', cursor: input.trim() && !loading ? 'pointer' : 'default',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.1rem', transition: 'all 0.2s', flexShrink: 0,
+                fontSize: '1rem', transition: 'all 0.2s', flexShrink: 0,
                 boxShadow: input.trim() && !loading ? '0 0 14px var(--red-glow)' : 'none',
                 transform: input.trim() && !loading ? 'scale(1)' : 'scale(0.9)',
               }}
               onMouseEnter={e => { if (input.trim()) e.currentTarget.style.transform = 'scale(1.1)'; }}
               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
-              {loading ? '⟳' : '➤'}
+              {loading ? '⟳' : '→'}
             </button>
           </form>
 

@@ -42,6 +42,45 @@ const myApplications = async (req, res, next) => { try { success(res, { applicat
 
 const listingApplicants = async (req, res, next) => { try { success(res, { applicants: await appService.getListingApplicants(req.params.listingId, req.user.id) }); } catch(e){next(e);} };
 
+const markUnderReview = async (req, res, next) => {
+  try {
+    const io  = req.app.get('io');
+    const app = await appService.markUnderReview(req.params.id, req.user.id, io);
+    success(res, { application: app }, 'Application marked under review');
+  } catch(e){next(e);}
+};
+
+const sendApplicationMessage = async (req, res, next) => {
+  try {
+    const io  = req.app.get('io');
+    const app = await appService.sendApplicationMessage({
+      applicationId: req.params.id,
+      senderId: req.user.id,
+      senderName: req.user.name || 'Admissions / Hiring Team',
+      senderRole: req.body.senderRole || req.user.role,
+      message: req.body.message,
+      type: req.body.type,
+      missingDocType: req.body.missingDocType,
+      meetingDetails: req.body.meetingDetails,
+    }, io);
+    success(res, { application: app }, 'Message sent successfully');
+  } catch(e){next(e);}
+};
+
+const uploadMissingDoc = async (req, res, next) => {
+  try {
+    const io = req.app.get('io');
+    const buffer = req.file?.buffer || null;
+    const docUrl = req.body.docUrl || '';
+    const app = await appService.uploadMissingDocument({
+      applicationId: req.params.id,
+      applicantId: req.user.id,
+      docUrl,
+    }, buffer, io);
+    success(res, { application: app }, 'Document uploaded successfully');
+  } catch(e){next(e);}
+};
+
 const updateApplicationStatus = async (req, res, next) => {
   try {
     const io  = req.app.get('io');
@@ -61,5 +100,5 @@ module.exports = {
   getUniversities, getUniversity, createUniversity, updateUniversity, deleteUniversity, myUniversities,
   getStages, getStage, createStage, updateStage, deleteStage, myStages,
   getJobs, getJob, createJob, updateJob, deleteJob, myJobs,
-  applyToListing, myApplications, listingApplicants, updateApplicationStatus, withdrawApplication,
+  applyToListing, myApplications, listingApplicants, markUnderReview, sendApplicationMessage, uploadMissingDoc, updateApplicationStatus, withdrawApplication,
 };

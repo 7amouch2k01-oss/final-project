@@ -57,7 +57,6 @@ export const Navbar = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Close mobile on route change
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   const handleLogout = async () => { await logout(); navigate('/'); };
@@ -130,7 +129,6 @@ export const Navbar = () => {
         {/* Left: Logo + Nav Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            {/* Animated Logo Mark */}
             <div style={{
               width: '34px', height: '34px',
               borderRadius: '9px',
@@ -193,7 +191,8 @@ export const Navbar = () => {
               backdropFilter: 'blur(12px)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
-              fontSize: '1.05rem',
+              fontSize: '0.85rem',
+              fontWeight: 700,
               color: 'var(--text-primary)',
               transition: 'all var(--t-fast)',
             }}
@@ -206,7 +205,7 @@ export const Navbar = () => {
               e.currentTarget.style.borderColor = 'var(--glass-border)';
             }}
           >
-            {mode === 'dark' ? '☀️' : '🌙'}
+            {mode === 'dark' ? 'LIGHT' : 'DARK'}
           </button>
 
           {user ? (
@@ -224,7 +223,8 @@ export const Navbar = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                     position: 'relative',
-                    fontSize: '1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
                     transition: 'all var(--t-fast)',
                     color: 'var(--text-secondary)',
                   }}
@@ -237,7 +237,7 @@ export const Navbar = () => {
                     e.currentTarget.style.borderColor = 'var(--glass-border)';
                   }}
                 >
-                  🔔
+                  NOTIF
                   {unread > 0 && (
                     <span style={{
                       position: 'absolute', top: '-4px', right: '-4px',
@@ -282,7 +282,6 @@ export const Navbar = () => {
                     <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
                       {notifications.length === 0 ? (
                         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                          <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🔕</div>
                           No notifications yet
                         </div>
                       ) : notifications.map(n => (
@@ -362,7 +361,7 @@ export const Navbar = () => {
           ) : (
             <>
               <Link to="/institution/login" className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--glass-border)', fontSize: '0.8rem' }}>
-                🏛️ Institution Portal
+                Institution Portal
               </Link>
               <Link to="/login" className="btn btn-ghost btn-sm">Log in</Link>
               <Link to="/register" className="btn btn-primary btn-sm">Get Started</Link>

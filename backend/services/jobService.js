@@ -3,17 +3,34 @@ const { uploadToCloudinary } = require('../config/cloudinary');
 const { escapeRegExp } = require('../utils/string');
 
 const buildFilter = (query) => {
-  const filter = { isActive: true, deletedAt: null };
+  const filter = { 
+    isActive: true, 
+    deletedAt: null,
+    $and: [
+      {
+        $or: [
+          { applicationEndDate: { $exists: false } },
+          { applicationEndDate: null },
+          { applicationEndDate: { $gte: new Date() } }
+        ]
+      }
+    ]
+  };
+
   if (query.search) {
     const escaped = escapeRegExp(query.search);
-    filter.$or = [
-      { title: new RegExp(escaped, 'i') },
-      { company: new RegExp(escaped, 'i') },
-      { description: new RegExp(escaped, 'i') },
-      { location: new RegExp(escaped, 'i') },
-      { tags: new RegExp(escaped, 'i') },
-    ];
+    filter.$and.push({
+      $or: [
+        { title: new RegExp(escaped, 'i') },
+        { company: new RegExp(escaped, 'i') },
+        { description: new RegExp(escaped, 'i') },
+        { location: new RegExp(escaped, 'i') },
+        { tags: new RegExp(escaped, 'i') },
+        { 'programmes.name': new RegExp(escaped, 'i') },
+      ]
+    });
   }
+
   if (query.type)            filter.type           = query.type;
   if (query.contractType)    filter.contractType   = query.contractType;
   if (query.experienceLevel) filter.experienceLevel = query.experienceLevel;
@@ -41,7 +58,7 @@ const getAll = async (query) => {
 const getById = async (id) => {
   const job = await Job.findOneAndUpdate(
     { _id: id, isActive: true, deletedAt: null },
-    { $inc: { views: 1 } },  // increment view count
+    { $inc: { views: 1 } },
     { new: true }
   ).populate('recruiterId', 'name company');
   if (!job) { const e = new Error('Job not found'); e.statusCode = 404; throw e; }
@@ -49,7 +66,7 @@ const getById = async (id) => {
 };
 
 const create = async (recruiterId, data, logoBuffer) => {
-  let companyLogo = '';
+  let companyLogo = data.companyLogo || '';
   if (logoBuffer) companyLogo = await uploadToCloudinary(logoBuffer, 'jobs', 'image');
   return Job.create({ ...data, recruiterId, companyLogo });
 };
