@@ -530,26 +530,26 @@ export const CitizenDashboard = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
             {jobs.map(j => (
-              <div key={j._id} className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <div style={{ width: '40px', height: '40px', background: 'var(--bg-elevated)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+              <div key={j._id} className="card glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div className="logo-container" style={{ width: '44px', height: '44px', background: 'var(--bg-elevated)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--glass-border)' }}>
                     {j.companyLogo ? (
-                      <img src={j.companyLogo} alt={j.company} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <img className="logo-bw" src={j.companyLogo} alt={j.company} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
                     ) : (
-                      <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>{j.company?.[0]?.toUpperCase() || 'JB'}</span>
+                      <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.85rem' }}>{j.company?.[0]?.toUpperCase() || 'JB'}</div>
                     )}
                   </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>{j.title}</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{j.company} · {j.location}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</h4>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>🏢 {j.company} · 📍 {j.location}</p>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0, lineHeight: 1.5 }}>
                   {j.description}
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{j.contractType}</span>
-                  <Link to="/jobs" className="btn btn-secondary btn-sm" style={{ fontSize: '0.76rem' }}>Apply / View</Link>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--glass-border)', paddingTop: '12px' }}>
+                  <span className="badge badge-muted" style={{ fontSize: '0.7rem' }}>{j.contractType}</span>
+                  <Link to="/jobs" className="btn btn-secondary btn-sm" style={{ fontSize: '0.78rem' }}>Apply / View</Link>
                 </div>
               </div>
             ))}

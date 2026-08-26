@@ -175,12 +175,12 @@ export const Jobs = () => {
                   }}
                 >
                   {/* Top: Logo, Title & Bookmark */}
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        width: '46px',
-                        height: '46px',
-                        borderRadius: '10px',
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                      <div className="logo-container" style={{
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '12px',
                         background: 'var(--bg-elevated)',
                         border: '1px solid var(--glass-border)',
                         display: 'flex',
@@ -188,24 +188,26 @@ export const Jobs = () => {
                         justifyContent: 'center',
                         overflow: 'hidden',
                         flexShrink: 0,
+                        transition: 'all var(--t-base)',
                       }}>
                         {j.companyLogo ? (
                           <img 
+                            className="logo-bw"
                             src={j.companyLogo} 
                             alt={j.company} 
-                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} 
+                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px' }} 
                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         ) : (
-                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                          <div className="logo-badge">
                             {j.company?.substring(0, 2).toUpperCase() || 'JB'}
-                          </span>
+                          </div>
                         )}
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <h4 style={{ 
-                          fontSize: '0.98rem', 
+                          fontSize: '1.02rem', 
                           margin: 0, 
                           fontWeight: 700,
                           overflow: 'hidden', 
@@ -215,8 +217,8 @@ export const Jobs = () => {
                         }}>
                           {j.title}
                         </h4>
-                        <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-                          {j.company} · {j.location || 'Remote'}
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                          🏢 {j.company} · 📍 {j.location || 'Remote'}
                         </p>
                       </div>
                     </div>

@@ -199,35 +199,35 @@ p  { color: var(--text-secondary); line-height: 1.7; }
 ::-webkit-scrollbar-thumb:hover { background: var(--grey-400); }
 
 /* ═══════════════════════════════════════════════════════════════
-   GLASS CARD — Core Component
+   GLASS CARD — Core Component & Visual Improvements
    ═══════════════════════════════════════════════════════════════ */
 .card, .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--glass-border);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   box-shadow: var(--shadow-sm);
   transition: border-color var(--t-base), box-shadow var(--t-base), transform var(--t-slow), background-color var(--t-base);
   position: relative;
   overflow: hidden;
 }
 
-/* Animated crosshair grid on hover */
+/* Glass card shine & depth */
 .card::before, .glass::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(128,128,128,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(128,128,128,0.06) 1px, transparent 1px);
-  background-size: 32px 32px;
-  opacity: 0;
+    linear-gradient(rgba(128,128,128,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128,128,128,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.3;
   transition: opacity 0.4s ease;
   pointer-events: none;
   z-index: 0;
 }
-.card:hover::before, .glass:hover::before { opacity: 1; }
+.card:hover::before, .glass:hover::before { opacity: 0.8; }
 
 /* Top red accent line on hover */
 .card::after, .glass::after {
@@ -237,15 +237,16 @@ p  { color: var(--text-secondary); line-height: 1.7; }
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--red), transparent);
   transform: scaleX(0);
-  transform-origin: left;
+  transform-origin: center;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 2;
 }
 .card:hover::after, .glass:hover::after { transform: scaleX(1); }
 
 .card:hover, .glass:hover {
   border-color: var(--glass-border-hover);
-  box-shadow: var(--shadow-lg), 0 0 0 1px var(--red-subtle);
-  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg), 0 0 24px var(--red-subtle);
+  transform: translateY(-4px);
 }
 
 /* Children above the pseudo-element grid */
@@ -256,6 +257,7 @@ p  { color: var(--text-secondary); line-height: 1.7; }
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
 }
 
 /* 3D tilt card */
@@ -263,6 +265,80 @@ p  { color: var(--text-secondary); line-height: 1.7; }
   transform-style: preserve-3d;
   perspective: 800px;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow var(--t-base);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGO STYLING (B&W DEFAULT -> RED ACCENT ON HOVER)
+   ═══════════════════════════════════════════════════════════════ */
+.logo-container,
+.company-logo,
+.uni-logo,
+.partner-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t-base);
+  position: relative;
+}
+
+/* Standard logo images: grayscale/monochrome, turning red/full-contrast on hover */
+.logo-bw,
+.logo-container img,
+.company-logo img,
+.uni-logo img,
+.partner-logo img {
+  filter: grayscale(100%) contrast(1.1) opacity(0.85);
+  transition: filter var(--t-base), transform var(--t-fast);
+}
+
+/* Light mode adjustments for logos */
+[data-mode="light"] .logo-bw,
+[data-mode="light"] .logo-container img,
+[data-mode="light"] .company-logo img,
+[data-mode="light"] .uni-logo img,
+[data-mode="light"] .partner-logo img {
+  filter: grayscale(100%) contrast(1.2) opacity(0.8);
+}
+
+/* Hover: Turn vibrant, glowing, with red accent drop-shadow / border */
+.card:hover .logo-bw,
+.card:hover .logo-container img,
+.card:hover .company-logo img,
+.card:hover .uni-logo img,
+.card:hover .partner-logo img,
+.logo-container:hover img,
+.company-logo:hover img,
+.uni-logo:hover img,
+.partner-logo:hover img {
+  filter: grayscale(0%) contrast(1.1) drop-shadow(0 0 8px rgba(225, 29, 72, 0.6)) opacity(1);
+  transform: scale(1.06);
+}
+
+/* Text-based logo badges */
+.logo-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all var(--t-base);
+}
+
+.card:hover .logo-badge,
+.logo-badge:hover {
+  background: var(--red-subtle);
+  border-color: var(--red-border);
+  color: var(--red-bright);
+  box-shadow: 0 0 16px var(--red-glow);
+  transform: scale(1.06);
 }
 
 /* ═══════════════════════════════════════════════════════════════

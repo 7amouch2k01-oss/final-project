@@ -203,23 +203,23 @@ export const StudentDashboard = () => {
               <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Featured Universities</h3>
               <Link to="/universities" style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--red)' }}>Browse all →</Link>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
               {unis.map(u => (
-                <div key={u._id} className="card glass" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                <div key={u._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="logo-container" style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--glass-border)' }}>
                       {u.logo ? (
-                        <img src={u.logo} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <img className="logo-bw" src={u.logo} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
                       ) : (
-                        <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{u.name?.substring(0, 2).toUpperCase()}</span>
+                        <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.8rem' }}>{u.name?.substring(0, 2).toUpperCase()}</div>
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ fontSize: '0.92rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</h4>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{u.city}, {u.country}</span>
+                      <h4 style={{ fontSize: '0.94rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700 }}>{u.name}</h4>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>📍 {u.city}, {u.country}</span>
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '4px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5 }}>
                     {u.description}
                   </p>
                   <Link to="/universities" className="btn btn-secondary btn-sm" style={{ marginTop: 'auto', justifyContent: 'center', fontSize: '0.78rem' }}>
@@ -236,22 +236,25 @@ export const StudentDashboard = () => {
               <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Internship Opportunities (Stages)</h3>
               <Link to="/stages" style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--red)' }}>Browse all →</Link>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
               {stages.map(s => (
-                <div key={s._id} className="card glass" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                <div key={s._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="logo-container" style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--glass-border)' }}>
                       {s.companyLogo ? (
-                        <img src={s.companyLogo} alt={s.company} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <img className="logo-bw" src={s.companyLogo} alt={s.company} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
                       ) : (
-                        <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{s.company?.substring(0, 2).toUpperCase()}</span>
+                        <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.8rem' }}>{s.company?.substring(0, 2).toUpperCase()}</div>
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ fontSize: '0.92rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</h4>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{s.company} · {s.duration}</span>
+                      <h4 style={{ fontSize: '0.94rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700 }}>{s.title}</h4>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>🏢 {s.company} · {s.location || 'Remote'}</span>
                     </div>
                   </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5 }}>
+                    {s.description}
+                  </p>
                   <Link to="/stages" className="btn btn-secondary btn-sm" style={{ marginTop: 'auto', justifyContent: 'center', fontSize: '0.78rem' }}>
                     View & Apply
                   </Link>

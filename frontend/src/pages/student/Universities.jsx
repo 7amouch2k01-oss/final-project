@@ -156,11 +156,11 @@ export const Universities = () => {
                   }}
                 >
                   {/* Top: Logo & Name */}
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div style={{
-                      width: '46px',
-                      height: '46px',
-                      borderRadius: '10px',
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                    <div className="logo-container" style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '12px',
                       background: 'var(--bg-elevated)',
                       border: '1px solid var(--glass-border)',
                       display: 'flex',
@@ -168,24 +168,26 @@ export const Universities = () => {
                       justifyContent: 'center',
                       overflow: 'hidden',
                       flexShrink: 0,
+                      transition: 'all var(--t-base)',
                     }}>
                       {u.logo ? (
                         <img 
+                          className="logo-bw"
                           src={u.logo} 
                           alt={u.name} 
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} 
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px' }} 
                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                       ) : (
-                        <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                        <div className="logo-badge">
                           {u.name?.substring(0, 2).toUpperCase() || 'UN'}
-                        </span>
+                        </div>
                       )}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h4 style={{ 
-                        fontSize: '0.98rem', 
+                        fontSize: '1.02rem', 
                         margin: 0, 
                         fontWeight: 700,
                         overflow: 'hidden', 
@@ -195,8 +197,8 @@ export const Universities = () => {
                       }}>
                         {u.name}
                       </h4>
-                      <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-                        {u.city}, {u.country}
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                        📍 {u.city}, {u.country}
                       </p>
                     </div>
                   </div>
