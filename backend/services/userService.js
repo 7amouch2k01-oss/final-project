@@ -90,7 +90,7 @@ const graduate = async (userId, io) => {
 const requestRecruitRights = async (userId, io) => {
   const user = await User.findById(userId);
   if (!user) { const e = new Error('User not found'); e.statusCode = 404; throw e; }
-  if (user.role !== 'citizen') {
+  if (user.role !== 'citizen' && user.role !== 'admin') {
     const e = new Error('Only citizens can request recruit rights'); e.statusCode = 400; throw e;
   }
 

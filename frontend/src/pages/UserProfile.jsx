@@ -555,7 +555,13 @@ export const UserProfile = () => {
             )}
 
             {/* Recruiter Request Trigger */}
-            {user?.role === 'citizen' && user?.recruitRights?.status !== 'approved' && (
+            {user?.role === 'admin' ? (
+              <div style={{ marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
+                <div style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>👑</span> Full Recruiter & Administrative Privileges Granted
+                </div>
+              </div>
+            ) : user?.role === 'citizen' && user?.recruitRights?.status !== 'approved' ? (
               <div style={{ marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
                   Want to post job listings & hire candidates on TuniJob?
@@ -568,7 +574,7 @@ export const UserProfile = () => {
                   📢 Request Recruiter Rights
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Quick Info Tip */}
