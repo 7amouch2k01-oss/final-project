@@ -342,6 +342,34 @@ p  { color: var(--text-secondary); line-height: 1.7; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   BUTTON LOGO ICONS (B&W TO GLOWING RED ON HOVER)
+   ═══════════════════════════════════════════════════════════════ */
+.icon-btn-logo {
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  transition: all var(--t-fast);
+}
+
+.btn-svg-logo {
+  stroke: var(--text-secondary);
+  transition: stroke var(--t-fast), transform var(--t-fast), filter var(--t-fast);
+}
+
+.icon-btn-logo:hover {
+  background: var(--red-subtle) !important;
+  border-color: var(--red-border) !important;
+  box-shadow: 0 0 14px var(--red-glow);
+  transform: scale(1.05);
+}
+
+.icon-btn-logo:hover .btn-svg-logo {
+  stroke: var(--red-bright) !important;
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.8));
+}
+
+/* ═══════════════════════════════════════════════════════════════
    BUTTONS
    ═══════════════════════════════════════════════════════════════ */
 .btn {

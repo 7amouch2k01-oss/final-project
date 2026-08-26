@@ -179,68 +179,99 @@ export const Navbar = () => {
 
         {/* Right: Theme Toggle + Auth + Notifs */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Light / Dark Mode Toggle */}
+          
+          {/* Admin Panel Quick Link for Admins */}
+          {user?.role === 'admin' && (
+            <a
+              href="/admin"
+              className="btn btn-secondary btn-sm hide-mobile"
+              style={{
+                borderColor: 'var(--red-border)',
+                background: 'var(--red-subtle)',
+                color: 'var(--red-bright)',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              🛡️ Admin Panel
+            </a>
+          )}
+
+          {/* Light / Dark Mode Logo Button (B&W to Red on Hover) */}
           <button
             onClick={toggleMode}
+            className="icon-btn-logo"
             title={mode === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            aria-label="Toggle Theme"
             style={{
-              width: '38px', height: '38px',
+              width: '40px', height: '40px',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--glass-border)',
               background: 'var(--glass-bg)',
-              backdropFilter: 'blur(12px)',
+              backdropFilter: 'blur(14px)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
               transition: 'all var(--t-fast)',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'var(--red-subtle)';
-              e.currentTarget.style.borderColor = 'var(--red-border)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'var(--glass-bg)';
-              e.currentTarget.style.borderColor = 'var(--glass-border)';
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
-            {mode === 'dark' ? 'LIGHT' : 'DARK'}
+            {mode === 'dark' ? (
+              // Sun icon for switching to light mode
+              <svg 
+                className="btn-svg-logo"
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            ) : (
+              // Moon icon for switching to dark mode
+              <svg 
+                className="btn-svg-logo"
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            )}
           </button>
 
           {user ? (
             <>
-              {/* Notification Bell */}
+              {/* Notification Bell Logo Button (B&W to Red on Hover) */}
               <div ref={notifRef} style={{ position: 'relative' }}>
                 <button
                   onClick={() => setNotifOpen(!notifOpen)}
                   aria-label="Notifications"
+                  className="icon-btn-logo"
                   style={{
-                    width: '38px', height: '38px',
+                    width: '40px', height: '40px',
                     borderRadius: 'var(--r-md)',
                     border: notifOpen ? '1px solid var(--red-border)' : '1px solid var(--glass-border)',
                     background: notifOpen ? 'var(--red-subtle)' : 'var(--glass-bg)',
-                    backdropFilter: 'blur(12px)',
+                    backdropFilter: 'blur(14px)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                     position: 'relative',
-                    fontSize: '1rem',
-                    fontWeight: 700,
                     transition: 'all var(--t-fast)',
-                    color: notifOpen ? 'var(--red-bright)' : 'var(--text-primary)',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = 'var(--red-subtle)';
-                    e.currentTarget.style.borderColor = 'var(--red-border)';
-                    e.currentTarget.style.color = 'var(--red-bright)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = notifOpen ? 'var(--red-subtle)' : 'var(--glass-bg)';
-                    e.currentTarget.style.borderColor = notifOpen ? 'var(--red-border)' : 'var(--glass-border)';
-                    e.currentTarget.style.color = notifOpen ? 'var(--red-bright)' : 'var(--text-primary)';
                   }}
                 >
-                  🔔
+                  <svg 
+                    className="btn-svg-logo"
+                    width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
                   {unread > 0 && (
                     <span style={{
                       position: 'absolute', top: '-4px', right: '-4px',

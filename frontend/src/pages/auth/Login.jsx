@@ -19,9 +19,6 @@ export const Login = () => {
       if (res.user?.role === 'admin') {
         const token = localStorage.getItem('accessToken');
         if (token) localStorage.setItem('admin_access_token', token);
-        toast.success('Welcome Administrator!');
-        window.location.href = window.location.port === '5173' ? 'http://localhost:5174/admin/dashboard' : '/admin/dashboard';
-        return;
       }
       toast.success('Welcome back!');
       navigate('/dashboard');
