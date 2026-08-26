@@ -14,14 +14,19 @@ export default function Recruiters() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [instRes, recruitRes] = await Promise.all([
+      const [instRes, recruitRes] = await Promise.allSettled([
         api.get(`/admin/institutions?status=${filter}&search=${search}`),
         api.get('/admin/recruit-requests'),
       ]);
-      setInstitutions(instRes.data.data.institutions || []);
-      setCitizenRequests(recruitRes.data.data.requests || []);
+      
+      if (instRes.status === 'fulfilled') {
+        setInstitutions(instRes.value.data.data.institutions || []);
+      }
+      if (recruitRes.status === 'fulfilled') {
+        setCitizenRequests(recruitRes.value.data.data.requests || []);
+      }
     } catch (err) {
-      toast.error('Failed to load recruiter data');
+      console.error('Failed to load recruiter data:', err);
     } finally {
       setLoading(false);
     }

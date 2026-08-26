@@ -26,13 +26,14 @@ export const RecruiterHub = () => {
     setLoading(true);
     try {
       // Fetch all listing types the citizen/recruiter has posted
-      const [jobRes, stageRes] = await Promise.all([
-        api.get('/jobs/mine').catch(() => ({ data: { data: { jobs: [] } } })),
-        api.get('/stages/mine').catch(() => ({ data: { data: { stages: [] } } })),
+      const [jobRes, stageRes] = await Promise.allSettled([
+        api.get('/jobs/mine'),
+        api.get('/stages/mine'),
       ]);
 
-      const jobs   = (jobRes.data.data.jobs   || []).map(j => ({ ...j, _type: 'Job' }));
-      const stages = (stageRes.data.data.stages || []).map(s => ({ ...s, _type: 'Stage' }));
+      const jobs = jobRes.status === 'fulfilled' ? (jobRes.value.data.data.jobs || []).map(j => ({ ...j, _type: 'Job' })) : [];
+      const stages = stageRes.status === 'fulfilled' ? (stageRes.value.data.data.stages || []).map(s => ({ ...s, _type: 'Stage' })) : [];
+      
       const combined = [...jobs, ...stages].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -40,13 +41,16 @@ export const RecruiterHub = () => {
 
       // Fetch applicants for the first listing (if any)
       if (combined.length > 0) {
-        const firstId = combined[0]._id;
-        const appRes = await api.get(`/applications/listing/${firstId}`);
-        setApplicants(appRes.data.data.applicants || []);
+        try {
+          const firstId = combined[0]._id;
+          const appRes = await api.get(`/applications/listing/${firstId}`);
+          setApplicants(appRes.data.data.applicants || []);
+        } catch {
+          setApplicants([]);
+        }
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load recruiter data');
     } finally {
       setLoading(false);
     }
