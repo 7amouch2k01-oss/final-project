@@ -19,10 +19,10 @@ router.post('/upload-document',    upload.single('file'),   async (req, res, nex
     require('../utils/apiResponse').success(res, { url, originalName: req.file.originalname }, 'Document uploaded successfully');
   } catch (e) { next(e); }
 });
-router.post('/graduate',           restrictTo('student'),   ctrl.graduate);
-router.post('/request-recruit',    restrictTo('citizen'),   ctrl.requestRecruitRights);
-router.get('/saved-jobs',          restrictTo('citizen'),   ctrl.getSavedJobs);
-router.post('/saved-jobs/:jobId',  restrictTo('citizen'),   ctrl.saveJob);
-router.delete('/saved-jobs/:jobId',restrictTo('citizen'),   ctrl.unsaveJob);
+router.post('/graduate',           restrictTo('student', 'admin'),   ctrl.graduate);
+router.post('/request-recruit',    restrictTo('citizen', 'admin'),   ctrl.requestRecruitRights);
+router.get('/saved-jobs',          restrictTo('citizen', 'admin'),   ctrl.getSavedJobs);
+router.post('/saved-jobs/:jobId',  restrictTo('citizen', 'admin'),   ctrl.saveJob);
+router.delete('/saved-jobs/:jobId',restrictTo('citizen', 'admin'),   ctrl.unsaveJob);
 
 module.exports = router;
