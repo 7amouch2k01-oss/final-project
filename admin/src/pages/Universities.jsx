@@ -137,46 +137,96 @@ export default function Universities() {
           <p style={{ fontSize: '0.85rem' }}>Add universities or run database seeding to populate the directory.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '22px' }}>
           {filtered.map(uni => (
-            <div key={uni._id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  {uni.isFeatured && (
-                    <span style={{ fontSize: '0.68rem', background: 'rgba(225, 29, 72, 0.15)', color: 'var(--accent)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                      ★ FEATURED
-                    </span>
-                  )}
-                  <h3 style={{ fontSize: '1.15rem', margin: '6px 0 2px' }}>{uni.name}</h3>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-sec)', margin: 0 }}>📍 {uni.city}, {uni.country}</p>
+            <div key={uni._id} className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>
+              
+              {/* Header: Logo, Title & Delete */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <div className="logo-container" style={{
+                    width: '48px', height: '48px',
+                    borderRadius: '12px',
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', flexShrink: 0,
+                    transition: 'all var(--t)'
+                  }}>
+                    {uni.logo ? (
+                      <img 
+                        className="logo-bw"
+                        src={uni.logo} 
+                        alt={uni.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px' }} 
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.85rem' }}>
+                        {uni.name?.substring(0, 2).toUpperCase() || 'UN'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {uni.isFeatured && (
+                      <span style={{ fontSize: '0.65rem', background: 'rgba(225, 29, 72, 0.15)', color: 'var(--accent)', border: '1px solid rgba(225, 29, 72, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 800, letterSpacing: '0.04em', display: 'inline-block', marginBottom: '4px' }}>
+                        ★ FEATURED
+                      </span>
+                    )}
+                    <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text)' }}>
+                      {uni.name}
+                    </h3>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-sec)', margin: '2px 0 0' }}>
+                      📍 {uni.city}, {uni.country}
+                    </p>
+                  </div>
                 </div>
+
                 <button 
                   onClick={() => handleDelete(uni._id)} 
                   className="btn btn-ghost btn-sm" 
-                  style={{ color: 'var(--red)' }}
+                  style={{
+                    color: 'var(--text-muted)',
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--border)',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all var(--t)'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.borderColor = 'var(--red)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                   title="Delete university"
                 >
                   🗑️
                 </button>
               </div>
 
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {/* Description */}
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-sec)', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.55 }}>
                 {uni.description}
               </p>
 
+              {/* Fields Tags */}
               {uni.fields?.length > 0 && (
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {uni.fields.map((f, idx) => (
-                    <span key={idx} style={{ fontSize: '0.72rem', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '4px' }}>
+                    <span key={idx} style={{ fontSize: '0.72rem', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '6px', color: 'var(--text-sec)', fontWeight: 500 }}>
                       {f}
                     </span>
                   ))}
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '12px', fontSize: '0.78rem', color: 'var(--text-sec)' }}>
-                <span>💰 {uni.tuitionFee?.amount > 0 ? `${uni.tuitionFee.amount} TND/yr` : 'Public / Free'}</span>
-                <span>📧 {uni.email || 'N/A'}</span>
+              {/* Footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '14px', fontSize: '0.78rem', color: 'var(--text-sec)' }}>
+                <span style={{ fontWeight: 600, color: 'var(--text)' }}>
+                  💰 {uni.tuitionFee?.amount > 0 ? `${uni.tuitionFee.amount} TND/yr` : 'Public / Free'}
+                </span>
+                <span style={{ color: 'var(--text-muted)' }}>
+                  📧 {uni.email || 'N/A'}
+                </span>
               </div>
             </div>
           ))}

@@ -177,34 +177,85 @@ export default function Listings() {
           <p style={{ fontSize: '0.85rem' }}>Create listings or run database seeding to populate the directory.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '22px' }}>
           {filtered.map(item => (
-            <div key={item._id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <span style={{ fontSize: '0.72rem', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
-                    🏢 {item.company}
-                  </span>
-                  <h3 style={{ fontSize: '1.15rem', margin: '6px 0 2px' }}>{item.title}</h3>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-sec)', margin: 0 }}>📍 {item.location} • {item.type}</p>
+            <div key={item._id} className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>
+              
+              {/* Header: Company Logo, Title & Delete */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <div className="logo-container" style={{
+                    width: '48px', height: '48px',
+                    borderRadius: '12px',
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', flexShrink: 0,
+                    transition: 'all var(--t)'
+                  }}>
+                    {item.companyLogo ? (
+                      <img 
+                        className="logo-bw"
+                        src={item.companyLogo} 
+                        alt={item.company} 
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px' }} 
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.85rem' }}>
+                        {item.company?.substring(0, 2).toUpperCase() || (activeTab === 'job' ? 'JB' : 'ST')}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                      <span style={{ fontSize: '0.72rem', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '6px', fontWeight: 600, color: 'var(--text-sec)' }}>
+                        🏢 {item.company}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text)' }}>
+                      {item.title}
+                    </h3>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-sec)', margin: '2px 0 0' }}>
+                      📍 {item.location} • <span style={{ textTransform: 'capitalize' }}>{item.type || 'On-site'}</span>
+                    </p>
+                  </div>
                 </div>
+
                 <button 
                   onClick={() => handleDelete(item._id)} 
                   className="btn btn-ghost btn-sm" 
-                  style={{ color: 'var(--red)' }}
+                  style={{
+                    color: 'var(--text-muted)',
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--border)',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all var(--t)'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.borderColor = 'var(--red)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                   title="Delete listing"
                 >
                   🗑️
                 </button>
               </div>
 
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {/* Description */}
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-sec)', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.55 }}>
                 {item.description}
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '12px', fontSize: '0.78rem', color: 'var(--text-sec)' }}>
-                <span>{activeTab === 'job' ? `💼 ${item.contractType} (${item.experienceLevel})` : `⏱️ ${item.duration}`}</span>
-                <span>Posted by: {item.recruiterId?.name || 'Recruiter'}</span>
+              {/* Footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '14px', fontSize: '0.78rem', color: 'var(--text-sec)' }}>
+                <span style={{ fontWeight: 600, color: 'var(--text)' }}>
+                  {activeTab === 'job' ? `💼 ${item.contractType} (${item.experienceLevel || 'All levels'})` : `⏱️ ${item.duration || 'Flexible'}`}
+                </span>
+                <span style={{ color: 'var(--text-muted)' }}>
+                  Posted by: {item.recruiterId?.name || 'Recruiter'}
+                </span>
               </div>
             </div>
           ))}
