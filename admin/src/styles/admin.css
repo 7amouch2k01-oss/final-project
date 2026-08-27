@@ -493,6 +493,72 @@ tbody tr:hover { background: var(--surface-raised); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: fadeIn 0.3s ease forwards; }
 
+/* ── Logo Container & Monochrome Styling ──────────────────── */
+.logo-container,
+.company-logo,
+.uni-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t);
+  position: relative;
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.logo-bw,
+.logo-container img,
+.company-logo img,
+.uni-logo img {
+  filter: grayscale(100%) contrast(1.1) opacity(0.85);
+  transition: filter var(--t), transform var(--t);
+}
+
+.card:hover .logo-bw,
+.card:hover .logo-container img,
+.card:hover .company-logo img,
+.card:hover .uni-logo img,
+.logo-container:hover img {
+  filter: grayscale(0%) contrast(1.1) drop-shadow(0 0 8px rgba(225, 29, 72, 0.6)) opacity(1);
+  transform: scale(1.05);
+}
+
+.logo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  color: var(--text-sec);
+  background: var(--surface-raised);
+  border-radius: inherit;
+  transition: all var(--t);
+}
+
+.card:hover .logo-badge,
+.logo-container:hover .logo-badge {
+  color: #ffffff;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+
+/* ── SVG Logo Buttons & Icons ────────────────────────────── */
+.icon-btn-logo,
+.btn-svg-logo {
+  color: var(--text-sec);
+  transition: color var(--t), filter var(--t), transform var(--t);
+}
+
+.icon-btn-logo:hover,
+.btn-svg-logo:hover,
+.card:hover .btn-svg-logo {
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+  transform: scale(1.08);
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar { width: 200px; }

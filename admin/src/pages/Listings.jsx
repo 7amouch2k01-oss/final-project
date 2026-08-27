@@ -218,7 +218,7 @@ export default function Listings() {
                       {item.title}
                     </h3>
                     <p style={{ fontSize: '0.78rem', color: 'var(--text-sec)', margin: '2px 0 0' }}>
-                      📍 {item.location} • <span style={{ textTransform: 'capitalize' }}>{item.type || 'On-site'}</span>
+                      {item.location} • <span style={{ textTransform: 'capitalize' }}>{item.type || 'On-site'}</span>
                     </p>
                   </div>
                 </div>

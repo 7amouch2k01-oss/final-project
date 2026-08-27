@@ -198,7 +198,7 @@ export const Universities = () => {
                         {u.name}
                       </h4>
                       <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-                        📍 {u.city}, {u.country}
+                        {u.city}, {u.country}
                       </p>
                     </div>
                   </div>

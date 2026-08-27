@@ -197,7 +197,7 @@ export const Stages = () => {
                         {s.title}
                       </h4>
                       <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-                        🏢 {s.company} · 📍 {s.location || 'Remote'}
+                        🏢 {s.company} · {s.location || 'Remote'}
                       </p>
                     </div>
                   </div>

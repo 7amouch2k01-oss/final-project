@@ -368,7 +368,7 @@ export const StudentDashboard = () => {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h4 style={{ fontSize: '0.94rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700 }}>{u.name}</h4>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>📍 {u.city}, {u.country}</span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{u.city}, {u.country}</span>
                     </div>
                   </div>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5 }}>

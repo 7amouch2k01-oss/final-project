@@ -140,7 +140,7 @@ export const RecruiterHub = () => {
                   <div key={l._id} className="glass" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <h4>{l.title}</h4>
-                      <p style={{ fontSize: '0.85rem' }}>🏢 {l.company} | 📍 {l.location} | Views: {l.views || 0}</p>
+                      <p style={{ fontSize: '0.85rem' }}>🏢 {l.company} | {l.location} | Views: {l.views || 0}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <button onClick={() => { setActiveTab('applicants'); }} className="btn btn-secondary btn-sm">Applicants</button>

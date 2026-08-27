@@ -218,7 +218,7 @@ export const Jobs = () => {
                           {j.title}
                         </h4>
                         <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-                          🏢 {j.company} · 📍 {j.location || 'Remote'}
+                          🏢 {j.company} · {j.location || 'Remote'}
                         </p>
                       </div>
                     </div>

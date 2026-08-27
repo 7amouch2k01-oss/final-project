@@ -178,7 +178,7 @@ export default function Universities() {
                       {uni.name}
                     </h3>
                     <p style={{ fontSize: '0.78rem', color: 'var(--text-sec)', margin: '2px 0 0' }}>
-                      📍 {uni.city}, {uni.country}
+                      {uni.city}, {uni.country}
                     </p>
                   </div>
                 </div>
