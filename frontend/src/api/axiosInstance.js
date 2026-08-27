@@ -13,18 +13,28 @@ api.interceptors.request.use(
       return config;
     }
 
+    const instToken = localStorage.getItem('institutionToken');
+    const userToken = localStorage.getItem('accessToken');
+
     // If calling institution endpoints, prioritize institutionToken
     if (config.url?.startsWith('/institutions')) {
-      const instToken = localStorage.getItem('institutionToken');
       if (instToken) {
         config.headers.Authorization = `Bearer ${instToken}`;
         return config;
       }
     }
 
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Otherwise, if the user is currently on an institution portal route or only has institutionToken
+    if (window.location.pathname.startsWith('/institution') && instToken && !userToken) {
+      config.headers.Authorization = `Bearer ${instToken}`;
+      return config;
+    }
+
+    // Default to user accessToken
+    if (userToken) {
+      config.headers.Authorization = `Bearer ${userToken}`;
+    } else if (instToken) {
+      config.headers.Authorization = `Bearer ${instToken}`;
     }
     return config;
   },
@@ -37,12 +47,16 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Avoid infinite loops
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && originalRequest.url !== '/auth/refresh-token') {
+    // Do NOT attempt user token refresh on institution routes or auth login/register
+    const isInstEndpoint = originalRequest?.url?.startsWith('/institutions');
+    const isAuthEndpoint = originalRequest?.url?.startsWith('/auth');
+    const isInstPage = window.location.pathname.startsWith('/institution');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint && !isInstEndpoint && !isInstPage) {
       originalRequest._retry = true;
 
       try {
-        // Request a new access token
+        // Request a new access token for normal user
         const response = await axios.post(
           `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`,
           {},
@@ -56,10 +70,19 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, clear token and redirect to login
+        // If user refresh fails, clear token only and redirect to user login
         localStorage.removeItem('accessToken');
         window.location.href = '/login';
         return Promise.reject(refreshError);
+      }
+    }
+
+    // If institution session expires (401 on institution page or endpoint)
+    if (error.response?.status === 401 && (isInstEndpoint || isInstPage)) {
+      // Clear expired institution token
+      localStorage.removeItem('institutionToken');
+      if (window.location.pathname === '/institution/dashboard') {
+        window.location.href = '/institution/login';
       }
     }
 

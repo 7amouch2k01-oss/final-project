@@ -128,7 +128,16 @@ export const Navbar = () => {
       }}>
         {/* Left: Logo + Nav Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <Link 
+            to={
+              location.pathname.startsWith('/institution') || localStorage.getItem('institutionToken')
+                ? '/institution/dashboard'
+                : user
+                ? '/dashboard'
+                : '/'
+            } 
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}
+          >
             <div style={{
               width: '34px', height: '34px',
               borderRadius: '9px',

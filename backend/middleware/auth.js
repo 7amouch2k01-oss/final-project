@@ -16,7 +16,10 @@ const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = decoded; // { id, role }
+    req.user = decoded; // { id, role } or { institutionId, role: 'institution' }
+    if (!req.user.id && decoded.institutionId) {
+      req.user.id = decoded.institutionId;
+    }
     next();
   } catch (err) {
     return unauthorized(res, 'Token is invalid or expired');
