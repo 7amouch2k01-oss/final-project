@@ -57,10 +57,10 @@ const getStats = async () => {
 // ── Get all users (paginated + filterable) ────────────────────────────────────
 const getAllUsers = async (query) => {
   const page   = Math.max(1, parseInt(query.page) || 1);
-  const limit  = Math.min(100, parseInt(query.limit) || 20);
+  const limit  = Math.min(100, parseInt(query.limit) || 50);
   const skip   = (page - 1) * limit;
   const filter = {};
-  if (query.role)   filter.role     = query.role;
+  if (query.role)   filter.role = query.role;
   if (query.search) {
     const safeSearch = escapeRegExp(query.search);
     filter.$or = [
@@ -68,6 +68,11 @@ const getAllUsers = async (query) => {
       { email: new RegExp(safeSearch, 'i') },
     ];
   }
+  // Filter by recruiter rights status
+  if (query.recruitRights === 'approved')  filter['recruitRights.status'] = 'approved';
+  if (query.recruitRights === 'pending')   filter['recruitRights.status'] = 'pending';
+  if (query.recruitRights === 'rejected')  filter['recruitRights.status'] = 'rejected';
+  if (query.recruitRights === 'none')      filter['recruitRights.status'] = 'none';
 
   const [users, total] = await Promise.all([
     User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
