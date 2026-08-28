@@ -88,7 +88,7 @@ export const Login = () => {
               className="btn btn-primary"
               style={{ justifyContent: 'center', width: '100%', padding: '13px', marginTop: '4px', opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? '⏳ Signing in…' : 'Sign In'}
+              {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
         </div>

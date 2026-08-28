@@ -38,7 +38,7 @@ export const InstitutionLogin = () => {
             color: '#fff', fontWeight: 800, fontSize: '1.4rem',
             margin: '0 auto 16px auto'
           }}>
-            🏛️
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="10" x2="8" y2="20"/><line x1="12" y1="10" x2="12" y2="20"/><line x1="16" y1="10" x2="16" y2="20"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           </div>
           <div className="section-label" style={{ justifyContent: 'center' }}>Portal Access</div>
           <h2 style={{ fontSize: '1.8rem', margin: '6px 0' }}>Institution Sign In</h2>
@@ -80,7 +80,7 @@ export const InstitutionLogin = () => {
                 background: 'rgba(225,29,72,0.08)', border: '1px solid var(--red-border)',
                 color: 'var(--red-bright)', fontSize: '0.85rem'
               }}>
-                ⚠️ {error}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> {error}
               </div>
             )}
 
@@ -90,7 +90,7 @@ export const InstitutionLogin = () => {
               className="btn btn-primary"
               style={{ width: '100%', padding: '14px', justifyContent: 'center', fontSize: '1rem', marginTop: '4px' }}
             >
-              {loading ? '⏳ Authenticating...' : 'Sign In to Dashboard →'}
+              {loading ? 'Authenticating...' : 'Sign In to Dashboard →'}
             </button>
           </form>
 

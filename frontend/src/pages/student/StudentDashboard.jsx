@@ -164,7 +164,8 @@ export const StudentDashboard = () => {
             className="btn btn-secondary"
             style={{ fontSize: '0.86rem', padding: '9px 16px' }}
           >
-            ⭐ Pro Student Hub
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Pro Student Hub
           </Link>
           <button 
             onClick={() => setIsProfileModalOpen(true)} 
@@ -314,7 +315,8 @@ export const StudentDashboard = () => {
                       {/* Status Announcement Banner if Accepted */}
                       {a.status === 'accepted' && (
                         <div style={{ padding: '8px 14px', borderRadius: 'var(--r-sm)', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '0.82rem', fontWeight: 700 }}>
-                          <span>🎉</span> Congratulations! Your application has been officially accepted.
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          Congratulations! Your application has been officially accepted.
                         </div>
                       )}
 

@@ -97,7 +97,7 @@ export const UserProfile = () => {
   };
 
   const handleGraduate = async () => {
-    if (window.confirm('🎓 Are you sure you graduated? This will upgrade your account to Citizen.')) {
+    if (window.confirm('Are you sure you graduated? This will upgrade your account to Citizen.')) {
       const res = await graduate();
       if (res.success) {
         toast.success('Congratulations! You are now a Citizen.');
@@ -648,7 +648,8 @@ export const UserProfile = () => {
                   className="btn btn-secondary" 
                   style={{ width: '100%', justifyContent: 'center' }}
                 >
-                  🎓 I Have Graduated
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                  I Have Graduated
                 </button>
               </div>
             )}

@@ -61,7 +61,9 @@ export const InstitutionRegister = () => {
     return (
       <div className="page flex-center" style={{ padding: '32px', minHeight: '80vh' }}>
         <div className="card glass animate-scale-in" style={{ maxWidth: '540px', padding: '40px', textAlign: 'center' }}>
-          <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>⏳</div>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--bg-elevated)', border: '2px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', color: 'var(--text-primary)' }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
           <div className="section-label" style={{ justifyContent: 'center' }}>Registration Received</div>
           <h2 style={{ fontSize: '1.8rem', margin: '10px 0' }}>Under Admin Review</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.7, marginBottom: '24px' }}>
@@ -247,7 +249,7 @@ export const InstitutionRegister = () => {
               className="btn btn-primary"
               style={{ width: '100%', padding: '14px', justifyContent: 'center', fontSize: '1rem', marginTop: '6px' }}
             >
-              {loading ? '⏳ Submitting Application...' : '🏛️ Submit Registration (Requires Admin Approval)'}
+              {loading ? 'Submitting Application...' : 'Submit Registration (Requires Admin Approval)'}
             </button>
           </form>
 

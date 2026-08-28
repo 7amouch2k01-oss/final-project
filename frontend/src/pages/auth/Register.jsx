@@ -225,7 +225,7 @@ export const Register = () => {
               className="btn btn-primary"
               style={{ justifyContent: 'center', width: '100%', padding: '14px', marginTop: '4px', opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? '⏳ Creating account…' : `Create ${isStudent ? 'Student' : 'Citizen'} Account`}
+              {loading ? 'Creating account…' : `Create ${isStudent ? 'Student' : 'Citizen'} Account`}
             </button>
           </form>
 
