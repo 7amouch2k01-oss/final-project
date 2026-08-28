@@ -174,7 +174,7 @@ cd admin && npm run dev
 
 <div align="center">
 
-Developed with ❤️ by **Mohamed Oussama**
+Developed with ❤️ by **Mohamed Amine Rzeigui**
 
 🌐 **Personal Portfolio**: [https://mosma.vercel.app](https://mosma.vercel.app)  
 🐙 **GitHub Profile**: [@7amouch2k01-oss](https://github.com/7amouch2k01-oss)  
