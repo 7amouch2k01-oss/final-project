@@ -112,7 +112,7 @@ export default function Settings() {
           <div className="card" style={{ padding: '24px' }}>
             <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>⚡ System Environment</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-sec)' }}>
-              <div>Platform: <strong>TuniStudy / TuniJob Enterprise</strong></div>
+              <div>Platform: <strong>TuniVerse Enterprise</strong></div>
               <div>Database: <strong>MongoDB Atlas (Connected)</strong></div>
               <div>Realtime: <strong>Socket.io Active</strong></div>
               <div>Single-Service: <strong>Unified Express Container</strong></div>

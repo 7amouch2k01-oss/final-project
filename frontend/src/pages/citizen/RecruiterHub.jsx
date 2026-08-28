@@ -177,9 +177,9 @@ export const RecruiterHub = () => {
               <div className="form-group">
                 <label className="form-label">Listing Type</label>
                 <select value={postType} onChange={e => setPostType(e.target.value)}>
-                  <option value="Job">Job Opening (TuniJob)</option>
-                  <option value="Stage">Internship (TuniStudy/TuniJob)</option>
-                  <option value="University">University Course (TuniStudy)</option>
+                  <option value="Job">Job Opening (Career Centre)</option>
+                  <option value="Stage">Internship / PFE (Academic & Career)</option>
+                  <option value="University">University Course (Academic Hub)</option>
                 </select>
               </div>
 

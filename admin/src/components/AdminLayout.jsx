@@ -58,10 +58,16 @@ export default function AdminLayout({ children }) {
       {/* Sidebar */}
       <aside className="sidebar" style={{ zIndex: 100 }}>
         <div className="sidebar-brand">
-          <div className="sidebar-logo">TA</div>
+          <div className="sidebar-logo" style={{ overflow: 'hidden', padding: '4px' }}>
+            <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 52 Q50 38 82 52" stroke="white" strokeWidth="9" fill="none" strokeLinecap="round"/>
+              <rect x="44.5" y="48" width="11" height="28" rx="3" fill="white"/>
+              <polygon points="50,18 41,38 59,38" fill="white"/>
+            </svg>
+          </div>
           <div>
-            <div className="sidebar-title">TuniAdmin</div>
-            <div className="sidebar-subtitle">Control Panel</div>
+            <div className="sidebar-title">TuniVerse</div>
+            <div className="sidebar-subtitle">Control Centre</div>
           </div>
         </div>
 

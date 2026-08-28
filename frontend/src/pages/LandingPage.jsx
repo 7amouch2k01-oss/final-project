@@ -79,12 +79,12 @@ export const LandingPage = () => {
           </div>
 
           <h1 style={{ lineHeight: 1.05 }}>
-            Apply to universities & jobs<br />
-            <span className="gradient-text">without leaving your home.</span>
+            Your gateway to universities,<br />
+            <span className="gradient-text">internships & careers in Tunisia.</span>
           </h1>
 
           <p style={{ fontSize: '1.2rem', maxWidth: '620px', color: 'var(--text-secondary)' }}>
-            TuniStudy connects students with top Tunisian universities. TuniJob connects graduates and recruiters for remote and office careers.
+            TuniVerse is Tunisia's all-in-one digital platform. Students apply to top universities and internships. Professionals find jobs and career opportunities — all online.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
@@ -149,7 +149,7 @@ export const LandingPage = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '32px' }}>
             
-            {/* TuniStudy Portal Card */}
+            {/* TuniVerse Academic Hub Card */}
             <div 
               className="card card-3d grid-lines" 
               style={{ padding: '48px', display: 'flex', flexDirection: 'column', gap: '24px' }}
@@ -182,11 +182,11 @@ export const LandingPage = () => {
               
               <div>
                 <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--red)', marginBottom: '8px' }}>
-                  For Students
+                  Students & Higher Education
                 </div>
-                <h3 style={{ fontSize: '1.8rem', fontWeight: 800 }}>TuniStudy</h3>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Academic Hub</h3>
                 <p style={{ marginTop: '12px', color: 'var(--text-secondary)' }}>
-                  Browse accredited university programs, upload your documents, and apply entirely online. No in-person visits required.
+                  Browse accredited university programs, upload your academic documents, and apply entirely online. No in-person visits required.
                 </p>
               </div>
 
@@ -209,7 +209,7 @@ export const LandingPage = () => {
               </Link>
             </div>
 
-            {/* TuniJob Portal Card */}
+            {/* TuniVerse Career Centre Card */}
             <div 
               className="card card-3d grid-lines" 
               style={{ padding: '48px', display: 'flex', flexDirection: 'column', gap: '24px' }}
@@ -242,16 +242,16 @@ export const LandingPage = () => {
 
               <div>
                 <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--red)', marginBottom: '8px' }}>
-                  For Citizens
+                  Professionals & Recruiters
                 </div>
-                <h3 style={{ fontSize: '1.8rem', fontWeight: 800 }}>TuniJob</h3>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Career Centre</h3>
                 <p style={{ marginTop: '12px', color: 'var(--text-secondary)' }}>
-                  Find remote, hybrid, or office jobs in Tunisia. Recruiters can post listings and review candidate profiles under a quick admin approval.
+                  Find remote, hybrid, or office jobs in Tunisia. Recruiters can post listings and review candidate profiles with verified credentials.
                 </p>
               </div>
 
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-                {['Browse remote-first job listings', 'Apply with your digital CV', 'Post jobs as an approved recruiter', 'Premium placement with Stripe checkout'].map(f => (
+                {['Browse remote-first job listings', 'Apply with your digital CV', 'Post jobs as an approved recruiter', 'Direct inquiries and candidate pipeline'].map(f => (
                   <li key={f} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                     <span style={{ 
                       width: '20px', height: '20px', borderRadius: '50%', 

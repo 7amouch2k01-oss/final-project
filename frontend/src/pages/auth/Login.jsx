@@ -37,10 +37,17 @@ export const Login = () => {
             background: 'var(--red)', boxShadow: '0 0 24px var(--red-glow)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 800, fontSize: '1rem',
-            fontFamily: 'var(--font-display)', margin: '0 auto 16px auto'
-          }}>TN</div>
+            fontFamily: 'var(--font-display)', margin: '0 auto 16px auto',
+            overflow: 'hidden',
+          }}>
+            <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 52 Q50 38 82 52" stroke="white" strokeWidth="9" fill="none" strokeLinecap="round"/>
+              <rect x="44.5" y="48" width="11" height="28" rx="3" fill="white"/>
+              <polygon points="50,18 41,38 59,38" fill="white"/>
+            </svg>
+          </div>
           <h2 style={{ fontSize: '1.6rem', marginBottom: '6px' }}>Welcome back</h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Sign in to TuniStudy / TuniJob</p>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Sign in to your TuniVerse account</p>
         </div>
 
         {/* Form Card */}

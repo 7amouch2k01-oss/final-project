@@ -124,8 +124,8 @@ export const AIAssistantModal = () => {
 
   useEffect(() => {
     const greet = user?.name
-      ? `Hey **${user.name}**! I'm **TuniGuide AI**, your assistant for TuniStudy & TuniJob.\n\nAsk me anything about universities, internships, jobs, or navigating the platform. I communicate in English, French, and Tunisian Arabic.`
-      : `Welcome! I'm **TuniGuide AI**, your assistant for **TuniStudy & TuniJob**.\n\nAsk me anything about universities, internships (Stages), jobs, or platform features.`;
+      ? `Hey **${user.name}**! I'm **TuniVerse AI**, your intelligent career and academic assistant.\n\nAsk me anything about universities, internships, jobs, or navigating the platform. I communicate in English, French, and Tunisian Arabic.`
+      : `Welcome! I'm **TuniVerse AI**, your assistant for the **TuniVerse** platform.\n\nAsk me anything about universities, internships (Stages), jobs, or platform features.`;
 
     setMessages([{ sender: 'ai', text: greet, time: now() }]);
   }, [user]);

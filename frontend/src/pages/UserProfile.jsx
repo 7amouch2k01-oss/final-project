@@ -606,7 +606,7 @@ export const UserProfile = () => {
             ) : user?.role === 'citizen' && user?.recruitRights?.status !== 'approved' ? (
               <div style={{ marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
-                  Want to post job listings & hire candidates on TuniJob?
+                  Want to post job listings & hire candidates on TuniVerse Career Centre?
                 </div>
                 <button 
                   onClick={handleRequestRecruit} 

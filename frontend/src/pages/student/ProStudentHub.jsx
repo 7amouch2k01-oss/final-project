@@ -74,7 +74,7 @@ export const ProStudentHub = () => {
   const [aiChat, setAiChat] = useState([
     {
       sender: 'ai',
-      text: `Hello ${user?.name?.split(' ')[0] || 'Student'}! I am your **TuniStudy Pro AI Career & University Advisor**.\n\nI can help you evaluate university opportunities (INSAT, ESPRIT, TBS, ENIT, etc.), advise you on PFE internships in Tunisia, or calculate your chances for engineering majors. How can I guide you today?`,
+      text: `Hello ${user?.name?.split(' ')[0] || 'Student'}! I am your **TuniVerse Pro AI Academic & Career Advisor**.\n\nI can help you evaluate university opportunities (INSAT, ESPRIT, TBS, ENIT, etc.), advise you on PFE internships in Tunisia, or calculate your chances for engineering majors. How can I guide you today?`,
       recommendations: ['What are the requirements for INSAT MPI?', 'Which university is best for AI in Tunisia?', 'How to prepare for a PFE internship at top tech companies?'],
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
@@ -324,7 +324,7 @@ export const ProStudentHub = () => {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="section-label" style={{ marginBottom: 0, color: 'var(--text-primary)' }}>TuniStudy Pro Workspace</div>
+              <div className="section-label" style={{ marginBottom: 0, color: 'var(--text-primary)' }}>TuniVerse Pro Academic Workspace</div>
               <span style={{
                 background: hasAccessToAll ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
                 color: 'var(--text-primary)',
@@ -876,7 +876,7 @@ export const ProStudentHub = () => {
         ) : (
           <div className="card glass" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', minHeight: '520px' }}>
             <div style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
-              <h3 style={{ fontSize: '1.3rem', margin: 0 }}>TuniStudy AI Career & University Advisor</h3>
+              <h3 style={{ fontSize: '1.3rem', margin: 0 }}>TuniVerse AI Academic & Career Advisor</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
                 Specialized in Tunisian university admissions, engineering tracks, and tech internships.
               </p>
@@ -946,7 +946,7 @@ export const ProStudentHub = () => {
 
               {aiLoading && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                  <span className="animate-spin">⟳</span> TuniStudy AI is analyzing Tunisian university tracks...
+                  <span className="animate-spin">⟳</span> TuniVerse AI is analyzing Tunisian university tracks...
                 </div>
               )}
             </div>

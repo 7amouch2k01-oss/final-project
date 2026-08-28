@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 
 export const Navbar = () => {
   const { user, logout } = useAuthStore();
-  const { brandName, updateThemeByRole, mode, toggleMode } = useTheme();
+  const { brandName, portalLabel, updateThemeByRole, mode, toggleMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -104,7 +104,17 @@ export const Navbar = () => {
     </Link>
   );
 
-  const brandLabel = brandName === 'TuniStudy' ? 'TS' : brandName === 'TuniJob' ? 'TJ' : 'TA';
+  const brandLabel = brandName === 'TuniStudy' ? 'TS' : brandName === 'TuniJob' ? 'TJ' : 'TV';
+
+  // TuniVerse SVG logo mark (arced T + arrow)
+  const TuniVerseMark = () => (
+    <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <rect width="100" height="100" rx="22" fill="#e11d48"/>
+      <path d="M18 52 Q50 38 82 52" stroke="white" strokeWidth="9" fill="none" strokeLinecap="round"/>
+      <rect x="44.5" y="48" width="11" height="28" rx="3" fill="white"/>
+      <polygon points="50,18 41,38 59,38" fill="white"/>
+    </svg>
+  );
 
   return (
     <>
@@ -138,39 +148,32 @@ export const Navbar = () => {
             } 
             style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}
           >
-            <div style={{
-              width: '34px', height: '34px',
-              borderRadius: '9px',
-              background: 'var(--red)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 800, fontSize: '0.85rem',
-              fontFamily: 'var(--font-display)',
-              flexShrink: 0,
-              boxShadow: '0 0 14px var(--red-glow)',
-              position: 'relative',
-              overflow: 'hidden',
-              transition: 'box-shadow var(--t-base), transform var(--t-fast)',
-            }}
-              onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = '0 0 28px var(--red-glow)';
-                e.currentTarget.style.transform = 'scale(1.08)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = '0 0 14px var(--red-glow)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              {brandLabel}
+            <TuniVerseMark />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 800,
+                fontSize: '1.05rem',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+              }}>
+                TuniVerse
+              </span>
+              {portalLabel && (
+                <span style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 600,
+                  fontSize: '0.65rem',
+                  color: 'var(--red)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  lineHeight: 1,
+                }}>
+                  {portalLabel}
+                </span>
+              )}
             </div>
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              fontSize: '1.05rem',
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.03em',
-            }}>
-              {brandName}
-            </span>
           </Link>
 
           {user && (

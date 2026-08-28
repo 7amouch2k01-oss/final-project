@@ -65,7 +65,7 @@ export const InstitutionRegister = () => {
           <div className="section-label" style={{ justifyContent: 'center' }}>Registration Received</div>
           <h2 style={{ fontSize: '1.8rem', margin: '10px 0' }}>Under Admin Review</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.7, marginBottom: '24px' }}>
-            Thank you for registering <strong>{formData.name}</strong> on TuniStudy / TuniJob. 
+            Thank you for registering <strong>{formData.name}</strong> on TuniVerse. 
             Our platform administrators are reviewing your official organization credentials. You will be approved shortly.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>

@@ -64,23 +64,23 @@ export const Register = () => {
           display: 'flex', flexDirection: 'column', gap: '24px',
         }}>
           <div>
-            <div className="section-label" style={{ marginBottom: '16px' }}>Choose your portal</div>
+            <div className="section-label" style={{ marginBottom: '16px' }}>Choose your path</div>
             <h2 style={{ fontSize: '1.6rem', marginBottom: '8px' }}>
               Welcome to<br />
-              <span style={{ color: 'var(--red)' }}>{isStudent ? 'TuniStudy' : 'TuniJob'}</span>
+              <span style={{ color: 'var(--red)' }}>TuniVerse</span>
             </h2>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               {isStudent
-                ? 'For students applying to Tunisian universities and internships.'
-                : 'For citizens seeking jobs or posting career opportunities.'}
+                ? 'Academic Hub: For students applying to Tunisian universities and internships.'
+                : 'Career Centre: For professionals seeking jobs or posting career opportunities.'}
             </p>
           </div>
 
           {/* Role Toggle */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {[
-              { id: 'student', icon: '🎓', label: 'Student', sub: 'TuniStudy' },
-              { id: 'citizen', icon: '💼', label: 'Citizen', sub: 'TuniJob' },
+              { id: 'student', icon: '🎓', label: 'Student', sub: 'Academic Hub' },
+              { id: 'citizen', icon: '💼', label: 'Professional', sub: 'Career Centre' },
             ].map(r => (
               <button
                 key={r.id}
@@ -105,8 +105,8 @@ export const Register = () => {
             <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '14px' }}>What you get</div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {(isStudent
-                ? ['Apply to universities online', 'Find & apply for internships', 'Track all applications', 'Graduate → Unlock TuniJob']
-                : ['Browse & apply to job listings', 'Request recruiter permissions', 'Post jobs (admin approved)', 'Premium featured listings']
+                ? ['Apply to universities online', 'Find & apply for internships', 'Track all applications', 'Graduate → Unlock Career Centre']
+                : ['Browse & apply to job listings', 'Request recruiter permissions', 'Post jobs (admin approved)', 'Premium placement & inquiries']
               ).map(f => (
                 <li key={f} style={{ display: 'flex', gap: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)', alignItems: 'center' }}>
                   <span style={{ color: 'var(--red)', fontWeight: 700, flexShrink: 0 }}>✓</span> {f}

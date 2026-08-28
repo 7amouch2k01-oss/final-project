@@ -59,15 +59,20 @@ export default function AdminLogin() {
             boxShadow: '0 0 28px rgba(225,29,72,0.4)',
             margin: '0 auto 14px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1rem', fontWeight: 800, color: '#fff',
-            fontFamily: "'Space Grotesk', sans-serif",
-          }}>TA</div>
+            overflow: 'hidden',
+          }}>
+            <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 52 Q50 38 82 52" stroke="white" strokeWidth="9" fill="none" strokeLinecap="round"/>
+              <rect x="44.5" y="48" width="11" height="28" rx="3" fill="white"/>
+              <polygon points="50,18 41,38 59,38" fill="white"/>
+            </svg>
+          </div>
 
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk', sans-serif" }}>
-            TuniAdmin
+            TuniVerse Control Centre
           </h2>
           <p style={{ fontSize: '0.82rem', color: '#606060', margin: 0 }}>
-            Secure Control Panel — Authorized Access Only
+            Master Administration Console — Authorized Access Only
           </p>
 
           {/* Warning notice */}

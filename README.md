@@ -1,4 +1,4 @@
-# 🎓 TuniStudy & TuniJob — Next-Gen Tunisian Career & Academic Super-Platform
+# 🌐 TuniVerse — Next-Gen Tunisian Career & Academic Super-Platform
 
 <div align="center">
 
@@ -10,7 +10,7 @@
 [![Author Portfolio](https://img.shields.io/badge/Portfolio-mosma.vercel.app-e11d48?style=for-the-badge&logo=vercel&logoColor=white)](https://mosma.vercel.app)
 
 <p align="center">
-  <strong>A full-stack, AI-powered ecosystem connecting Tunisian high-school graduates, university students, and job-seeking citizens with verified academic institutions and top recruiters.</strong>
+  <strong>A full-stack, AI-powered digital ecosystem connecting Tunisian high-school graduates, university students, and job-seeking professionals with verified academic institutions and top recruiters.</strong>
 </p>
 
 [Explore Live Platform](https://tunistudy-production.up.railway.app) • [View Author Portfolio](https://mosma.vercel.app) • [Report Bug](https://github.com/7amouch2k01-oss/final-project/issues)
@@ -21,11 +21,11 @@
 
 ## 🌟 Executive Overview
 
-**TuniStudy & TuniJob** is a unified, bi-modal web platform engineered to eliminate bureaucratic friction in Tunisia's academic orientation and job markets. It unifies **two specialized portals** into one cohesive system:
+**TuniVerse** is a unified, bi-modal web platform engineered to eliminate bureaucratic friction in Tunisia's academic orientation and employment markets. It unifies **two specialized centres** into one cohesive system:
 
-1. 🎓 **TuniStudy (For Students)**: Digital application engine for university admissions (ESPRIT, INSAT, MSB, ENIT, etc.), internship matchmaking (PFE / Summer stages), Baccalaureate verification, score calculating algorithms, and an integrated **AI Academic Advisor** (Google Gemini).
-2. 💼 **TuniJob (For Citizens & Recruiters)**: Fast-paced employment portal for remote, hybrid, and on-site careers in Tunisia, featuring verified recruiter rights, candidate inquiries, portfolio showcases ("Hire Me"), and Stripe checkout.
-3. 🛡️ **TuniAdmin**: Real-time management console for platform analytics, user moderation, recruiter KYC validations, institution onboarding, and system audit logs.
+1. 🎓 **Academic Hub (For Students)**: Digital application engine for university admissions (ESPRIT, INSAT, MSB, ENIT, etc.), internship matchmaking (PFE / Summer stages), Baccalaureate verification, score calculating algorithms, and an integrated **AI Academic Advisor** (Google Gemini).
+2. 💼 **Career Centre (For Professionals & Recruiters)**: Fast-paced employment portal for remote, hybrid, and on-site careers in Tunisia, featuring verified recruiter rights, candidate inquiries, portfolio showcases ("Hire Me"), and Stripe checkout.
+3. 🛡️ **TuniVerse Control Centre**: Real-time management console for platform analytics, user moderation, recruiter KYC validations, institution onboarding, and system audit logs.
 
 ---
 
@@ -52,21 +52,21 @@ graph TD
 
 ## 🚀 Key Features
 
-### 🎓 For Students (TuniStudy)
+### 🎓 Academic Hub (Students & Higher Education)
 - **Direct University Applications**: Submit admissions applications with transcripts and automated CV attachments.
 - **PFE & Internship Portal**: Browse stages from Tunisia's leading tech hubs (*InstaDeep, Vermeg, Orange Digital Center, Telnet, Satoripop*).
-- **⭐ Pro Student Hub**:
+- **⭐ Pro Academic Hub**:
   - **AI Orientation Advisor**: Live conversational agent trained on the Tunisian orientation score formula (*Score de Réorientation*).
   - **Task & Sprint Board**: Kanban organizer for PFE deadlines and project deliverables.
   - **Score Simulator**: Accurate formula calculator across Math, Info, Sciences, and Technique branches.
 - **Academic Verification**: Baccalaureate diploma validation and flexible post-bac path tracking to reach 100% profile strength.
 
-### 💼 For Citizens & Recruiters (TuniJob)
-- **Verified Recruiter Workflow**: Citizens can request recruiter rights to post jobs and review candidate CVs.
+### 💼 Career Centre (Professionals & Recruiters)
+- **Verified Recruiter Workflow**: Citizens and hiring managers can request recruiter rights to post jobs and review candidate CVs.
 - **Direct Application Hub**: One-click application pipeline with status tracker (*Pending → Under Review → Accepted / Rejected*).
 - **"Hire Me" Social Showcase**: Publish service availability cards with direct messaging and inquiries.
 
-### 🛡️ For Super Admins (TuniAdmin)
+### 🛡️ TuniVerse Control Centre (Administration)
 - **KYC & Recruiter Rights Approval**: Review business credentials and approve or reject recruiter rights.
 - **Institution Management**: Onboard academic universities and technical faculties.
 - **Real-Time Analytics**: Visual metric charts powered by Chart.js.
@@ -114,7 +114,7 @@ Create a `.env` file in `backend/`:
 ```env
 PORT=5000
 NODE_ENV=development
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/tunistudy?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/tuniverse?retryWrites=true&w=majority
 JWT_SECRET=your_super_secret_jwt_key_here
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
@@ -133,8 +133,6 @@ STRIPE_SECRET_KEY=sk_test_...
 ```
 
 ### 4. Database Seeding
-
-Populate realistic Tunisian universities, internships, jobs, and test accounts:
 
 ```bash
 cd backend
@@ -158,6 +156,15 @@ cd admin && npm run dev
 
 ---
 
+## 🔑 Default Seed Credentials
+
+| Role | Email | Password | Access Level |
+|---|---|---|---|
+| **Super Admin** | `admin@tunistudy.tn` | `Password123!` | TuniVerse Control Centre |
+| **Recruiter (Vermeg)** | `hr@vermeg.com` | `Password123!` | Career Centre Postings & Applicant Review |
+| **Student (ESPRIT)** | `ali.bensalem@esprit.tn` | `Password123!` | Academic Hub, Applications |
+| **Student (INSAT)** | `sana.trabelsi@insat.u-carthage.tn` | `Password123!` | Academic Hub, Academic Track |
+| **Citizen (Job Seeker)** | `ramy.gharbi@gmail.com` | `Password123!` | Career Centre Listings, Hire-Me Posts |
 
 ---
 
