@@ -722,27 +722,28 @@ textarea::placeholder { color: var(--text-muted); }
 .divider     { height: 1px; background: var(--glass-border); margin: var(--sp-5) 0; }
 
 /* ═══════════════════════════════════════════════════════════════
-   MODAL BACKDROP & DIALOGS
+   MODAL BACKDROP & DIALOGS (GUARANTEED VIEWPORT CENTERING & SAFE SPACING)
    ═══════════════════════════════════════════════════════════════ */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   background: var(--bg-overlay);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 1200;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(12px, 3vh, 28px);
+  padding: clamp(20px, 4vh, 48px) clamp(12px, 3vw, 24px);
   overflow-y: auto;
   animation: fadeIn 0.2s ease;
+  box-sizing: border-box;
 }
 
 .modal {
   width: 100%;
-  max-width: 540px;
-  max-height: calc(100vh - 40px);
+  max-width: 560px;
+  max-height: calc(100vh - clamp(60px, 10vh, 100px));
   background: var(--bg-surface);
   border: 1px solid var(--glass-border);
   border-radius: var(--r-xl);
@@ -754,6 +755,7 @@ textarea::placeholder { color: var(--text-muted); }
   flex-direction: column;
   overflow-y: auto;
   box-sizing: border-box;
+  margin: auto 0;
 }
 
 /* Modal internal scroll styling */

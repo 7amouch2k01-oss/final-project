@@ -185,6 +185,8 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="modal-backdrop animate-fade-in" onClick={onClose}>
       <div 
@@ -193,7 +195,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
         style={{ 
           maxWidth: '700px', 
           width: '100%',
-          maxHeight: '90vh', 
+          maxHeight: 'calc(100vh - 100px)', 
           padding: 'clamp(20px, 3.5vw, 32px)',
           display: 'flex',
           flexDirection: 'column'
