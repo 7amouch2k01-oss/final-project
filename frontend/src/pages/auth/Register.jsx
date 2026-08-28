@@ -42,22 +42,26 @@ export const Register = () => {
   const isStudent = role === 'student';
 
   return (
-    <div className="page flex-center" style={{ padding: '24px', background: 'var(--bg-base)', minHeight: '100vh' }}>
-      <div style={{
-        width: '100%', maxWidth: '920px',
-        display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
-        gap: '0', borderRadius: 'var(--r-xl)',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-xl)',
-        border: '1px solid var(--glass-border)',
-      }}>
+    <div className="page flex-center" style={{ padding: '16px', background: 'var(--bg-base)', minHeight: '100vh' }}>
+      <div 
+        className="card"
+        style={{
+          width: '100%', maxWidth: '920px',
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '0', borderRadius: 'var(--r-xl)',
+          overflow: 'hidden',
+          boxShadow: 'var(--shadow-xl)',
+          border: '1px solid var(--glass-border)',
+        }}
+      >
 
         {/* ── Left Panel: Role Selector ───────────────────────────────────────── */}
         <div style={{
-          padding: '48px 40px',
+          padding: 'clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)',
           background: 'var(--bg-elevated)',
           borderRight: '1px solid var(--glass-border)',
-          display: 'flex', flexDirection: 'column', gap: '28px',
+          display: 'flex', flexDirection: 'column', gap: '24px',
         }}>
           <div>
             <div className="section-label" style={{ marginBottom: '16px' }}>Choose your portal</div>
@@ -114,7 +118,7 @@ export const Register = () => {
 
         {/* ── Right Panel: Form ───────────────────────────────────────────────── */}
         <div style={{
-          padding: '48px 40px',
+          padding: 'clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)',
           background: 'var(--bg-surface)',
           display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '24px',
         }}>

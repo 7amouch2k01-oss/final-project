@@ -28,10 +28,10 @@ export const Login = () => {
   };
 
   return (
-    <div className="page flex-center" style={{ padding: '24px', background: 'var(--bg-base)', minHeight: '100vh' }}>
+    <div className="page flex-center" style={{ padding: '16px', background: 'var(--bg-base)', minHeight: '100vh' }}>
       <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '0' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
             width: '52px', height: '52px', borderRadius: '14px',
             background: 'var(--red)', boxShadow: '0 0 24px var(--red-glow)',
@@ -44,7 +44,7 @@ export const Login = () => {
         </div>
 
         {/* Form Card */}
-        <div className="card" style={{ padding: '36px' }}>
+        <div className="card" style={{ padding: 'clamp(20px, 5vw, 36px)' }}>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div className="form-group">
               <label className="form-label">Email Address</label>
