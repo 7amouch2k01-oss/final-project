@@ -789,8 +789,8 @@ textarea::placeholder { color: var(--text-muted); }
   .hide-mobile { display: none !important; }
   .hide-desktop { display: flex !important; }
   h1 { font-size: 1.85rem; line-height: 1.15; }
-  h2 { font-size: 1.4rem; line-height: 1.2; }
-  h3 { font-size: 1.15rem; }
+  h2 { font-size: 1.35rem; line-height: 1.2; }
+  h3 { font-size: 1.1rem; }
   
   /* Tables become horizontally scrollable on mobile */
   .table-responsive {
@@ -801,13 +801,27 @@ textarea::placeholder { color: var(--text-muted); }
   
   /* Modal margins */
   .modal {
-    padding: 24px 18px;
-    margin: 12px;
+    padding: 20px 16px;
+    margin: 8px;
+    width: 100%;
   }
   
   /* Stat rows wrap nicely */
   .stat-row-mobile {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Form & search responsiveness */
+  form[style*="display: flex"] {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+  form[style*="display: flex"] input {
+    flex: 1 1 180px !important;
+    width: 100% !important;
+  }
+  form[style*="display: flex"] button {
+    flex-shrink: 0 !important;
   }
 }
 
@@ -817,8 +831,11 @@ textarea::placeholder { color: var(--text-muted); }
     grid-template-columns: 1fr !important;
   }
   .btn {
-    padding: 8px 14px;
-    font-size: 0.82rem;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  nav {
+    padding: 0 14px !important;
   }
 }
 

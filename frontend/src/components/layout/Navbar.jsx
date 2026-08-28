@@ -439,22 +439,23 @@ export const Navbar = () => {
                 </span>
               </Link>
 
-              <button onClick={handleLogout} className="btn btn-secondary btn-sm">Sign Out</button>
+              <button onClick={handleLogout} className="btn btn-secondary btn-sm hide-mobile">Sign Out</button>
             </>
           ) : (
             <>
-              <Link to="/institution/login" className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--glass-border)', fontSize: '0.8rem' }}>
+              <Link to="/institution/login" className="btn btn-ghost btn-sm hide-mobile" style={{ border: '1px solid var(--glass-border)', fontSize: '0.8rem' }}>
                 Institution Portal
               </Link>
-              <Link to="/login" className="btn btn-ghost btn-sm">Log in</Link>
+              <Link to="/login" className="btn btn-ghost btn-sm hide-mobile">Log in</Link>
               <Link to="/register" className="btn btn-primary btn-sm">Get Started</Link>
             </>
           )}
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger toggle (available for both logged-in and guests) */}
           <button
             className="hide-desktop"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle navigation menu"
             style={{
               width: '38px', height: '38px',
               borderRadius: 'var(--r-md)',
@@ -462,6 +463,7 @@ export const Navbar = () => {
               background: 'var(--glass-bg)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
               cursor: 'pointer',
+              flexShrink: 0,
             }}
           >
             {[0,1,2].map(i => (
@@ -483,45 +485,150 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Drawer */}
-      {mobileOpen && user && (
-        <div className="hide-desktop" style={{
-          position: 'fixed', inset: 0, top: '64px',
-          background: 'var(--bg-surface)',
-          backdropFilter: 'blur(24px)',
-          zIndex: 999,
-          padding: '32px 24px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
-          animation: 'fadeIn 0.2s ease',
-        }}>
-          {[
-            { to: '/dashboard', label: 'Dashboard' },
-            { to: '/universities', label: 'Universities' },
-            { to: '/stages', label: 'Internships' },
-            ...(user.role !== 'student' ? [{ to: '/jobs', label: 'Jobs' }] : []),
-            ...(user.role === 'citizen' && user.recruitRights?.status === 'approved'
-              ? [{ to: '/recruiter', label: 'Recruiter Hub' }] : []),
-          ].map(({ to, label }) => (
-            <Link
-              key={to} to={to}
-              style={{
-                padding: '14px 18px', fontSize: '1.05rem', fontWeight: 600,
-                fontFamily: 'var(--font-display)',
-                color: isActive(to) ? 'var(--red)' : 'var(--text-secondary)',
-                borderRadius: 'var(--r-lg)',
-                background: isActive(to) ? 'var(--red-subtle)' : 'transparent',
-                border: `1px solid ${isActive(to) ? 'var(--red-border)' : 'transparent'}`,
-                transition: 'all var(--t-fast)',
-              }}
-            >
-              {label}
-            </Link>
-          ))}
-          <div style={{ marginTop: '16px', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
-            <button onClick={handleLogout} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-              Sign Out
-            </button>
-          </div>
+      {/* Mobile Drawer (Responsive for all screen sizes < 769px) */}
+      {mobileOpen && (
+        <div 
+          className="hide-desktop animate-fade-down" 
+          style={{
+            position: 'fixed', 
+            inset: 0, 
+            top: '64px',
+            background: 'var(--bg-surface)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            zIndex: 999,
+            padding: '24px 20px',
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '8px',
+            overflowY: 'auto',
+            maxHeight: 'calc(100vh - 64px)',
+            boxShadow: 'var(--shadow-xl)',
+            borderBottom: '1px solid var(--glass-border)',
+          }}
+        >
+          {user ? (
+            <>
+              {[
+                { to: '/dashboard', label: 'Dashboard', icon: '📊' },
+                { to: '/universities', label: 'Universities', icon: '🎓' },
+                { to: '/stages', label: 'Internships', icon: '💼' },
+                ...(user.role !== 'student' ? [{ to: '/jobs', label: 'Job Listings', icon: '👔' }] : []),
+                ...(user.role === 'citizen' && user.recruitRights?.status === 'approved'
+                  ? [{ to: '/recruiter', label: 'Recruiter Hub', icon: '🏢' }] : []),
+                ...(user.role === 'student' ? [{ to: '/student/pro', label: '⭐ Pro Student Hub', icon: '⭐' }] : []),
+                { to: '/profile', label: 'My Profile', icon: '👤' },
+              ].map(({ to, label }) => (
+                <Link
+                  key={to} 
+                  to={to}
+                  onClick={() => setMobileOpen(false)}
+                  style={{
+                    padding: '12px 16px', 
+                    fontSize: '1rem', 
+                    fontWeight: 600,
+                    fontFamily: 'var(--font-display)',
+                    color: isActive(to) ? 'var(--red)' : 'var(--text-primary)',
+                    borderRadius: 'var(--r-md)',
+                    background: isActive(to) ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                    border: `1px solid ${isActive(to) ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    textDecoration: 'none',
+                    transition: 'all var(--t-fast)',
+                  }}
+                >
+                  <span>{label}</span>
+                  <span style={{ fontSize: '0.85rem', opacity: 0.6 }}>→</span>
+                </Link>
+              ))}
+
+              {user.role === 'admin' && (
+                <a
+                  href="/admin"
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-display)',
+                    color: 'var(--red-bright)',
+                    borderRadius: 'var(--r-md)',
+                    background: 'var(--red-subtle)',
+                    border: '1px solid var(--red-border)',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span>🛡️ Super Admin Panel</span>
+                  <span>↗</span>
+                </a>
+              )}
+
+              <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
+                <button 
+                  onClick={() => { setMobileOpen(false); handleLogout(); }} 
+                  className="btn btn-danger" 
+                  style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                >
+                  Sign Out ({user.name?.split(' ')[0]})
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/"
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--glass-border)',
+                  textDecoration: 'none'
+                }}
+              >
+                🏠 Home
+              </Link>
+              <Link
+                to="/institution/login"
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--glass-border)',
+                  textDecoration: 'none'
+                }}
+              >
+                🏛️ Institution Portal
+              </Link>
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="btn btn-secondary"
+                style={{ width: '100%', justifyContent: 'center', padding: '12px', marginTop: '8px' }}
+              >
+                Log In
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMobileOpen(false)}
+                className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+              >
+                Create Account (Get Started)
+              </Link>
+            </>
+          )}
         </div>
       )}
     </>
