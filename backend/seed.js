@@ -720,7 +720,71 @@ const seed = async (clearExisting = true) => {
       isFeatured: true,
     });
 
-    console.log('✅ Jobs seeded.');
+    // ── Part-Time Student Jobs ──
+    const jobPartTimeWeb = await Job.create({
+      recruiterId: recruiterVermeg._id,
+      title: 'Junior Web Assistant & Content Support',
+      company: 'Vermeg',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Vermeg_logo.svg/1200px-Vermeg_logo.svg.png',
+      description: 'Flexible 15-20h/week opportunity designed for university students. Assist our dev marketing team with WordPress landing pages, technical blog updates, and CSS theme adjustments.',
+      requirements: ['Enrolled university student in CS or Multimedia', 'HTML, CSS, and basic JavaScript understanding', 'Available 15 hours per week with flexible scheduling'],
+      responsibilities: ['Update documentation and web contents', 'Fix responsive layout quirks on public sites', 'Assist frontend devs with QA checks'],
+      location: 'Les Berges du Lac / Remote',
+      type: 'hybrid',
+      salary: { min: 700, max: 950, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'HTML/CSS', 'JavaScript', 'Student-Friendly', 'Flexible Hours'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: true,
+    });
+
+    const jobPartTimeTutor = await Job.create({
+      recruiterId: recruiterSatoripop._id,
+      title: 'Part-Time Code Mentor & Lab Assistant',
+      company: 'Satoripop',
+      companyLogo: 'https://satoripop.com/wp-content/themes/satoripop/assets/images/logo.svg',
+      description: 'Join our junior developer academy as a weekend/evening lab mentor. Help bootcamp students debug algorithms, Git workflows, and React basics.',
+      requirements: ['Strong foundations in Python or JavaScript/React', 'Good communication skills in French and English', 'Passionate about mentoring and teaching peers'],
+      responsibilities: ['Assist students during coding workshops', 'Review basic algorithmic exercises', 'Answer questions on Discord support channel'],
+      location: 'Sousse / Remote',
+      type: 'remote',
+      salary: { min: 800, max: 1100, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'Mentoring', 'React', 'Python', 'Remote'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: true,
+    });
+
+    const jobPartTimeData = await Job.create({
+      recruiterId: recruiterInstadeep._id,
+      title: 'Part-Time AI Annotation & QA Tester',
+      company: 'InstaDeep',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/InstaDeep_Logo.png/640px-InstaDeep_Logo.png',
+      description: 'Assist our NLP and computer vision team with dataset labeling, model output validation, and edge-case classification. Ideal for students passionate about AI.',
+      requirements: ['Currently studying Engineering, Math, or Computer Science', 'High attention to detail', 'Basic Python scripting is a plus but not strictly required'],
+      responsibilities: ['Label and review prompt-response datasets', 'Document hallucinations and edge-case model outputs', 'Provide qualitative feedback to research engineers'],
+      location: 'Ariana / Remote',
+      type: 'remote',
+      salary: { min: 850, max: 1200, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'AI/Data', 'QA', 'Student-Friendly', 'Remote'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: true,
+    });
+
+    console.log('✅ Jobs & Part-Time Opportunities seeded.');
 
     // ── 5. SEED APPLICATIONS ──────────────────────────────────────────────────
     console.log('📥 Seeding application logs...');

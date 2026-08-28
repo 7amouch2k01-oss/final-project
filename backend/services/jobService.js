@@ -94,4 +94,10 @@ const remove = async (id, recruiterId, role) => {
 const getMyListings = async (recruiterId) =>
   Job.find({ recruiterId, deletedAt: null }).sort({ createdAt: -1 });
 
-module.exports = { getAll, getById, create, update, remove, getMyListings };
+/** Student-facing: part-time jobs only */
+const getPartTime = async (query) => {
+  const partTimeQuery = { ...query, contractType: 'part-time' };
+  return getAll(partTimeQuery);
+};
+
+module.exports = { getAll, getById, create, update, remove, getMyListings, getPartTime };

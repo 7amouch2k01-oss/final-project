@@ -28,6 +28,10 @@ const updateJob  = async (req, res, next) => { try { const j = await jobService.
 const deleteJob  = async (req, res, next) => { try { await jobService.remove(req.params.id, req.user.id, req.user.role); success(res, {}, 'Job deleted'); } catch(e){next(e);} };
 const myJobs     = async (req, res, next) => { try { success(res, { jobs: await jobService.getMyListings(req.user.id) }); } catch(e){next(e);} };
 
+// Student-facing: part-time jobs only
+const getPartTimeJobs = async (req, res, next) => { try { success(res, await jobService.getPartTime(req.query)); } catch(e){next(e);} };
+const getPartTimeJob  = async (req, res, next) => { try { success(res, { job: await jobService.getById(req.params.id) }); } catch(e){next(e);} };
+
 // ══════════════════════════ APPLICATIONS ══════════════════════════════════════
 const applyToListing = async (req, res, next) => {
   try {
@@ -100,5 +104,6 @@ module.exports = {
   getUniversities, getUniversity, createUniversity, updateUniversity, deleteUniversity, myUniversities,
   getStages, getStage, createStage, updateStage, deleteStage, myStages,
   getJobs, getJob, createJob, updateJob, deleteJob, myJobs,
+  getPartTimeJobs, getPartTimeJob,
   applyToListing, myApplications, listingApplicants, markUnderReview, sendApplicationMessage, uploadMissingDoc, updateApplicationStatus, withdrawApplication,
 };

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useInstitutionStore } from '../../store/institutionStore';
+import { useTheme } from '../../contexts/ThemeContext';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -19,12 +20,15 @@ export const InstitutionDashboard = () => {
     logout,
   } = useInstitutionStore();
 
+  const { mode, toggleMode } = useTheme();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('applicants'); // 'applicants', 'listings', 'ended', 'post'
   const [applicantFilter, setApplicantFilter] = useState('all');
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
 
   // Communication Modals State
   const [activeModal, setActiveModal] = useState(null); // 'missing_doc' | 'meeting' | null
@@ -61,6 +65,14 @@ export const InstitutionDashboard = () => {
     fetchApplicants(applicantFilter);
     fetchListings();
   }, [applicantFilter]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   // When clicking an applicant to view, automatically mark as under_review
   const handleSelectApplicant = async (app) => {
@@ -269,6 +281,124 @@ export const InstitutionDashboard = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Light / Dark Mode Button (B&W to Red on Hover) */}
+          <button
+            onClick={toggleMode}
+            className="icon-btn-logo"
+            title={mode === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            aria-label="Toggle Theme"
+            style={{
+              width: '40px', height: '40px',
+              borderRadius: 'var(--r-md)',
+              border: '1px solid var(--glass-border)',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(14px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all var(--t-fast)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {mode === 'dark' ? (
+              <svg 
+                className="btn-svg-logo"
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            ) : (
+              <svg 
+                className="btn-svg-logo"
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            )}
+          </button>
+
+          {/* Notification Bell Button (B&W to Red on Hover) */}
+          <div ref={notifRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              aria-label="Notifications"
+              className="icon-btn-logo"
+              style={{
+                width: '40px', height: '40px',
+                borderRadius: 'var(--r-md)',
+                border: notifOpen ? '1px solid var(--red-border)' : '1px solid var(--glass-border)',
+                background: notifOpen ? 'var(--red-subtle)' : 'var(--glass-bg)',
+                backdropFilter: 'blur(14px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'all var(--t-fast)',
+              }}
+            >
+              <svg 
+                className="btn-svg-logo"
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              {(stats?.stats?.pendingApps || 0) > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-4px', right: '-4px',
+                  background: 'var(--red)', color: '#fff',
+                  fontSize: '0.62rem', fontWeight: 800,
+                  width: '18px', height: '18px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: '2px solid var(--bg-surface)',
+                  boxShadow: '0 0 8px var(--red-glow)',
+                  animation: 'pulse-red 2s ease infinite',
+                }}>{stats?.stats?.pendingApps}</span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div 
+                className="card animate-fade-down"
+                style={{
+                  position: 'absolute',
+                  top: '48px',
+                  right: 0,
+                  width: '320px',
+                  zIndex: 2000,
+                  padding: '16px',
+                  boxShadow: 'var(--shadow-xl)',
+                  border: '1px solid var(--glass-border)',
+                  background: 'var(--bg-elevated)',
+                  borderRadius: 'var(--r-lg)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Institution Alerts</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stats?.stats?.pendingApps || 0} pending</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {(stats?.stats?.pendingApps || 0) > 0 ? (
+                    <div style={{ padding: '8px', background: 'var(--red-subtle)', borderRadius: 'var(--r-md)', border: '1px solid var(--red-border)', fontSize: '0.82rem', color: 'var(--text-primary)' }}>
+                      ⚠️ You have <strong>{stats?.stats?.pendingApps}</strong> candidate applications waiting for your review.
+                    </div>
+                  ) : (
+                    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                      ✓ All applications reviewed and up to date!
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={() => setActiveTab('post')} 
             className="btn btn-primary"

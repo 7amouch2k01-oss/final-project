@@ -56,8 +56,8 @@ export default function Settings() {
                 style={{ width: '100%', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', color: 'var(--text)', marginTop: '4px' }}
               >
                 <option value="all">👥 All Users (Everyone)</option>
-                <option value="student">🎓 Students Only</option>
-                <option value="citizen">💼 Citizens & Job Seekers Only</option>
+                <option value="student">Students Only (Academic Hub)</option>
+                <option value="citizen">Professionals & Citizens Only (Career Centre)</option>
               </select>
             </div>
 

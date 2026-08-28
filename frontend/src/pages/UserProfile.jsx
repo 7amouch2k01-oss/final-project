@@ -215,7 +215,11 @@ export const UserProfile = () => {
               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
-              {uploadingAvatar ? '⏳' : '📷'}
+              {uploadingAvatar ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              )}
               <input 
                 type="file" 
                 accept="image/jpeg,image/png,image/webp" 
@@ -232,7 +236,7 @@ export const UserProfile = () => {
               
               {/* Role Badge */}
               <span className={`badge badge-${user?.role === 'citizen' ? 'success' : 'accent'}`} style={{ textTransform: 'uppercase' }}>
-                {user?.role === 'citizen' ? '💼 Citizen' : user?.role === 'admin' ? '🛡️ Admin' : '🎓 Student'}
+                {user?.role === 'citizen' ? 'Citizen' : user?.role === 'admin' ? 'Admin' : 'Student'}
               </span>
 
               {/* Student Pro Star Badge (Black & White to Red on Hover) */}
@@ -313,10 +317,47 @@ export const UserProfile = () => {
           {/* Navigation Pills */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
             {[
-              { id: 'general', label: '👤 General Info' },
-              { id: 'education', label: '🎓 Education' },
-              { id: 'experience', label: '💼 Experience' },
-              ...((user?.role === 'citizen' || user?.recruitRights?.status === 'approved') ? [{ id: 'company', label: '🏢 Recruiter / Org' }] : [])
+              { 
+                id: 'general', 
+                label: 'General Info',
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                )
+              },
+              { 
+                id: 'education', 
+                label: 'Education',
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                )
+              },
+              { 
+                id: 'experience', 
+                label: 'Experience',
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>
+                )
+              },
+              ...((user?.role === 'citizen' || user?.recruitRights?.status === 'approved') ? [{ 
+                id: 'company', 
+                label: 'Recruiter / Org',
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                    <path d="M9 22v-4h6v4" />
+                    <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" />
+                  </svg>
+                )
+              }] : [])
             ].map(tab => (
               <button
                 key={tab.id}
@@ -333,8 +374,12 @@ export const UserProfile = () => {
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   transition: 'all var(--t-fast)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
               >
+                <span style={{ color: activeTab === tab.id ? 'var(--red-bright)' : 'var(--text-secondary)' }}>{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -410,8 +455,12 @@ export const UserProfile = () => {
             {/* Education Tab */}
             {activeTab === 'education' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }} className="animate-fade-in">
-                <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
-                  🎓 Academic History & Studies
+                <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                  Academic History & Studies
                 </h3>
 
                 <div className="form-group">
@@ -450,8 +499,12 @@ export const UserProfile = () => {
             {/* Experience Tab */}
             {activeTab === 'experience' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }} className="animate-fade-in">
-                <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
-                  💼 Work, Projects & Internship Experience
+                <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>
+                  Work, Projects & Internship Experience
                 </h3>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -544,7 +597,11 @@ export const UserProfile = () => {
                 className="btn btn-primary btn-lg"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               >
-                {loading ? '⏳ Saving...' : '💾 Save Profile Changes'}
+                {loading ? (
+                  <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving...</>
+                ) : (
+                  <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Profile Changes</>
+                )}
               </button>
             </div>
           </form>

@@ -15,6 +15,7 @@ import Jobs from './pages/citizen/Jobs';
 import UserProfile from './pages/UserProfile';
 import RecruiterHub from './pages/citizen/RecruiterHub';
 import ProStudentHub from './pages/student/ProStudentHub';
+import PartTimeJobs from './pages/student/PartTimeJobs';
 
 // Institution Portal Pages
 import InstitutionRegister from './pages/institution/InstitutionRegister';
@@ -131,6 +132,12 @@ function App() {
             <Route path="/stages" element={
               <ProtectedRoute>
                 <Stages />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/student/part-time-jobs" element={
+              <ProtectedRoute allowedRoles={['student', 'admin']}>
+                <PartTimeJobs />
               </ProtectedRoute>
             } />
 

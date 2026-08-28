@@ -79,23 +79,50 @@ export const Register = () => {
           {/* Role Toggle */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {[
-              { id: 'student', icon: '🎓', label: 'Student', sub: 'Academic Hub' },
-              { id: 'citizen', icon: '💼', label: 'Professional', sub: 'Career Centre' },
+              { 
+                id: 'student', 
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                ), 
+                label: 'Student', 
+                sub: 'Academic Hub' 
+              },
+              { 
+                id: 'citizen', 
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>
+                ), 
+                label: 'Professional', 
+                sub: 'Career Centre' 
+              },
             ].map(r => (
               <button
                 key={r.id}
                 onClick={() => setRole(r.id)}
+                className="icon-btn-logo"
                 style={{
                   padding: '18px 14px', borderRadius: 'var(--r-lg)', cursor: 'pointer',
                   border: `2px solid ${role === r.id ? 'var(--red)' : 'var(--glass-border)'}`,
                   background: role === r.id ? 'var(--red-subtle)' : 'var(--bg-raised)',
                   transition: 'all var(--t-base)', textAlign: 'left',
                   boxShadow: role === r.id ? '0 0 16px var(--red-glow)' : 'none',
+                  color: role === r.id ? 'var(--red)' : 'var(--text-primary)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
                 }}
               >
-                <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>{r.icon}</div>
+                <div style={{ color: role === r.id ? 'var(--red)' : 'var(--text-primary)', marginBottom: '4px' }}>
+                  {r.icon}
+                </div>
                 <div style={{ fontWeight: 700, fontSize: '0.9rem', color: role === r.id ? 'var(--red)' : 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{r.label}</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{r.sub}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{r.sub}</div>
               </button>
             ))}
           </div>

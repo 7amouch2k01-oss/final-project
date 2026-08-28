@@ -181,6 +181,7 @@ export const Navbar = () => {
               <NavLink to="/dashboard">Dashboard</NavLink>
               <NavLink to="/universities">Universities</NavLink>
               <NavLink to="/stages">Internships</NavLink>
+              {user.role === 'student' && <NavLink to="/student/part-time-jobs">Part-Time Jobs</NavLink>}
               {user.role !== 'student' && <NavLink to="/jobs">Jobs</NavLink>}
               {user.role === 'citizen' && user.recruitRights?.status === 'approved' && (
                 <NavLink to="/recruiter">Recruiter Hub</NavLink>
@@ -513,14 +514,15 @@ export const Navbar = () => {
           {user ? (
             <>
               {[
-                { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-                { to: '/universities', label: 'Universities', icon: '🎓' },
-                { to: '/stages', label: 'Internships', icon: '💼' },
-                ...(user.role !== 'student' ? [{ to: '/jobs', label: 'Job Listings', icon: '👔' }] : []),
+                { to: '/dashboard', label: 'Dashboard' },
+                { to: '/universities', label: 'Universities' },
+                { to: '/stages', label: 'Internships' },
+                ...(user.role === 'student' ? [{ to: '/student/part-time-jobs', label: 'Part-Time Jobs' }] : []),
+                ...(user.role !== 'student' ? [{ to: '/jobs', label: 'Jobs' }] : []),
                 ...(user.role === 'citizen' && user.recruitRights?.status === 'approved'
-                  ? [{ to: '/recruiter', label: 'Recruiter Hub', icon: '🏢' }] : []),
-                ...(user.role === 'student' ? [{ to: '/student/pro', label: '⭐ Pro Student Hub', icon: '⭐' }] : []),
-                { to: '/profile', label: 'My Profile', icon: '👤' },
+                  ? [{ to: '/recruiter', label: 'Recruiter Hub' }] : []),
+                ...(user.role === 'student' ? [{ to: '/student/pro', label: 'Pro Student Hub' }] : []),
+                { to: '/profile', label: 'My Profile' },
               ].map(({ to, label }) => (
                 <Link
                   key={to} 
@@ -542,7 +544,20 @@ export const Navbar = () => {
                     transition: 'all var(--t-fast)',
                   }}
                 >
-                  <span>{label}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {to === '/universities' ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                      </svg>
+                    ) : to === '/stages' || to === '/jobs' ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                      </svg>
+                    ) : null}
+                    {label}
+                  </span>
                   <span style={{ fontSize: '0.85rem', opacity: 0.6 }}>→</span>
                 </Link>
               ))}
