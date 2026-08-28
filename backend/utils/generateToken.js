@@ -1,24 +1,24 @@
 const jwt = require('jsonwebtoken');
 
 /**
- * Generate a short-lived access token (15m)
+ * Generate a persistent access token (valid until logout, fallback 365d)
  */
 const generateAccessToken = (userId, role) => {
   return jwt.sign(
     { id: userId, role },
     process.env.JWT_ACCESS_SECRET,
-    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m' }
+    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '365d' }
   );
 };
 
 /**
- * Generate a long-lived refresh token (7d)
+ * Generate a persistent refresh token (365d)
  */
 const generateRefreshToken = (userId) => {
   return jwt.sign(
     { id: userId },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d' }
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES || '365d' }
   );
 };
 
