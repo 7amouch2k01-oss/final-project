@@ -229,9 +229,51 @@ export const UserProfile = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '1.75rem', margin: 0, fontWeight: 800 }}>{name || user?.name || 'User Profile'}</h1>
+              
+              {/* Role Badge */}
               <span className={`badge badge-${user?.role === 'citizen' ? 'success' : 'accent'}`} style={{ textTransform: 'uppercase' }}>
                 {user?.role === 'citizen' ? '💼 Citizen' : user?.role === 'admin' ? '🛡️ Admin' : '🎓 Student'}
               </span>
+
+              {/* Student Pro Star Badge (Black & White to Red on Hover) */}
+              {(user?.role === 'student' || !user?.role) && (
+                user?.subscription?.plan === 'pro' || 
+                user?.subscription?.plan === 'premium' || 
+                (user?.subscription?.trialExpiresAt && new Date(user.subscription.trialExpiresAt) > new Date())
+              ) && (
+                <span 
+                  className="icon-btn-logo"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '4px 10px',
+                    borderRadius: 'var(--r-full)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--glass-border)',
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    boxShadow: 'var(--shadow-xs)',
+                    cursor: 'default',
+                  }}
+                  title="Active Pro Student Membership"
+                >
+                  <svg 
+                    className="btn-svg-logo" 
+                    width="14" 
+                    height="14" 
+                    viewBox="0 0 24 24" 
+                    fill="currentColor" 
+                    stroke="none"
+                  >
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  PRO
+                </span>
+              )}
+
               {user?.recruitRights?.status === 'approved' && (
                 <span className="badge badge-success">✓ Verified Recruiter</span>
               )}

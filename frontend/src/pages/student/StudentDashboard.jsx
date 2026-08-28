@@ -113,7 +113,46 @@ export const StudentDashboard = () => {
       <div className="card glass" style={{ padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
         <div>
           <div className="section-label">Student Workspace</div>
-          <h2 style={{ fontSize: '1.8rem', margin: '4px 0 6px', fontWeight: 800 }}>Welcome, {user?.name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '1.8rem', margin: '4px 0 6px', fontWeight: 800 }}>Welcome, {user?.name}</h2>
+            {(
+              user?.subscription?.plan === 'pro' || 
+              user?.subscription?.plan === 'premium' || 
+              (user?.subscription?.trialExpiresAt && new Date(user.subscription.trialExpiresAt) > new Date())
+            ) && (
+              <span 
+                className="icon-btn-logo"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: 'var(--r-full)',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--glass-border)',
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  boxShadow: 'var(--shadow-xs)',
+                  cursor: 'default',
+                }}
+                title="Active Pro Student Membership"
+              >
+                <svg 
+                  className="btn-svg-logo" 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="currentColor" 
+                  stroke="none"
+                >
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                PRO
+              </span>
+            )}
+          </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0 }}>
             Manage your higher education & internship applications, interview bookings, and profile verification.
           </p>

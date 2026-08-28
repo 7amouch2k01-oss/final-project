@@ -45,21 +45,21 @@ html { scroll-behavior: smooth; }
   --t: 0.2s ease;
 }
 
-/* ─── Light Theme Tokens ─────────────────────────────────────── */
+/* ─── Light Theme Tokens (Smoothed Soft Warm Grey) ─────────── */
 [data-mode="light"],
 html[data-mode="light"] {
-  --sidebar-bg:   #ffffff;
+  --sidebar-bg:   #f1f5f9;
   --sidebar-w:    240px;
 
-  --main-bg:      #f8fafc;
-  --surface:      #ffffff;
-  --surface-raised: #f1f5f9;
-  --border:       #e2e8f0;
-  --border-hover: #cbd5e1;
+  --main-bg:      #eef1f5;
+  --surface:      #f8fafc;
+  --surface-raised: #e4e8ef;
+  --border:       rgba(100, 116, 139, 0.18);
+  --border-hover: rgba(100, 116, 139, 0.3);
 
-  --text:         #0f172a;
+  --text:         #1e293b;
   --text-sec:     #475569;
-  --text-muted:   #94a3b8;
+  --text-muted:   #64748b;
   --text-inv:     #ffffff;
 
   --accent:       #e11d48;
