@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
+import { BrandLogo } from '../../components/common/CompleteProfileModal';
 
 export const Jobs = () => {
   const { user } = useAuthStore();
@@ -178,9 +179,9 @@ export const Jobs = () => {
                   <div style={{ display: 'flex', gap: '14px', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1, minWidth: 0 }}>
                       <div className="logo-container" style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: '12px',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: 'var(--r-md)',
                         background: 'var(--bg-elevated)',
                         border: '1px solid var(--glass-border)',
                         display: 'flex',
@@ -190,19 +191,7 @@ export const Jobs = () => {
                         flexShrink: 0,
                         transition: 'all var(--t-base)',
                       }}>
-                        {j.companyLogo ? (
-                          <img 
-                            className="logo-bw"
-                            src={j.companyLogo} 
-                            alt={j.company} 
-                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px' }} 
-                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                          />
-                        ) : (
-                          <div className="logo-badge">
-                            {j.company?.substring(0, 2).toUpperCase() || 'JB'}
-                          </div>
-                        )}
+                        <BrandLogo logoUrl={j.companyLogo} name={j.title} company={j.company} />
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>

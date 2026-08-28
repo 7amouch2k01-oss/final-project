@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import CompleteProfileModal from '../../components/common/CompleteProfileModal';
+import CompleteProfileModal, { BrandLogo } from '../../components/common/CompleteProfileModal';
 
 export const CitizenDashboard = () => {
   const { user, requestRecruitRights } = useAuthStore();
@@ -533,11 +533,7 @@ export const CitizenDashboard = () => {
               <div key={j._id} className="card glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <div className="logo-container" style={{ width: '44px', height: '44px', background: 'var(--bg-elevated)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--glass-border)' }}>
-                    {j.companyLogo ? (
-                      <img className="logo-bw" src={j.companyLogo} alt={j.company} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
-                    ) : (
-                      <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.85rem' }}>{j.company?.[0]?.toUpperCase() || 'JB'}</div>
-                    )}
+                    <BrandLogo logoUrl={j.companyLogo} name={j.title} company={j.company} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</h4>

@@ -752,3 +752,180 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
 };
 
 export default CompleteProfileModal;
+
+/**
+ * Universal SVG Vector and Brand Logos for Tunisian Institutions & Companies
+ * Guarantees 100% reliable rendering without broken external CDN hotlinks.
+ */
+export const getInstitutionLogoSvg = (nameOrTitle = '', company = '') => {
+  const query = `${nameOrTitle} ${company}`.toLowerCase();
+
+  // 1. ESPRIT
+  if (query.includes('esprit')) {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" fill="currentColor">
+        <path d="M20 20 H80 V32 H34 V44 H70 V56 H34 V68 H80 V80 H20 Z" />
+      </svg>
+    );
+  }
+
+  // 2. INSAT / Carthage
+  if (query.includes('insat') || query.includes('carthage')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+      </svg>
+    );
+  }
+
+  // 3. ENIT / ENIS / ENSI / Public Engineering
+  if (query.includes('enit') || query.includes('enis') || query.includes('ensi') || query.includes('polytechnique')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+        <polyline points="2 17 12 22 22 17" />
+        <polyline points="2 12 12 17 22 12" />
+      </svg>
+    );
+  }
+
+  // 4. SMU / MSB / Mediterranean School of Business
+  if (query.includes('msb') || query.includes('smu') || query.includes('mediterranean school')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 12l2 2 4-4" />
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+        <path d="M2 12h20" />
+      </svg>
+    );
+  }
+
+  // 5. TEK-UP / Sesame / Technology Universities
+  if (query.includes('tek-up') || query.includes('tekup') || query.includes('sesame')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+    );
+  }
+
+  // 6. InstaDeep (AI, Deep Learning)
+  if (query.includes('instadeep') || query.includes('ai research') || query.includes('deep learning')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <rect x="9" y="9" width="6" height="6" />
+        <line x1="9" y1="1" x2="9" y2="4" />
+        <line x1="15" y1="1" x2="15" y2="4" />
+        <line x1="9" y1="20" x2="9" y2="23" />
+        <line x1="15" y1="20" x2="15" y2="23" />
+        <line x1="20" y1="9" x2="23" y2="9" />
+        <line x1="20" y1="14" x2="23" y2="14" />
+        <line x1="1" y1="9" x2="4" y2="9" />
+        <line x1="1" y1="14" x2="4" y2="14" />
+      </svg>
+    );
+  }
+
+  // 7. Vermeg (Fintech, Banking Solutions)
+  if (query.includes('vermeg') || query.includes('fintech')) {
+    return (
+      <svg viewBox="0 0 100 100" width="80%" height="80%" fill="currentColor">
+        <path d="M15 25 L45 80 L55 80 L85 25 L70 25 L50 63 L30 25 Z" />
+      </svg>
+    );
+  }
+
+  // 8. Orange / Orange Digital Center
+  if (query.includes('orange')) {
+    return (
+      <svg viewBox="0 0 100 100" width="80%" height="80%" fill="currentColor">
+        <rect x="10" y="10" width="80" height="80" rx="10" />
+        <rect x="25" y="55" width="50" height="16" fill="rgba(255,255,255,0.9)" />
+      </svg>
+    );
+  }
+
+  // 9. BIAT / Banks / Financial
+  if (query.includes('biat') || query.includes('bank') || query.includes('finance')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="3" y1="21" x2="21" y2="21" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+        <polyline points="5 6 12 3 19 6" />
+        <line x1="4" y1="10" x2="4" y2="21" />
+        <line x1="20" y1="10" x2="20" y2="21" />
+        <line x1="8" y1="14" x2="8" y2="17" />
+        <line x1="12" y1="14" x2="12" y2="17" />
+        <line x1="16" y1="14" x2="16" y2="17" />
+      </svg>
+    );
+  }
+
+  // 10. Satoripop (Design, Flutter, Mobile)
+  if (query.includes('satoripop') || query.includes('flutter') || query.includes('mobile')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" />
+      </svg>
+    );
+  }
+
+  // 11. Telnet Group (Aerospace, Embedded, IoT)
+  if (query.includes('telnet') || query.includes('embedded') || query.includes('iot')) {
+    return (
+      <svg viewBox="0 0 24 24" width="65%" height="65%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="2" />
+        <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14" />
+      </svg>
+    );
+  }
+
+  return null;
+};
+
+/**
+ * Smart Logo Component: Renders real image if provided, or brand vector SVG fallback
+ */
+export const BrandLogo = ({ logoUrl, name = '', company = '', className = '', style = {} }) => {
+  const [imageError, setImageError] = React.useState(false);
+  const brandSvg = getInstitutionLogoSvg(name, company);
+  const initials = (name || company || 'TN').substring(0, 2).toUpperCase();
+
+  if (logoUrl && !imageError) {
+    return (
+      <img
+        className={className || 'logo-bw'}
+        src={logoUrl}
+        alt={name || company}
+        onError={() => setImageError(true)}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px', ...style }}
+      />
+    );
+  }
+
+  if (brandSvg) {
+    return (
+      <div 
+        className={className || 'btn-svg-logo'} 
+        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'currentColor', ...style }}
+      >
+        {brandSvg}
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="logo-badge" 
+      style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.82rem', ...style }}
+    >
+      {initials}
+    </div>
+  );
+};

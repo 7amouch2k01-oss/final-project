@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axiosInstance';
 import { Link } from 'react-router-dom';
-import CompleteProfileModal from '../../components/common/CompleteProfileModal';
+import CompleteProfileModal, { BrandLogo } from '../../components/common/CompleteProfileModal';
 import toast from 'react-hot-toast';
 
 export const StudentDashboard = () => {
@@ -140,8 +140,14 @@ export const StudentDashboard = () => {
       {/* ── Applications Quick Stats Row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
         <div className="card glass" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-            📑
+          <div className="logo-container" style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg className="btn-svg-logo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>Total Applied</div>
@@ -150,32 +156,41 @@ export const StudentDashboard = () => {
         </div>
 
         <div className="card glass" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.12)', border: '1px solid rgba(251, 191, 36, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-            ⏳
+          <div className="logo-container" style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg className="btn-svg-logo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>Pending</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fbbf24' }}>{pendingApps}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>{pendingApps}</div>
           </div>
         </div>
 
         <div className="card glass" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(96, 165, 250, 0.12)', border: '1px solid rgba(96, 165, 250, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-            🔍
+          <div className="logo-container" style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg className="btn-svg-logo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>Under Review</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#60a5fa' }}>{underReviewApps}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>{underReviewApps}</div>
           </div>
         </div>
 
         <div className="card glass" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-            🎉
+          <div className="logo-container" style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg className="btn-svg-logo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>Accepted</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981' }}>{acceptedApps}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>{acceptedApps}</div>
           </div>
         </div>
       </div>
@@ -267,13 +282,11 @@ export const StudentDashboard = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                           <div className="logo-container" style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                            {a.targetId?.logo || a.targetId?.companyLogo ? (
-                              <img className="logo-bw" src={a.targetId.logo || a.targetId.companyLogo} alt={targetTitle} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
-                            ) : (
-                              <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.8rem' }}>
-                                {targetTitle.substring(0, 2).toUpperCase()}
-                              </div>
-                            )}
+                            <BrandLogo 
+                              logoUrl={a.targetId?.logo || a.targetId?.companyLogo} 
+                              name={targetTitle} 
+                              company={a.targetId?.company || ''} 
+                            />
                           </div>
 
                           <div>
@@ -360,11 +373,7 @@ export const StudentDashboard = () => {
                 <div key={u._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div className="logo-container" style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--glass-border)' }}>
-                      {u.logo ? (
-                        <img className="logo-bw" src={u.logo} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
-                      ) : (
-                        <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.8rem' }}>{u.name?.substring(0, 2).toUpperCase()}</div>
-                      )}
+                      <BrandLogo logoUrl={u.logo} name={u.name} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h4 style={{ fontSize: '0.94rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700 }}>{u.name}</h4>
@@ -393,11 +402,7 @@ export const StudentDashboard = () => {
                 <div key={s._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div className="logo-container" style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--glass-border)' }}>
-                      {s.companyLogo ? (
-                        <img className="logo-bw" src={s.companyLogo} alt={s.company} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
-                      ) : (
-                        <div className="logo-badge" style={{ width: '100%', height: '100%', fontSize: '0.8rem' }}>{s.company?.substring(0, 2).toUpperCase()}</div>
-                      )}
+                      <BrandLogo logoUrl={s.companyLogo} name={s.title} company={s.company} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h4 style={{ fontSize: '0.94rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700 }}>{s.title}</h4>
