@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TuniVerse</string>
+    <string name="title_activity_main">TuniVerse</string>
+    <string name="package_name">com.tuniverse.app</string>
+    <string name="custom_url_scheme">com.tuniverse.app</string>
+</resources>
