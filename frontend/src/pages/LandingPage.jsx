@@ -155,12 +155,30 @@ export const LandingPage = () => {
               style={{ padding: '48px', display: 'flex', flexDirection: 'column', gap: '24px' }}
             >
 
-              <div style={{ 
-                width: '56px', height: '56px', borderRadius: '16px', 
-                background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem',
-                boxShadow: 'var(--shadow-sm)'
-              }}>🎓</div>
+              <div 
+                className="logo-container"
+                style={{ 
+                  width: '56px', height: '56px', borderRadius: '16px', 
+                  background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <svg 
+                  className="btn-svg-logo" 
+                  width="26" 
+                  height="26" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
+              </div>
               
               <div>
                 <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--red)', marginBottom: '8px' }}>
@@ -197,12 +215,30 @@ export const LandingPage = () => {
               style={{ padding: '48px', display: 'flex', flexDirection: 'column', gap: '24px' }}
             >
 
-              <div style={{ 
-                width: '56px', height: '56px', borderRadius: '16px', 
-                background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem',
-                boxShadow: 'var(--shadow-sm)'
-              }}>💼</div>
+              <div 
+                className="logo-container"
+                style={{ 
+                  width: '56px', height: '56px', borderRadius: '16px', 
+                  background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <svg 
+                  className="btn-svg-logo" 
+                  width="26" 
+                  height="26" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+              </div>
 
               <div>
                 <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--red)', marginBottom: '8px' }}>

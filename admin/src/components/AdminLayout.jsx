@@ -50,13 +50,9 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="admin-layout" style={{ position: 'relative' }}>
-      {/* Animated Background Laser / Grid Lines moving Right to Left */}
+      {/* Clean Static Ambient Grid */}
       <div className="animated-bg-wrapper" aria-hidden="true">
         <div className="bg-grid-mesh" />
-        <div className="laser-beam vertical beam-1" />
-        <div className="laser-beam vertical beam-2" />
-        <div className="laser-line-h h-line-1" />
-        <div className="laser-line-h h-line-2" />
       </div>
 
       {/* Sidebar */}
