@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { BrandLogo } from '../../components/common/CompleteProfileModal';
+import { useAuthStore } from '../../store/authStore';
 
 export const Universities = () => {
   const { user } = useAuthStore();
