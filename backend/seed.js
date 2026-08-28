@@ -784,6 +784,90 @@ const seed = async (clearExisting = true) => {
       isFeatured: true,
     });
 
+    const jobPartTimeDesigner = await Job.create({
+      recruiterId: recruiterSatoripop._id,
+      title: 'Part-Time Graphic & Social Media Designer',
+      company: 'Satoripop',
+      companyLogo: 'https://satoripop.com/wp-content/themes/satoripop/assets/images/logo.svg',
+      description: 'Create engaging graphics, carousel posts, and event banners for our developer community and tech recruitment events. 12-16 hours per week.',
+      requirements: ['Proficiency with Figma, Canva, or Adobe Illustrator/Photoshop', 'Creative eye for modern typography and color harmony', 'Portfolio or examples of past design work'],
+      responsibilities: ['Design social media promo assets (LinkedIn, Instagram)', 'Create slide templates for tech talks', 'Coordinate with community managers'],
+      location: 'Sousse / Remote',
+      type: 'remote',
+      salary: { min: 650, max: 900, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'UI/UX', 'Graphic Design', 'Figma', 'Remote'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: false,
+    });
+
+    const jobPartTimeSupport = await Job.create({
+      recruiterId: recruiterTelnet._id,
+      title: 'Student Technical Support & Helpdesk Specialist',
+      company: 'Telnet Group',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Logo_Telnet.png/640px-Logo_Telnet.png',
+      description: 'Assist our IT operations team with hardware diagnostics, workstation setups, and ticket triage during morning or afternoon shifts.',
+      requirements: ['Basic computer networking and OS troubleshooting skills', 'Good customer service mindset', 'Available 2-3 half-days per week'],
+      responsibilities: ['Respond to employee IT support tickets', 'Assist with printer, VPN, and account access configs', 'Document recurring IT problems'],
+      location: 'Charguia II, Tunis',
+      type: 'on-site',
+      salary: { min: 600, max: 850, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'IT Support', 'Hardware', 'Networking', 'On-Site'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: false,
+    });
+
+    const jobPartTimeCommunity = await Job.create({
+      recruiterId: recruiterBiat._id,
+      title: 'Campus Ambassador & Innovation Lab Coordinator',
+      company: 'BIAT',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Logo_BIAT.svg/1200px-Logo_BIAT.svg.png',
+      description: 'Represent BIAT Labs at your university campus. Help organize student hackathons, fintech workshops, and innovation challenges.',
+      requirements: ['Active university student leader or club member', 'Strong public speaking and organization skills', 'Passionate about fintech and student entrepreneurship'],
+      responsibilities: ['Promote BIAT hackathons across student clubs', 'Coordinate on-campus info sessions', 'Gather student feedback on digital banking initiatives'],
+      location: 'Tunis / Campus',
+      type: 'hybrid',
+      salary: { min: 750, max: 1000, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'Ambassador', 'Fintech', 'Events', 'Leadership'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: true,
+    });
+
+    const jobPartTimeQA = await Job.create({
+      recruiterId: recruiterVermeg._id,
+      title: 'Junior Manual QA Tester (Evening Shifts)',
+      company: 'Vermeg',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Vermeg_logo.svg/1200px-Vermeg_logo.svg.png',
+      description: 'Execute test suites and verify bug fixes on our financial software platforms. Flexible evening/weekend hours adapted for engineering students.',
+      requirements: ['Detail-oriented mindset', 'Understanding of software lifecycle (SDLC)', 'Basic understanding of API testing (Postman) is a plus'],
+      responsibilities: ['Execute regression test cases', 'Log reproducible bug reports with steps in Jira', 'Validate release candidates across browsers'],
+      location: 'Tunis / Remote',
+      type: 'hybrid',
+      salary: { min: 750, max: 1050, currency: 'TND', period: 'month', isHidden: false },
+      contractType: 'part-time',
+      experienceLevel: 'junior',
+      tags: ['Part-Time', 'QA', 'Testing', 'Postman', 'Jira'],
+      applicationStartDate: new Date('2026-05-01'),
+      applicationEndDate: new Date('2026-12-31'),
+      deadline: new Date('2026-12-31'),
+      isActive: true,
+      isFeatured: false,
+    });
+
     console.log('✅ Jobs & Part-Time Opportunities seeded.');
 
     // ── 5. SEED APPLICATIONS ──────────────────────────────────────────────────

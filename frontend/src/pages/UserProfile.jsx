@@ -32,7 +32,35 @@ export const UserProfile = () => {
   const [companyLocation, setCompanyLocation] = useState(user?.company?.location || '');
 
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('general'); // 'general', 'education', 'experience', 'company'
+  const [activeTab, setActiveTab] = useState('general'); // 'general', 'education', 'experience', 'company', 'network'
+  const [followData, setFollowData] = useState({ followers: [], following: [], followersCount: 0, followingCount: 0 });
+  const [loadingFollow, setLoadingFollow] = useState(false);
+
+  const fetchFollowData = async () => {
+    try {
+      setLoadingFollow(true);
+      const res = await api.get('/community/follow-data');
+      setFollowData(res.data.data || { followers: [], following: [], followersCount: 0, followingCount: 0 });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingFollow(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchFollowData();
+  }, []);
+
+  const handleUnfollow = async (targetUserId) => {
+    try {
+      await api.post(`/community/follow/${targetUserId}`);
+      toast.success('Updated connection!');
+      fetchFollowData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update connection');
+    }
+  };
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -285,6 +313,33 @@ export const UserProfile = () => {
             <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               {user?.email} · Member since {new Date(user?.createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
             </p>
+
+            {/* Follow Stats Badges */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px' }}>
+              <button 
+                onClick={() => setActiveTab('network')}
+                style={{
+                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <strong style={{ color: 'var(--red-bright)', fontWeight: 800 }}>{followData.followers?.length || 0}</strong>
+                <span style={{ color: 'var(--text-secondary)' }}>Followers</span>
+              </button>
+              <span style={{ color: 'var(--text-muted)' }}>·</span>
+              <button 
+                onClick={() => setActiveTab('network')}
+                style={{
+                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <strong style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{followData.following?.length || 0}</strong>
+                <span style={{ color: 'var(--text-secondary)' }}>Following</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -357,7 +412,19 @@ export const UserProfile = () => {
                     <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" />
                   </svg>
                 )
-              }] : [])
+              }] : []),
+              {
+                id: 'network',
+                label: `Connections (${(followData.followers?.length || 0) + (followData.following?.length || 0)})`,
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                )
+              }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -587,6 +654,110 @@ export const UserProfile = () => {
                     placeholder="Introduce your company, work benefits, and talent needs..." 
                   />
                 </div>
+              </div>
+            )}
+
+            {/* Network & Follow System Tab */}
+            {activeTab === 'network' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-fade-in">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>👥</span> Your Professional Network & Follows
+                  </h3>
+                  <button 
+                    type="button" 
+                    onClick={fetchFollowData} 
+                    className="btn btn-ghost btn-sm"
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+
+                {loadingFollow ? (
+                  <div className="flex-center" style={{ padding: '36px', color: 'var(--text-muted)' }}>
+                    Loading connections...
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    
+                    {/* Following Column */}
+                    <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Following</span>
+                        <span className="badge badge-accent">{followData.following?.length || 0}</span>
+                      </div>
+                      {followData.following?.length === 0 ? (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '8px 0' }}>
+                          You are not following anyone yet. Explore the community to connect with professionals and fellow students!
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '280px', overflowY: 'auto' }}>
+                          {followData.following?.map(f => (
+                            <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'var(--bg-surface)', borderRadius: 'var(--r-sm)', border: '1px solid var(--glass-border)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '0.75rem', flexShrink: 0, overflow: 'hidden' }}>
+                                  {f.avatar ? <img src={f.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (f.name?.[0]?.toUpperCase() || 'U')}
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <p style={{ margin: 0, fontSize: '0.84rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</p>
+                                  <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{f.role || 'Member'}</p>
+                                </div>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => handleUnfollow(f._id)}
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '4px 8px', fontSize: '0.74rem', color: 'var(--text-muted)' }}
+                                title="Unfollow"
+                              >
+                                Unfollow
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Followers Column */}
+                    <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Followers</span>
+                        <span className="badge badge-success">{followData.followers?.length || 0}</span>
+                      </div>
+                      {followData.followers?.length === 0 ? (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '8px 0' }}>
+                          No followers yet. Complete your profile and share posts in the community to grow your network!
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '280px', overflowY: 'auto' }}>
+                          {followData.followers?.map(f => (
+                            <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'var(--bg-surface)', borderRadius: 'var(--r-sm)', border: '1px solid var(--glass-border)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '0.75rem', flexShrink: 0, overflow: 'hidden' }}>
+                                  {f.avatar ? <img src={f.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (f.name?.[0]?.toUpperCase() || 'U')}
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <p style={{ margin: 0, fontSize: '0.84rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</p>
+                                  <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{f.role || 'Member'}</p>
+                                </div>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => handleUnfollow(f._id)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '4px 8px', fontSize: '0.74rem' }}
+                              >
+                                {followData.following?.some(u => u._id === f._id) ? 'Following' : '+ Follow Back'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                )}
               </div>
             )}
 

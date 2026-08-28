@@ -14,17 +14,20 @@ export const StudentDashboard = () => {
   const [appFilter, setAppFilter] = useState('all'); // 'all', 'pending', 'under_review', 'accepted', 'rejected'
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [uploadingDocAppId, setUploadingDocAppId] = useState(null);
+  const [followData, setFollowData] = useState({ followers: [], following: [], followersCount: 0, followingCount: 0 });
 
   const fetchData = async () => {
     try {
-      const [uniRes, stageRes, appRes] = await Promise.all([
+      const [uniRes, stageRes, appRes, followRes] = await Promise.all([
         api.get('/universities?limit=4'),
         api.get('/stages?limit=4'),
-        api.get('/applications/mine')
+        api.get('/applications/mine'),
+        api.get('/community/follow-data').catch(() => ({ data: { data: { followers: [], following: [] } } })),
       ]);
       setUnis(uniRes.data.data.universities || []);
       setStages(stageRes.data.data.stages || []);
       setApps(appRes.data.data.applications || []);
+      setFollowData(followRes.data.data || { followers: [], following: [] });
     } catch (err) {
       console.error(err);
     } finally {
@@ -483,14 +486,50 @@ export const StudentDashboard = () => {
                 ? 'Complete your Baccalaureate proof, CV, and skills to reach 100% and boost your acceptance rate.' 
                 : 'Your profile is 100% verified and active!'}
             </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button onClick={() => setIsProfileModalOpen(true)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                Complete My Profile
+              </button>
+            </div>
+          </div>
 
-            <button 
-              onClick={() => setIsProfileModalOpen(true)} 
-              className="btn btn-secondary btn-sm"
-              style={{ width: '100%', justifyContent: 'center', fontSize: '0.82rem' }}
-            >
-              {profileScore < 100 ? 'Complete Profile (100%)' : 'Update Profile'}
-            </button>
+          {/* Student Professional Network Card */}
+          <div className="card glass" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1rem' }}>👥</span>
+                <h4 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700 }}>Academic & Career Network</h4>
+              </div>
+              <Link to="/profile" style={{ fontSize: '0.75rem', color: 'var(--red)', fontWeight: 600, textDecoration: 'none' }}>
+                Manage ↗
+              </Link>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--red-bright)' }}>{followData.followers?.length || 0}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Followers</div>
+              </div>
+              <div style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{followData.following?.length || 0}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Following</div>
+              </div>
+            </div>
+
+            {followData.following?.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>Recent Connections:</span>
+                {followData.following.slice(0, 3).map(f => (
+                  <div key={f._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+                      {f.avatar ? <img src={f.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (f.name?.[0]?.toUpperCase() || 'U')}
+                    </div>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{f.name}</span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: 'auto', textTransform: 'capitalize' }}>{f.role}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Active Communications & Interview Hub */}
