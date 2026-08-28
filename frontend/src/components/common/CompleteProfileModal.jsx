@@ -190,16 +190,23 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
       <div 
         className="modal" 
         onClick={e => e.stopPropagation()} 
-        style={{ maxWidth: '720px', maxHeight: '92vh', overflowY: 'auto', padding: '32px' }}
+        style={{ 
+          maxWidth: '700px', 
+          width: '100%',
+          maxHeight: '90vh', 
+          padding: 'clamp(20px, 3.5vw, 32px)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '16px' }}>
-          <div>
-            <div className="section-label">Verified Profile Hub</div>
-            <h3 style={{ fontSize: '1.4rem', margin: '4px 0 0', fontWeight: 700 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px', flexShrink: 0 }}>
+          <div style={{ flex: 1, paddingRight: '12px' }}>
+            <div className="section-label" style={{ fontSize: '0.68rem', marginBottom: '2px' }}>Verified Profile Hub</div>
+            <h3 style={{ fontSize: '1.35rem', margin: 0, fontWeight: 800 }}>
               {isStudent ? 'Student & Academic Verification' : 'Professional Profile Verification'}
             </h3>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '4px 0 0', lineHeight: 1.4 }}>
               {isStudent 
                 ? 'Upload your Baccalaureate proof and choose your academic or vocational path to reach 100%.'
                 : 'Complete your credentials and CV to unlock full dashboard privileges.'}
@@ -207,7 +214,19 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
           </div>
           <button 
             onClick={onClose} 
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer' }}
+            className="btn-ghost"
+            style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontSize: '1.2rem', 
+              cursor: 'pointer',
+              flexShrink: 0,
+              padding: 0
+            }}
           >
             ✕
           </button>
