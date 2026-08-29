@@ -481,6 +481,44 @@ export const StudentDashboard = () => {
               <div style={{ width: `${profileScore}%`, height: '100%', background: profileScore === 100 ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, var(--red), var(--red-hover))', transition: 'width 0.4s ease' }} />
             </div>
 
+            {/* Baccalaureate Status Badge */}
+            {user?.baccalaureate?.verificationStatus && (
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--r-sm)',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: user.baccalaureate.verificationStatus === 'verified' 
+                  ? 'rgba(16, 185, 129, 0.1)' 
+                  : user.baccalaureate.verificationStatus === 'rejected'
+                  ? 'rgba(239, 68, 68, 0.1)'
+                  : 'rgba(245, 158, 11, 0.1)',
+                color: user.baccalaureate.verificationStatus === 'verified' 
+                  ? '#10b981' 
+                  : user.baccalaureate.verificationStatus === 'rejected'
+                  ? '#ef4444' 
+                  : '#f59e0b',
+                border: user.baccalaureate.verificationStatus === 'verified'
+                  ? '1px solid rgba(16, 185, 129, 0.2)'
+                  : user.baccalaureate.verificationStatus === 'rejected'
+                  ? '1px solid rgba(239, 68, 68, 0.2)'
+                  : '1px solid rgba(245, 158, 11, 0.2)',
+              }}>
+                <span>
+                  {user.baccalaureate.verificationStatus === 'verified' && '✓ Baccalaureate Verified'}
+                  {user.baccalaureate.verificationStatus === 'under_review' && '⏳ Bac Proof: Under Review (< 24h)'}
+                  {user.baccalaureate.verificationStatus === 'rejected' && '⚠️ Bac Proof: Action Needed'}
+                  {user.baccalaureate.verificationStatus === 'unsubmitted' && 'Bac Proof: Not Uploaded'}
+                </span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                  {user.baccalaureate.section || 'Student'}
+                </span>
+              </div>
+            )}
+
             <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
               {profileScore < 100 
                 ? 'Complete your Baccalaureate proof, CV, and skills to reach 100% and boost your acceptance rate.' 

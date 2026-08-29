@@ -381,6 +381,56 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
+              {/* Baccalaureate Verification Status Badge / SLA Notice */}
+              {bac.verificationStatus && bac.verificationStatus !== 'unsubmitted' && (
+                <div style={{
+                  padding: '14px 16px',
+                  borderRadius: 'var(--r-md)',
+                  border: bac.verificationStatus === 'verified' 
+                    ? '1px solid rgba(16, 185, 129, 0.3)' 
+                    : bac.verificationStatus === 'rejected'
+                    ? '1px solid rgba(239, 68, 68, 0.4)'
+                    : '1px solid rgba(245, 158, 11, 0.4)',
+                  background: bac.verificationStatus === 'verified' 
+                    ? 'rgba(16, 185, 129, 0.08)' 
+                    : bac.verificationStatus === 'rejected'
+                    ? 'rgba(239, 68, 68, 0.08)'
+                    : 'rgba(245, 158, 11, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{
+                      fontWeight: 800,
+                      fontSize: '0.86rem',
+                      color: bac.verificationStatus === 'verified' ? '#10b981' : bac.verificationStatus === 'rejected' ? '#ef4444' : '#f59e0b'
+                    }}>
+                      {bac.verificationStatus === 'verified' && '✓ Official Tunisian Baccalaureate Verified'}
+                      {bac.verificationStatus === 'under_review' && '⏳ Under Priority Administrative Review (< 24h SLA)'}
+                      {bac.verificationStatus === 'rejected' && '⚠️ Baccalaureate Proof Needs Action'}
+                    </span>
+                    {bac.verificationConfidence > 0 && (
+                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                        AI Score: {bac.verificationConfidence}%
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    {bac.verificationStatus === 'verified' && (
+                      'Your diploma has been authenticated and verified. Your academic profile is fully accredited.'
+                    )}
+                    {bac.verificationStatus === 'under_review' && (
+                      'Your proof has been submitted to the administration queue. Our review team will visually inspect and verify your document in under 24 hours.'
+                    )}
+                    {bac.verificationStatus === 'rejected' && (
+                      `Reason: "${bac.rejectionReason || 'The uploaded file does not clearly show the official Ministry of Education seals or text.'}" — Please attach a clearer copy below.`
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Bac Proof Upload */}
               <div className="form-group">
                 <label className="form-label">Official Baccalaureate Proof Document (PDF or Photo) *</label>

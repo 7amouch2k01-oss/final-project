@@ -15,6 +15,7 @@ const getStats = async () => {
     totalInstitutions, pendingInstitutions,
     totalUniversities, totalStages, totalJobs,
     totalApplications, pendingRecruitRequests,
+    pendingBacVerifications,
   ] = await Promise.all([
     User.countDocuments({ isActive: true }),
     User.countDocuments({ role: 'student',  isActive: true }),
@@ -27,6 +28,7 @@ const getStats = async () => {
     Job.countDocuments({ isActive: true, deletedAt: null }),
     Application.countDocuments(),
     User.countDocuments({ role: 'citizen', 'recruitRights.status': 'pending' }),
+    User.countDocuments({ role: 'student', 'baccalaureate.verificationStatus': 'under_review' }),
   ]);
 
   // New users last 7 days (for chart)
@@ -50,6 +52,7 @@ const getStats = async () => {
     listings: { universities: totalUniversities, stages: totalStages, jobs: totalJobs },
     applications: { total: totalApplications },
     pendingRecruitRequests,
+    pendingBacVerifications,
     charts: { newUsers: newUsersChart, applications: appChart },
   };
 };
@@ -249,16 +252,140 @@ const getAllListings = async (query) => {
   return { data, total, type: 'job' };
 };
 
-// ── Delete / Archive Listing (Admin) ──────────────────────────────────────────
-const deleteListing = async (type, id) => {
-  if (type === 'university') {
-    await University.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false });
-  } else if (type === 'stage') {
-    await Stage.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false });
-  } else {
-    await Job.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false });
+// ── Baccalaureate Verifications Review ────────────────────────────────────────
+const getBacVerifications = async (query = {}) => {
+  const page   = Math.max(1, parseInt(query.page) || 1);
+  const limit  = Math.min(100, parseInt(query.limit) || 50);
+  const skip   = (page - 1) * limit;
+  const status = query.status || 'under_review';
+
+  const filter = {
+    role: 'student',
+    'baccalaureate.proofDocUrl': { $exists: true, $ne: '' },
+  };
+
+  if (status !== 'all') {
+    filter['baccalaureate.verificationStatus'] = status;
   }
-  return { success: true };
+
+  if (query.search) {
+    const safeSearch = escapeRegExp(query.search);
+    filter.$or = [
+      { name: new RegExp(safeSearch, 'i') },
+      { email: new RegExp(safeSearch, 'i') },
+      { 'baccalaureate.school': new RegExp(safeSearch, 'i') },
+      { 'baccalaureate.section': new RegExp(safeSearch, 'i') },
+    ];
+  }
+
+  const [students, total, underReviewCount, verifiedCount, rejectedCount] = await Promise.all([
+    User.find(filter)
+      .select('name email avatar baccalaureate cvUrl createdAt')
+      .sort({ 'baccalaureate.submittedAt': -1, updatedAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    User.countDocuments(filter),
+    User.countDocuments({ role: 'student', 'baccalaureate.verificationStatus': 'under_review' }),
+    User.countDocuments({ role: 'student', 'baccalaureate.verificationStatus': 'verified' }),
+    User.countDocuments({ role: 'student', 'baccalaureate.verificationStatus': 'rejected' }),
+  ]);
+
+  return {
+    students,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+    counts: {
+      underReview: underReviewCount,
+      verified: verifiedCount,
+      rejected: rejectedCount,
+      total: underReviewCount + verifiedCount + rejectedCount,
+    },
+  };
+};
+
+const approveBacVerification = async (studentId, adminId, io) => {
+  const student = await User.findOne({ _id: studentId, role: 'student' });
+  if (!student) {
+    const e = new Error('Student not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  student.baccalaureate.verificationStatus = 'verified';
+  student.baccalaureate.isVerified         = true;
+  student.baccalaureate.verificationMethod = 'admin_manual';
+  student.baccalaureate.reviewedAt         = new Date();
+  student.baccalaureate.reviewedBy         = adminId;
+  student.baccalaureate.rejectionReason    = '';
+  student.baccalaureate.verificationNotes  = 'Manually verified and confirmed authentic by platform administration.';
+
+  // If student has full name and CV, profile is 100% complete
+  if (student.name && student.cvUrl) {
+    student.isProfileComplete = true;
+  }
+
+  await student.save();
+
+  // Create notification
+  await Notification.create({
+    userId: student._id,
+    title: '🎓 Baccalaureate Certificate Verified',
+    message: 'Your official Tunisian Baccalaureate has been verified and confirmed authentic by administration. Your profile is now verified!',
+    type: 'system',
+    link: '/profile',
+    senderId: adminId,
+  });
+
+  if (io) {
+    io.to(student._id.toString()).emit('baccalaureate:status_changed', {
+      status: 'verified',
+      isVerified: true,
+      message: 'Your Baccalaureate certificate has been verified by administration.',
+    });
+  }
+
+  return student.toPublicProfile();
+};
+
+const rejectBacVerification = async (studentId, adminId, reason = 'Document does not match official Tunisian Baccalaureate criteria', io) => {
+  const student = await User.findOne({ _id: studentId, role: 'student' });
+  if (!student) {
+    const e = new Error('Student not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  student.baccalaureate.verificationStatus = 'rejected';
+  student.baccalaureate.isVerified         = false;
+  student.baccalaureate.verificationMethod = 'admin_manual';
+  student.baccalaureate.reviewedAt         = new Date();
+  student.baccalaureate.reviewedBy         = adminId;
+  student.baccalaureate.rejectionReason    = reason;
+  student.baccalaureate.verificationNotes  = `Rejected by administration: ${reason}`;
+  student.isProfileComplete                = false;
+
+  await student.save();
+
+  // Create notification
+  await Notification.create({
+    userId: student._id,
+    title: '⚠️ Baccalaureate Verification Update',
+    message: `Your Baccalaureate proof could not be verified: "${reason}". Please upload a clear official copy in your profile.`,
+    type: 'system',
+    link: '/profile',
+    senderId: adminId,
+  });
+
+  if (io) {
+    io.to(student._id.toString()).emit('baccalaureate:status_changed', {
+      status: 'rejected',
+      isVerified: false,
+      reason,
+    });
+  }
+
+  return student.toPublicProfile();
 };
 
 module.exports = {
@@ -266,4 +393,5 @@ module.exports = {
   getInstitutions, approveInstitution, rejectInstitution,
   getPendingRecruitRequests, approveRecruit, rejectRecruit,
   broadcastNotification, getAllListings, deleteListing,
+  getBacVerifications, approveBacVerification, rejectBacVerification,
 };

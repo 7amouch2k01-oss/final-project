@@ -1,6 +1,7 @@
 const User         = require('../models/User');
 const Notification = require('../models/Notification');
 const { uploadToCloudinary } = require('../config/cloudinary');
+const { verifyBaccalaureateDocument } = require('./bacVerificationService');
 
 // ── Get current user profile ────────────────────────────────────────────────
 const getMe = async (userId) => {
@@ -10,7 +11,7 @@ const getMe = async (userId) => {
 };
 
 // ── Update profile with Baccalaureate gate check ────────────────────────────
-const updateProfile = async (userId, fields) => {
+const updateProfile = async (userId, fields, io) => {
   const user = await User.findById(userId);
   if (!user) { const e = new Error('User not found'); e.statusCode = 404; throw e; }
 
@@ -20,15 +21,60 @@ const updateProfile = async (userId, fields) => {
     if (fields[f] !== undefined) user[f] = fields[f];
   });
 
+  // ── Automated Tunisian Baccalaureate Verification ─────────────────────────
+  if (fields.baccalaureate && user.role === 'student') {
+    const bac = user.baccalaureate || {};
+    if (bac.proofDocUrl) {
+      const verification = verifyBaccalaureateDocument({
+        proofDocUrl: bac.proofDocUrl,
+        school:      bac.school,
+        year:        bac.year,
+        section:     bac.section,
+        grade:       bac.grade,
+      });
+
+      // Update baccalaureate verification data
+      user.baccalaureate.verificationStatus     = verification.status;
+      user.baccalaureate.verificationConfidence = verification.confidence;
+      user.baccalaureate.verificationNotes      = verification.notes;
+      user.baccalaureate.verificationMethod     = verification.status === 'verified' ? 'ai_auto' : 'none';
+      user.baccalaureate.isVerified             = verification.status === 'verified';
+      user.baccalaureate.submittedAt            = new Date();
+      user.baccalaureate.extractedData          = verification.extractedData;
+
+      // In-app notification
+      const notifTitle = verification.status === 'verified'
+        ? 'Baccalaureate Verified'
+        : 'Baccalaureate Under Review';
+      const notifMsg = verification.status === 'verified'
+        ? 'Your Tunisian Baccalaureate certificate has been verified.'
+        : 'Your Baccalaureate proof has been submitted for administrative review and will be verified within 24h.';
+
+      await Notification.create({
+        userId: user._id,
+        title: notifTitle,
+        message: notifMsg,
+        type: 'system',
+        link: '/profile',
+      });
+
+      if (io) {
+        io.to(user._id.toString()).emit('baccalaureate:status_changed', {
+          status: verification.status,
+          confidence: verification.confidence,
+          notes: verification.notes,
+        });
+      }
+    }
+  }
+
   // Check if profile is complete
   if (user.role === 'student') {
-    // For students, Baccalaureate info & proof document are MANDATORY
     const bac = user.baccalaureate || {};
     const hasBac = bac.school && bac.year && bac.section && bac.proofDocUrl;
-    user.isProfileComplete = !!(hasBac && user.name);
+    user.isProfileComplete = !!(hasBac && user.name && user.cvUrl);
   } else {
-    // For citizens, name & experience/skills/company mark completeness
-    user.isProfileComplete = !!(user.name && (user.experience?.length > 0 || user.skills?.length > 0 || user.company?.name));
+    user.isProfileComplete = !!(user.name && user.cvUrl && (user.experience?.length > 0 || user.skills?.length > 0 || user.company?.name));
   }
 
   await user.save();

@@ -11,6 +11,7 @@ import Institutions from './pages/Institutions';
 import Universities from './pages/Universities';
 import Listings from './pages/Listings';
 import Settings from './pages/Settings';
+import BacVerifications from './pages/BacVerifications';
 import './styles/admin.css';
 
 // Guard: Only authenticated admins can see protected routes
@@ -41,13 +42,14 @@ export default function App() {
         <Route path="/" element={<PublicRoute><AdminLogin /></PublicRoute>} />
 
         {/* Protected: All admin pages */}
-        <Route path="/dashboard"    element={<ProtectedRoute><Dashboard    /></ProtectedRoute>} />
-        <Route path="/users"        element={<ProtectedRoute><Users        /></ProtectedRoute>} />
-        <Route path="/institutions" element={<ProtectedRoute><Institutions /></ProtectedRoute>} />
-        <Route path="/recruiters"   element={<ProtectedRoute><Recruiters   /></ProtectedRoute>} />
-        <Route path="/universities" element={<ProtectedRoute><Universities /></ProtectedRoute>} />
-        <Route path="/listings"     element={<ProtectedRoute><Listings     /></ProtectedRoute>} />
-        <Route path="/settings"     element={<ProtectedRoute><Settings     /></ProtectedRoute>} />
+        <Route path="/dashboard"        element={<ProtectedRoute><Dashboard        /></ProtectedRoute>} />
+        <Route path="/users"            element={<ProtectedRoute><Users            /></ProtectedRoute>} />
+        <Route path="/institutions"     element={<ProtectedRoute><Institutions     /></ProtectedRoute>} />
+        <Route path="/recruiters"       element={<ProtectedRoute><Recruiters       /></ProtectedRoute>} />
+        <Route path="/bac-verifications" element={<ProtectedRoute><BacVerifications /></ProtectedRoute>} />
+        <Route path="/universities"     element={<ProtectedRoute><Universities     /></ProtectedRoute>} />
+        <Route path="/listings"         element={<ProtectedRoute><Listings         /></ProtectedRoute>} />
+        <Route path="/settings"         element={<ProtectedRoute><Settings         /></ProtectedRoute>} />
 
         {/* Catch-all: send unknown routes to dashboard if authed, else to login */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

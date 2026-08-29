@@ -33,12 +33,35 @@ const userSchema = new mongoose.Schema(
 
     // ── Baccalaureate (Mandatory for students) ────────────────────────────────
     baccalaureate: {
-      school:       { type: String, trim: true },
-      year:         { type: Number },
-      section:      { type: String, trim: true }, // e.g., Math, Sciences Exp, Tech, Info, Eco-Gestion, Lettres, Sport
-      grade:        { type: String, trim: true }, // Mention or score (e.g. Assez Bien, 14.50)
-      proofDocUrl:  { type: String, default: '' }, // Uploaded PDF or image proof
-      isVerified:   { type: Boolean, default: false },
+      school:                 { type: String, trim: true },
+      year:                   { type: Number },
+      section:                { type: String, trim: true }, // e.g., Math, Sciences Exp, Tech, Info, Eco-Gestion, Lettres, Sport
+      grade:                  { type: String, trim: true }, // Mention or score (e.g. Assez Bien, 14.50)
+      proofDocUrl:            { type: String, default: '' }, // Uploaded PDF or image proof
+      isVerified:             { type: Boolean, default: false },
+      verificationStatus: {
+        type: String,
+        enum: ['unsubmitted', 'verified', 'under_review', 'rejected'],
+        default: 'unsubmitted',
+      },
+      verificationConfidence: { type: Number, default: 0 }, // 0 to 100
+      verificationNotes:      { type: String, default: '' },
+      verificationMethod: {
+        type: String,
+        enum: ['none', 'ai_auto', 'admin_manual'],
+        default: 'none',
+      },
+      submittedAt:            { type: Date },
+      reviewedAt:             { type: Date },
+      reviewedBy:             { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      rejectionReason:        { type: String, default: '' },
+      extractedData: {
+        candidateNumber:      { type: String, default: '' },
+        section:              { type: String, default: '' },
+        year:                 { type: Number },
+        mention:              { type: String, default: '' },
+        detectedKeywords:     [{ type: String }],
+      },
     },
 
     // ── Citizen Recruit Rights ─────────────────────────────────────────────────

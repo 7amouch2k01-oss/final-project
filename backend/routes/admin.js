@@ -21,6 +21,11 @@ router.get('/recruit-requests',               ctrl.getRecruitRequests);
 router.patch('/recruit-requests/:id/approve', ctrl.approveRecruit);
 router.patch('/recruit-requests/:id/reject',  ctrl.rejectRecruit);
 
+// Baccalaureate Verifications
+router.get('/bac-verifications',               ctrl.getBacVerifications);
+router.patch('/bac-verifications/:id/approve', ctrl.approveBacVerification);
+router.patch('/bac-verifications/:id/reject',  ctrl.rejectBacVerification);
+
 router.post('/broadcast',             ctrl.broadcast);
 router.get('/listings',               ctrl.getAllListings);
 router.delete('/listings/:type/:id',  ctrl.deleteListing);

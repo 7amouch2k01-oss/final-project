@@ -11,7 +11,8 @@ const getMe = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
-    const user = await userService.updateProfile(req.user.id, req.body);
+    const io   = req.app.get('io');
+    const user = await userService.updateProfile(req.user.id, req.body, io);
     success(res, { user: user.toPublicProfile() }, 'Profile updated');
   } catch (e) { next(e); }
 };

@@ -60,9 +60,33 @@ const deleteListing = async (req, res, next) => {
   } catch(e){next(e);}
 };
 
+// Baccalaureate Verifications
+const getBacVerifications = async (req, res, next) => {
+  try {
+    success(res, await adminService.getBacVerifications(req.query));
+  } catch(e){next(e);}
+};
+
+const approveBacVerification = async (req, res, next) => {
+  try {
+    const io = req.app.get('io');
+    const student = await adminService.approveBacVerification(req.params.id, req.user.id, io);
+    success(res, { student }, 'Student Baccalaureate verified and confirmed authentic');
+  } catch(e){next(e);}
+};
+
+const rejectBacVerification = async (req, res, next) => {
+  try {
+    const io = req.app.get('io');
+    const student = await adminService.rejectBacVerification(req.params.id, req.user.id, req.body.reason, io);
+    success(res, { student }, 'Student Baccalaureate verification rejected');
+  } catch(e){next(e);}
+};
+
 module.exports = {
   getStats, getAllUsers, changeRole, banUser, unbanUser,
   getInstitutions, approveInstitution, rejectInstitution,
   getRecruitRequests, approveRecruit, rejectRecruit,
   broadcast, getAllListings, deleteListing,
+  getBacVerifications, approveBacVerification, rejectBacVerification,
 };

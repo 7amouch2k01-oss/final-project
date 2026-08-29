@@ -32,6 +32,7 @@ export default function Dashboard() {
           stages: sData.listings?.stages || 0,
           applications: sData.applications?.total || 0,
           pendingRecruitRequests: sData.pendingRecruitRequests || 0,
+          pendingBacVerifications: sData.pendingBacVerifications || 0,
         });
       } else {
         console.error('Stats error:', statsRes.reason);
@@ -179,6 +180,18 @@ export default function Dashboard() {
         </svg>
       ), 
       color: '#8b5cf6' 
+    },
+    { 
+      label: 'Baccalaureate Queue', 
+      value: stats?.pendingBacVerifications, 
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+          <path d="M6 12v5c3 3 9 3 12 0v-5" />
+        </svg>
+      ), 
+      color: (stats?.pendingBacVerifications || 0) > 0 ? '#ef4444' : '#10b981', 
+      badge: (stats?.pendingBacVerifications || 0) > 0 ? 'REVIEW 24H' : 'ALL VERIFIED' 
     },
     { 
       label: 'Internship Listings (Stages)', 
