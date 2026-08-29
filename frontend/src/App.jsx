@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 import { useInstitutionStore } from './store/institutionStore';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { initNativeFeatures } from './native/capacitorBridge';
 import Layout from './components/layout/Layout';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/auth/Login';
@@ -79,6 +80,7 @@ function App() {
   const { fetchProfile } = useInstitutionStore();
 
   useEffect(() => {
+    initNativeFeatures();
     checkAuth();
     if (localStorage.getItem('institutionToken')) {
       fetchProfile();

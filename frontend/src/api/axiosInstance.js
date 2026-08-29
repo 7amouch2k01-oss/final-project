@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '../native/capacitorBridge';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api', // '/api' works out-of-the-box on both local and Railway single-deploy
-  withCredentials: true, // Send cookies (refresh token)
+  baseURL: getApiBaseUrl(),
+  withCredentials: true,
 });
 
 // Interceptor to add access token to headers
@@ -58,7 +59,7 @@ api.interceptors.response.use(
       try {
         // Request a new access token for normal user
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`,
+          `${getApiBaseUrl()}/auth/refresh-token`,
           {},
           { withCredentials: true }
         );

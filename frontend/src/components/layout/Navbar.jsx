@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../contexts/ThemeContext';
 import api from '../../api/axiosInstance';
 import io from 'socket.io-client';
+import { getSocketUrl } from '../../native/capacitorBridge';
 
 export const Navbar = () => {
   const { user, logout } = useAuthStore();
@@ -39,7 +40,7 @@ export const Navbar = () => {
     };
     fetchNotifs();
 
-    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+    const socket = io(getSocketUrl());
     socket.emit('join', user._id);
     if (user.role === 'admin') socket.emit('join:admin');
     socket.on('notification:new', (n) => {
