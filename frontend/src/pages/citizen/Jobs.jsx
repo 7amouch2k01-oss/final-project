@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
@@ -6,6 +7,7 @@ import { BrandLogo } from '../../components/common/CompleteProfileModal';
 
 export const Jobs = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [appliedJobIds, setAppliedJobIds] = useState(new Set());
   const [savedJobIds, setSavedJobIds] = useState(new Set());
@@ -59,6 +61,22 @@ export const Jobs = () => {
     e.preventDefault();
     if (!user) {
       toast.error('Please log in to apply');
+      return;
+    }
+    // Profile completion gate — must have name + CV + bio
+    if (!user.name || !user.name.trim()) {
+      toast.error('Please complete your Full Name in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
+      return;
+    }
+    if (!user.cvUrl || !user.cvUrl.trim()) {
+      toast.error('Please upload your CV/Portfolio URL in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
+      return;
+    }
+    if (!user.bio || !user.bio.trim()) {
+      toast.error('Please write a short Bio in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
       return;
     }
     if (appliedJobIds.has(selectedJob._id)) {

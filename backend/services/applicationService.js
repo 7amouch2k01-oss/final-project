@@ -57,6 +57,28 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
     throw e;
   }
 
+  // 1.5 Verify Applicant profile proofs & completeness (Name, CV proof, and Bio)
+  const applicant = await User.findById(applicantId);
+  if (!applicant) {
+    const e = new Error('User not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  const hasName = applicant.name && applicant.name.trim().length > 0;
+  const hasCv = (applicant.cvUrl && applicant.cvUrl.trim().length > 0) || (cvUrl && cvUrl.trim().length > 0);
+  const hasBio = applicant.bio && applicant.bio.trim().length > 0;
+
+  if (!hasName || !hasCv || !hasBio) {
+    const missing = [];
+    if (!hasName) missing.push('Full Name');
+    if (!hasCv) missing.push('CV / Proof document');
+    if (!hasBio) missing.push('Bio & General profile info');
+    const e = new Error(`Profile incomplete: Please finish uploading your ${missing.join(', ')} in your profile before applying.`);
+    e.statusCode = 400;
+    throw e;
+  }
+
   // 2. Prevent duplicate applications
   const existing = await Application.findOne({ applicantId, targetId });
   if (existing) {

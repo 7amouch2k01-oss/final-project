@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { BrandLogo } from '../../components/common/CompleteProfileModal';
@@ -6,6 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 
 export const Universities = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [unis, setUnis] = useState([]);
   const [appliedUniIds, setAppliedUniIds] = useState(new Set());
   const [search, setSearch] = useState('');
@@ -56,6 +58,22 @@ export const Universities = () => {
     e.preventDefault();
     if (!user) {
       toast.error('Please log in to submit your application');
+      return;
+    }
+    // Profile completion gate — must have name + CV + bio
+    if (!user.name || !user.name.trim()) {
+      toast.error('Please complete your Full Name in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
+      return;
+    }
+    if (!user.cvUrl || !user.cvUrl.trim()) {
+      toast.error('Please upload your CV/Portfolio URL in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
+      return;
+    }
+    if (!user.bio || !user.bio.trim()) {
+      toast.error('Please write a short Bio in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
       return;
     }
     if (appliedUniIds.has(selectedUni._id)) {

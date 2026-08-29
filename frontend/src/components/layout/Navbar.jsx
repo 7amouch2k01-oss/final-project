@@ -130,12 +130,15 @@ export const Navbar = () => {
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        padding: '0 24px',
-        height: '64px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        paddingTop: 'var(--safe-top, 0px)',
+        minHeight: 'calc(64px + var(--safe-top, 0px))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         transition: 'background var(--t-base), box-shadow var(--t-base), border-color var(--t-base)',
+        boxSizing: 'border-box',
       }}>
         {/* Left: Logo + Nav Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
@@ -498,7 +501,7 @@ export const Navbar = () => {
           style={{
             position: 'fixed', 
             inset: 0, 
-            top: '64px',
+            top: 'calc(64px + var(--safe-top, 0px))',
             background: 'var(--bg-surface)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
@@ -508,7 +511,7 @@ export const Navbar = () => {
             flexDirection: 'column', 
             gap: '8px',
             overflowY: 'auto',
-            maxHeight: 'calc(100vh - 64px)',
+            maxHeight: 'calc(100vh - 64px - var(--safe-top, 0px))',
             boxShadow: 'var(--shadow-xl)',
             borderBottom: '1px solid var(--glass-border)',
           }}

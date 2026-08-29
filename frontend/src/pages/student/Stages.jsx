@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
@@ -6,6 +7,7 @@ import { BrandLogo } from '../../components/common/CompleteProfileModal';
 
 export const Stages = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [stages, setStages] = useState([]);
   const [appliedStageIds, setAppliedStageIds] = useState(new Set());
   const [search, setSearch] = useState('');
@@ -55,6 +57,22 @@ export const Stages = () => {
     e.preventDefault();
     if (!user) {
       toast.error('Please log in to apply');
+      return;
+    }
+    // Profile completion gate — must have name + CV + bio
+    if (!user.name || !user.name.trim()) {
+      toast.error('Please complete your Full Name in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
+      return;
+    }
+    if (!user.cvUrl || !user.cvUrl.trim()) {
+      toast.error('Please upload your CV/Portfolio URL in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
+      return;
+    }
+    if (!user.bio || !user.bio.trim()) {
+      toast.error('Please write a short Bio in your profile before applying.', { duration: 4000 });
+      navigate('/profile');
       return;
     }
     if (appliedStageIds.has(selectedStage._id)) {

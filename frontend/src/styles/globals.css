@@ -784,6 +784,10 @@ textarea::placeholder { color: var(--text-muted); }
 }
 
 @media (max-width: 768px) {
+  :root {
+    --safe-top: max(env(safe-area-inset-top, 0px), 28px);
+  }
+
   html, body, #root {
     width: 100% !important;
     max-width: 100vw !important;
