@@ -98,6 +98,24 @@ export const LandingPage = () => {
                 <Link to="/login" className="btn btn-secondary btn-lg">Log In</Link>
               </>
             )}
+            <a 
+              href="/downloads/tuniverse-app.apk" 
+              download="tuniverse-app.apk"
+              className="btn btn-secondary btn-lg"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                border: '1px solid rgba(225, 29, 72, 0.4)',
+                background: 'rgba(225, 29, 72, 0.06)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--red-bright)' }}>
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <span>Download Android APK</span>
+            </a>
           </div>
         </div>
       </section>
@@ -312,6 +330,105 @@ export const LandingPage = () => {
                 <p style={{ fontSize: '0.85rem', margin: 0, color: 'var(--text-secondary)' }}>{step.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Android Mobile App Showcase ─────────────────────── */}
+      <section style={{ 
+        padding: '80px 24px', 
+        position: 'relative', 
+        zIndex: 1,
+        borderBottom: '1px solid var(--glass-border)'
+      }}>
+        <div className="container">
+          <div 
+            className="card card-3d" 
+            style={{ 
+              padding: '48px 36px', 
+              background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.08) 0%, rgba(20, 20, 25, 0.95) 100%)',
+              border: '1px solid rgba(225, 29, 72, 0.3)',
+              borderRadius: 'var(--r-xl)',
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '36px'
+            }}
+          >
+            <div style={{ flex: '1 1 450px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="badge badge-accent">📱 Native Mobile Experience</span>
+                <span className="badge">Android APK v1.0</span>
+              </div>
+              <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>
+                Take TuniVerse wherever you go.
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>
+                Get instant push alerts for application updates, scan and upload your Baccalaureate proof directly with your camera, and book video interviews on the go.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginTop: '6px' }}>
+                {[
+                  'Instant push notifications',
+                  '1-tap document scan & upload',
+                  'Video interview launcher',
+                  'Offline profile caching'
+                ].map((feat, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--red-bright)', fontWeight: 800 }}>✓</span>
+                    {feat}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '12px' }}>
+                <a 
+                  href="/downloads/tuniverse-app.apk" 
+                  download="tuniverse-app.apk"
+                  className="btn btn-primary btn-lg"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span>Download for Android (.APK)</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Mobile Visual Mockup Card */}
+            <div style={{ 
+              flex: '0 0 260px', 
+              margin: '0 auto',
+              background: 'var(--bg-raised)', 
+              border: '2px solid var(--glass-border)', 
+              borderRadius: '32px', 
+              padding: '20px 16px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px'
+            }}>
+              <div style={{ width: '48px', height: '4px', background: 'var(--text-muted)', borderRadius: '4px', margin: '0 auto' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--red)' }}>TuniVerse</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>100%</span>
+              </div>
+              <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>Application Accepted!</div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>ESPRIT University accepted your file.</div>
+                <span className="badge badge-success" style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>Ready to Enroll</span>
+              </div>
+              <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', padding: '16px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>Interview Invitation</div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>InstaDeep booked a meeting.</div>
+                <span className="badge badge-accent" style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>Join Google Meet</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
