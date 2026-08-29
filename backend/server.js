@@ -142,6 +142,26 @@ const adminDist = fs.existsSync(path.join(__dirname, '../admin/dist'))
   ? path.join(__dirname, '../admin/dist') 
   : path.join(__dirname, 'admin/dist');
 
+// ─── Mobile App Version & Update Info Endpoint ─────────────────────────────
+app.get('/api/app-version', (req, res) => {
+  res.json({
+    status: 'success',
+    data: {
+      latestVersion: process.env.APP_LATEST_VERSION || '1.1.0',
+      buildNumber: parseInt(process.env.APP_BUILD_NUMBER || '110', 10),
+      apkUrl: '/downloads/tuniverse-app.apk',
+      releaseNotes: [
+        'Tunisian Baccalaureate Verification Engine & 24h Review Center',
+        'Mobile Notch & Status Bar Safe Area Clearance',
+        'Profile Completion Gate for Student & Citizen Applications',
+        'Direct Over-The-Air Application Updates',
+      ],
+      forceUpdate: process.env.APP_FORCE_UPDATE === 'true' || false,
+      publishedAt: new Date().toISOString(),
+    }
+  });
+});
+
 // ─── Direct Android APK Download Route ───────────────────────────────────────
 app.get('/downloads/tuniverse-app.apk', (req, res) => {
   const apkPaths = [

@@ -17,6 +17,7 @@ import UserProfile from './pages/UserProfile';
 import RecruiterHub from './pages/citizen/RecruiterHub';
 import ProStudentHub from './pages/student/ProStudentHub';
 import PartTimeJobs from './pages/student/PartTimeJobs';
+import AppUpdateModal from './components/common/AppUpdateModal';
 
 // Institution Portal Pages
 import InstitutionRegister from './pages/institution/InstitutionRegister';
@@ -163,6 +164,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>
+        <AppUpdateModal />
         <Toaster position="bottom-right" />
       </Router>
     </ThemeProvider>
