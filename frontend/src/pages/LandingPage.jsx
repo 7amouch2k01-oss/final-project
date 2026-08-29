@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import AppDownloadButtons from '../components/common/AppDownloadButtons';
+
 
 const STEPS = [
   { 
@@ -360,7 +362,7 @@ export const LandingPage = () => {
             <div style={{ flex: '1 1 450px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="badge badge-accent">📱 Native Mobile Experience</span>
-                <span className="badge">Android APK v1.0</span>
+                <span className="badge">Android & iOS</span>
               </div>
               <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>
                 Take TuniVerse wherever you go.
@@ -383,22 +385,12 @@ export const LandingPage = () => {
                 ))}
               </div>
 
-              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '12px' }}>
-                <a 
-                  href="/downloads/tuniverse-app.apk" 
-                  download="tuniverse-app.apk"
-                  className="btn btn-primary btn-lg"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  <span>Download for Android (.APK)</span>
-                </a>
+              {/* ── Smart OS-Aware Download Buttons ───────────────── */}
+              <div style={{ marginTop: '12px' }}>
+                <AppDownloadButtons size="lg" showBothOnDesktop={true} />
               </div>
             </div>
+
 
             {/* Mobile Visual Mockup Card */}
             <div style={{ 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axiosInstance';
 import { CURRENT_APP_VERSION, CURRENT_BUILD_NUMBER } from '../../config/appVersion';
 import { isNative, getApiBaseUrl } from '../../native/capacitorBridge';
+import { getDeviceOS } from '../../utils/deviceDetect';
 
 export default function AppUpdateModal() {
   const [updateInfo, setUpdateInfo] = useState(null);
@@ -41,14 +42,23 @@ export default function AppUpdateModal() {
 
   if (!isOpen || !updateInfo) return null;
 
+  const deviceOS = getDeviceOS();
+  const isIOSDevice = deviceOS === 'ios';
+
   const handleUpdate = () => {
     setDownloading(true);
-    const downloadUrl = updateInfo.apkUrl?.startsWith('http')
-      ? updateInfo.apkUrl
-      : `${getApiBaseUrl()}${updateInfo.apkUrl || '/downloads/tuniverse-app.apk'}`;
 
-    // Trigger download / open APK installer
-    window.open(downloadUrl, '_system');
+    if (isIOSDevice) {
+      // iOS: open the app in Safari so user can "Add to Home Screen"
+      const iosUrl = updateInfo.iosUrl || 'https://tunistudy.up.railway.app';
+      window.open(iosUrl, '_blank');
+    } else {
+      // Android: trigger APK download
+      const downloadUrl = updateInfo.apkUrl?.startsWith('http')
+        ? updateInfo.apkUrl
+        : `${getApiBaseUrl()}${updateInfo.apkUrl || '/downloads/tuniverse-app.apk'}`;
+      window.open(downloadUrl, '_system');
+    }
 
     setTimeout(() => {
       setDownloading(false);
@@ -62,6 +72,7 @@ export default function AppUpdateModal() {
     sessionStorage.setItem('tuniverse_update_dismissed', 'true');
     setIsOpen(false);
   };
+
 
   return (
     <div style={{
@@ -192,9 +203,18 @@ export default function AppUpdateModal() {
               cursor: 'pointer',
             }}
           >
-            {downloading ? (
+          {downloading ? (
               <>
-                <span className="animate-spin">⟳</span> Downloading Update...
+                <span className="animate-spin">⟳</span>
+                {isIOSDevice ? 'Opening in Safari...' : 'Downloading Update...'}
+              </>
+            ) : isIOSDevice ? (
+              <>
+                {/* Apple icon */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
+                Update on iPhone / iPad
               </>
             ) : (
               <>
