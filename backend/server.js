@@ -1,6 +1,7 @@
 const express       = require('express');
 const http          = require('http');
 const path          = require('path');
+const fs            = require('fs');
 const { Server }    = require('socket.io');
 const mongoose      = require('mongoose');
 const dotenv        = require('dotenv');
@@ -12,9 +13,9 @@ const rateLimit     = require('express-rate-limit');
 
 dotenv.config();
 
-const connectDB                   = require('./config/db');
+const connectDB                         = require('./config/db');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
-const initSocket                  = require('./socket/socketHandler');
+const initSocket                        = require('./socket/socketHandler');
 
 // ─── Route imports ────────────────────────────────────────────────────────────
 const authRoutes         = require('./routes/auth');
@@ -31,6 +32,15 @@ const proRoutes          = require('./routes/pro');
 const communityRoutes    = require('./routes/community');
 const aiRoutes           = require('./routes/ai');
 
+// ─── Static dist paths (resolved early so health check can use them) ──────────
+const frontendDist = fs.existsSync(path.join(__dirname, '../frontend/dist'))
+  ? path.join(__dirname, '../frontend/dist')
+  : path.join(__dirname, 'frontend/dist');
+
+const adminDist = fs.existsSync(path.join(__dirname, '../admin/dist'))
+  ? path.join(__dirname, '../admin/dist')
+  : path.join(__dirname, 'admin/dist');
+
 // ─── Connect to MongoDB ────────────────────────────────────────────────────────
 connectDB();
 
@@ -38,15 +48,14 @@ connectDB();
 const app    = express();
 const server = http.createServer(app);
 
-// Enable trust proxy so rate-limiter and secure cookies work behind reverse proxies (Railway / Render)
+// Enable trust proxy so rate-limiter and secure cookies work behind Railway
 app.set('trust proxy', 1);
 
-// Allowed origins for CORS (main app + isolated admin panel)
+// ─── Socket.io ────────────────────────────────────────────────────────────────
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
 if (process.env.ADMIN_URL)  allowedOrigins.push(process.env.ADMIN_URL);
 
-// ─── Socket.io ────────────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -55,7 +64,6 @@ const io = new Server(server, {
   },
 });
 initSocket(io);
-// Make io accessible in controllers via req.io
 app.set('io', io);
 
 // ─── Security middleware ───────────────────────────────────────────────────────
@@ -72,7 +80,7 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Auth limiter for auth routes (100 req / 15 min)
+// Auth limiter (100 req / 15 min)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -83,10 +91,10 @@ const authLimiter = rateLimit({
 app.use(
   cors({
     origin: function (origin, callback) {
-      // In single deployment mode, requests from browser to same host might have no origin or match
+      // Allow requests with no origin (mobile apps, Railway health probes)
       if (!origin) return callback(null, true);
-      // If allowedOrigins contains it, or in production single deployment, accept
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'production') {
+      // Accept all in production (single-host deployment) or known dev origins
+      if (process.env.NODE_ENV === 'production' || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(null, true);
@@ -96,7 +104,7 @@ app.use(
 );
 
 // ─── Body parsers ─────────────────────────────────────────────────────────────
-// NOTE: Stripe webhook needs raw body — must be BEFORE express.json()
+// Stripe webhook needs raw body — must be BEFORE express.json()
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -107,13 +115,19 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// ─── Health check ─────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: '🚀 TuniStudy / TuniJob API is running',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
+// ─── Health check (Railway probes HEAD / and GET /api/health) ─────────────────
+// HEAD probe — Railway load balancer uses HEAD / to confirm server is up
+app.head('/', (_req, res) => res.sendStatus(200));
+
+app.get('/api/health', (_req, res) => {
+  const dbState  = mongoose.connection.readyState;
+  const dbStatus = ['disconnected', 'connected', 'connecting', 'disconnecting'][dbState] || 'unknown';
+  res.status(200).json({
+    success:     true,
+    message:     '🚀 TuniVerse API is running',
+    environment: process.env.NODE_ENV || 'production',
+    database:    dbStatus,
+    timestamp:   new Date().toISOString(),
   });
 });
 
@@ -132,25 +146,15 @@ app.use('/api/pro',           proRoutes);
 app.use('/api/community',     communityRoutes);
 app.use('/api/ai',            aiRoutes);
 
-// ─── Single Deployment: Serve Built Frontend & Admin SPAs ──────────────────
-const fs = require('fs');
-const frontendDist = fs.existsSync(path.join(__dirname, '../frontend/dist')) 
-  ? path.join(__dirname, '../frontend/dist') 
-  : path.join(__dirname, 'frontend/dist');
-
-const adminDist = fs.existsSync(path.join(__dirname, '../admin/dist')) 
-  ? path.join(__dirname, '../admin/dist') 
-  : path.join(__dirname, 'admin/dist');
-
-// ─── Mobile App Version & Update Info Endpoint ─────────────────────────────
-app.get('/api/app-version', (req, res) => {
+// ─── Mobile App Version & Update Info Endpoint ────────────────────────────────
+app.get('/api/app-version', (_req, res) => {
   res.json({
     status: 'success',
     data: {
       latestVersion: process.env.APP_LATEST_VERSION || '1.1.0',
-      buildNumber: parseInt(process.env.APP_BUILD_NUMBER || '110', 10),
-      apkUrl: '/downloads/tuniverse-app.apk',
-      iosUrl: process.env.APP_IOS_URL || 'https://tunistudy.up.railway.app',
+      buildNumber:   parseInt(process.env.APP_BUILD_NUMBER || '110', 10),
+      apkUrl:        '/downloads/tuniverse-app.apk',
+      iosUrl:        process.env.APP_IOS_URL || 'https://tunistudy.up.railway.app',
       releaseNotes: [
         'iOS Support — Install TuniVerse directly on iPhone & iPad',
         'Smart OS Detection — Android & iOS download buttons auto-detected',
@@ -158,14 +162,14 @@ app.get('/api/app-version', (req, res) => {
         'Mobile Notch & Status Bar Safe Area Clearance',
         'Profile Completion Gate for Student & Citizen Applications',
       ],
-      forceUpdate: process.env.APP_FORCE_UPDATE === 'true' || false,
-      publishedAt: new Date().toISOString(),
-    }
+      forceUpdate:  process.env.APP_FORCE_UPDATE === 'true' || false,
+      publishedAt:  new Date().toISOString(),
+    },
   });
 });
 
 // ─── Direct Android APK Download Route ───────────────────────────────────────
-app.get('/downloads/tuniverse-app.apk', (req, res) => {
+app.get('/downloads/tuniverse-app.apk', (_req, res) => {
   const apkPaths = [
     path.join(__dirname, '../frontend/dist/downloads/tuniverse-app.apk'),
     path.join(__dirname, '../frontend/public/downloads/tuniverse-app.apk'),
@@ -182,17 +186,16 @@ app.get('/downloads/tuniverse-app.apk', (req, res) => {
   res.status(404).send('APK file not found.');
 });
 
-// 1. Serve Admin SPA at /admin
+// ─── Serve Built SPAs ─────────────────────────────────────────────────────────
+// 1. Admin panel at /admin
 app.use('/admin', express.static(adminDist));
-app.get(/^\/admin(\/.*)?$/, (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
+app.get(/^\/admin(\/.*)?$/, (_req, res) => {
   res.sendFile(path.join(adminDist, 'index.html'));
 });
 
-// 2. Serve Main Frontend SPA at /
+// 2. Main frontend SPA at /
 app.use(express.static(frontendDist));
-app.get('{*splat}', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
+app.get('{*splat}', (_req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
@@ -203,7 +206,7 @@ app.use(errorHandler);
 // ─── Start server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🚀 Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+  console.log(`\n🚀 TuniVerse server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
   console.log(`📡 Socket.io ready`);
-  console.log(`🌐 Health check: http://0.0.0.0:${PORT}/api/health\n`);
+  console.log(`🌐 Health: http://0.0.0.0:${PORT}/api/health\n`);
 });
