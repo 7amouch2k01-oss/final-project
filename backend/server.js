@@ -142,6 +142,24 @@ const adminDist = fs.existsSync(path.join(__dirname, '../admin/dist'))
   ? path.join(__dirname, '../admin/dist') 
   : path.join(__dirname, 'admin/dist');
 
+// ─── Direct Android APK Download Route ───────────────────────────────────────
+app.get('/downloads/tuniverse-app.apk', (req, res) => {
+  const apkPaths = [
+    path.join(__dirname, '../frontend/dist/downloads/tuniverse-app.apk'),
+    path.join(__dirname, '../frontend/public/downloads/tuniverse-app.apk'),
+    path.join(__dirname, 'frontend/dist/downloads/tuniverse-app.apk'),
+    path.join(__dirname, '../frontend/android/app/build/outputs/apk/debug/app-debug.apk'),
+  ];
+  for (const p of apkPaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 100000) {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', 'attachment; filename="tuniverse-app.apk"');
+      return res.sendFile(path.resolve(p));
+    }
+  }
+  res.status(404).send('APK file not found.');
+});
+
 // 1. Serve Admin SPA at /admin
 app.use('/admin', express.static(adminDist));
 app.get(/^\/admin(\/.*)?$/, (req, res, next) => {
