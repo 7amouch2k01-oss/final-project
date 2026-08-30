@@ -388,6 +388,32 @@ const rejectBacVerification = async (studentId, adminId, reason = 'Document does
   return student.toPublicProfile();
 };
 
+// ── Delete a listing (university / stage / job) ───────────────────────────────
+const deleteListing = async (type, id) => {
+  const modelMap = {
+    university: University,
+    stage:      Stage,
+    job:        Job,
+  };
+  const Model = modelMap[type];
+  if (!Model) {
+    const e = new Error(`Unknown listing type: ${type}. Must be university, stage, or job.`);
+    e.statusCode = 400;
+    throw e;
+  }
+  const doc = await Model.findById(id);
+  if (!doc) {
+    const e = new Error('Listing not found');
+    e.statusCode = 404;
+    throw e;
+  }
+  // Soft-delete
+  doc.deletedAt = new Date();
+  doc.isActive  = false;
+  await doc.save();
+  return { deleted: true, type, id };
+};
+
 module.exports = {
   getStats, getAllUsers, changeUserRole, toggleBan,
   getInstitutions, approveInstitution, rejectInstitution,
