@@ -10,8 +10,8 @@ export default function AppUpdateModal() {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    // ⚠️ Only show update prompt on mobile phones/tablets, NEVER on desktop browsers
-    if (!isMobile()) return;
+    // ⚠️ Only show update prompt inside the installed mobile app APK, never in web browsers
+    if (!isNative) return;
 
     const checkVersion = async () => {
       try {
@@ -43,7 +43,6 @@ export default function AppUpdateModal() {
     return () => clearTimeout(timer);
   }, []);
 
-
   if (!isOpen || !updateInfo) return null;
 
   const deviceOS = getDeviceOS();
@@ -53,15 +52,25 @@ export default function AppUpdateModal() {
     setDownloading(true);
 
     if (isIOSDevice) {
-      // iOS: open the app in Safari so user can "Add to Home Screen"
+      // iOS
       const iosUrl = updateInfo.iosUrl || 'https://tunistudy.up.railway.app';
-      window.open(iosUrl, '_blank');
+      window.location.href = iosUrl;
     } else {
-      // Android: trigger APK download
-      const downloadUrl = updateInfo.apkUrl?.startsWith('http')
-        ? updateInfo.apkUrl
-        : `${getApiBaseUrl()}${updateInfo.apkUrl || '/downloads/tuniverse-app.apk'}`;
-      window.open(downloadUrl, '_system');
+      // Android: Direct APK download from live production URL
+      const downloadUrl = 'https://tunistudy.up.railway.app/downloads/tuniverse-app.apk';
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', 'tuniverse-app.apk');
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Fallback
+      setTimeout(() => {
+        window.location.href = downloadUrl;
+      }, 300);
     }
 
     setTimeout(() => {
@@ -69,7 +78,7 @@ export default function AppUpdateModal() {
       if (!updateInfo.forceUpdate) {
         setIsOpen(false);
       }
-    }, 2000);
+    }, 2500);
   };
 
   const handleDismiss = () => {
