@@ -100,24 +100,7 @@ export const LandingPage = () => {
                 <Link to="/login" className="btn btn-secondary btn-lg">Log In</Link>
               </>
             )}
-            <a 
-              href="/downloads/tuniverse-app.apk" 
-              download="tuniverse-app.apk"
-              className="btn btn-secondary btn-lg"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                border: '1px solid rgba(225, 29, 72, 0.4)',
-                background: 'rgba(225, 29, 72, 0.06)'
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--red-bright)' }}>
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-              <span>Download Android APK</span>
-            </a>
+            <AppDownloadButtons size="lg" variant="hero" showBothOnDesktop={true} />
           </div>
         </div>
       </section>
