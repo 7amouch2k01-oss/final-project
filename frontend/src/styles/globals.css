@@ -809,70 +809,30 @@ textarea::placeholder { color: var(--text-muted); }
     box-sizing: border-box !important;
   }
 
-  /* Force responsive collapse on all grid layouts */
-  .dashboard-grid,
-  div[style*="gridTemplateColumns"],
-  div[style*="grid-template-columns"] {
+  /* Force responsive collapse on dashboard grid */
+  .dashboard-grid {
     grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
     gap: 16px !important;
   }
 
   /* Mobile Card adjustments */
   .card, .glass {
     max-width: 100% !important;
+    width: 100% !important;
     box-sizing: border-box !important;
-  }
-  .card[style*="padding: 48px"],
-  .card[style*="padding: 36px"],
-  .card[style*="padding: 40px"],
-  .card[style*="padding: 32px"] {
-    padding: 18px 14px !important;
-    border-radius: var(--r-lg) !important;
+    min-width: 0 !important;
   }
 
-  /* Header and search forms */
-  div[style*="justifyContent: 'space-between'"],
-  div[style*="justify-content: space-between"] {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 14px !important;
-  }
-
-  form {
+  /* Search forms & inputs */
+  .search-form,
+  form.responsive-form {
     width: 100% !important;
     max-width: 100% !important;
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
-  }
-
-  form input,
-  form input[style*="width: 280px"],
-  form input[style*="width: '280px'"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-  }
-
-  form button {
-    width: 100% !important;
-  }
-
-  /* Tab bars scroll horizontally on mobile without breaking layout */
-  div[style*="overflowX: 'auto'"],
-  div[style*="overflow-x: auto"] {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    max-width: 100% !important;
-    padding-bottom: 4px !important;
-  }
-  div[style*="overflowX: 'auto'"]::-webkit-scrollbar,
-  div[style*="overflow-x: auto"]::-webkit-scrollbar {
-    display: none !important;
   }
 
   /* Typography scale */
@@ -900,13 +860,6 @@ textarea::placeholder { color: var(--text-muted); }
   /* Hide / Show utilities */
   .hide-mobile { display: none !important; }
   .hide-desktop { display: flex !important; }
-
-  /* Hero adjustments */
-  section[style*="padding: 100px"],
-  section[style*="padding: 80px"],
-  section[style*="padding: 120px"] {
-    padding: 40px 14px !important;
-  }
 }
 
 @media (max-width: 480px) {

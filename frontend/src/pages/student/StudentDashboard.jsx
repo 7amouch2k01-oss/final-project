@@ -254,7 +254,7 @@ export const StudentDashboard = () => {
               </div>
 
               {/* Filter Tabs */}
-              <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-elevated)', padding: '4px', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)', overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-elevated)', padding: '4px', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)', flexWrap: 'wrap', maxWidth: '100%' }}>
                 {[
                   { id: 'all', label: `All (${totalApps})` },
                   { id: 'pending', label: `Pending (${pendingApps})` },
@@ -266,7 +266,7 @@ export const StudentDashboard = () => {
                     key={tab.id}
                     onClick={() => setAppFilter(tab.id)}
                     style={{
-                      padding: '5px 12px',
+                      padding: '6px 12px',
                       borderRadius: 'var(--r-sm)',
                       border: 'none',
                       fontSize: '0.75rem',
@@ -323,8 +323,8 @@ export const StudentDashboard = () => {
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: '200px', flex: '1 1 220px' }}>
                           <div className="logo-container" style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                             <BrandLogo 
                               logoUrl={a.targetId?.logo || a.targetId?.companyLogo} 
@@ -333,9 +333,9 @@ export const StudentDashboard = () => {
                             />
                           </div>
 
-                          <div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word' }}>
                                 {targetTitle}
                               </h4>
                               <span className="badge badge-accent" style={{ fontSize: '0.68rem', textTransform: 'uppercase' }}>
@@ -343,7 +343,7 @@ export const StudentDashboard = () => {
                               </span>
                             </div>
                             {targetSubtitle && (
-                              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '2px 0 0', wordBreak: 'break-word' }}>
                                 {targetSubtitle}
                               </p>
                             )}
@@ -351,7 +351,7 @@ export const StudentDashboard = () => {
                         </div>
 
                         {/* Status & Withdraw */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', alignSelf: 'center' }}>
                           <span style={{
                             fontSize: '0.72rem',
                             fontWeight: 700,
@@ -408,11 +408,11 @@ export const StudentDashboard = () => {
 
           {/* Featured Universities */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
               <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Featured Universities</h3>
               <Link to="/universities" style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--red)' }}>Browse all →</Link>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
               {unis.map(u => (
                 <div key={u._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -437,11 +437,11 @@ export const StudentDashboard = () => {
 
           {/* Internships */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
               <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Internship Opportunities (Stages)</h3>
               <Link to="/stages" style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--red)' }}>Browse all →</Link>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
               {stages.map(s => (
                 <div key={s._id} className="card glass" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
