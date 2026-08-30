@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import AppDownloadButtons from '../components/common/AppDownloadButtons';
-
+import { isNative } from '../native/capacitorBridge';
 
 const STEPS = [
   { 
@@ -57,6 +57,148 @@ const STATS = [
 export const LandingPage = () => {
   const { isAuthenticated } = useAuthStore();
 
+  // ── Native Mobile App Optimized View (Android APK / Capacitor) ───────────
+  if (isNative) {
+    return (
+      <div style={{
+        minHeight: 'calc(100vh - 64px - var(--safe-top, 0px))',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '32px 20px calc(24px + env(safe-area-inset-bottom, 16px))',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'radial-gradient(circle at 50% 15%, rgba(225, 29, 72, 0.18), rgba(11, 12, 16, 0.98) 75%)',
+        boxSizing: 'border-box',
+      }}>
+        {/* Subtle photo / mesh overlay */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'radial-gradient(rgba(225,29,72,0.12) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          opacity: 0.6,
+          pointerEvents: 'none',
+        }} />
+
+        {/* Ambient Glow */}
+        <div style={{
+          position: 'absolute',
+          top: '-15%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '320px',
+          height: '320px',
+          background: 'var(--red-glow, rgba(225,29,72,0.3))',
+          filter: 'blur(90px)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Top Header / Badge */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '12px' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '5px 14px',
+            borderRadius: '999px',
+            background: 'rgba(225, 29, 72, 0.12)',
+            border: '1px solid rgba(225, 29, 72, 0.3)',
+            fontSize: '0.72rem',
+            fontWeight: 800,
+            color: 'var(--red-bright, #ff3366)',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          }}>
+            <span>🇹🇳</span> Built for Tunisia
+          </div>
+        </div>
+
+        {/* Center Punchline & Visual */}
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', margin: 'auto 0', padding: '16px 0' }} className="animate-fade-up">
+          <h1 style={{
+            fontSize: '2.15rem',
+            fontWeight: 900,
+            lineHeight: 1.12,
+            letterSpacing: '-0.02em',
+            marginBottom: '14px',
+            fontFamily: 'var(--font-display, inherit)',
+          }}>
+            Your Gateway to <br />
+            <span className="gradient-text">Universities & Careers</span>
+          </h1>
+
+          <p style={{
+            fontSize: '0.92rem',
+            color: 'var(--text-secondary, #a0a0a0)',
+            maxWidth: '310px',
+            margin: '0 auto',
+            lineHeight: 1.5,
+          }}>
+            Apply to universities, find verified internships, and launch your career in Tunisia.
+          </p>
+
+          {/* Quick Stats Pills */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '10px',
+            marginTop: '20px',
+            flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary, #bbb)', background: 'rgba(255,255,255,0.05)', padding: '5px 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              🎓 200+ Universities
+            </span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary, #bbb)', background: 'rgba(255,255,255,0.05)', padding: '5px 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              💼 1,500+ Jobs
+            </span>
+          </div>
+        </div>
+
+        {/* Bottom Clean Action Buttons */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '360px', margin: '0 auto' }}>
+          {isAuthenticated ? (
+            <Link
+              to="/dashboard"
+              className="btn btn-primary btn-lg"
+              style={{ width: '100%', justifyContent: 'center', padding: '15px', fontSize: '1rem', fontWeight: 800, borderRadius: '14px', textDecoration: 'none' }}
+            >
+              Open Dashboard →
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/register"
+                className="btn btn-primary btn-lg"
+                style={{ width: '100%', justifyContent: 'center', padding: '15px', fontSize: '0.98rem', fontWeight: 800, borderRadius: '14px', textDecoration: 'none', boxShadow: '0 8px 25px rgba(225,29,72,0.35)' }}
+              >
+                Create Account
+              </Link>
+              <Link
+                to="/login"
+                className="btn btn-secondary btn-lg"
+                style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '0.95rem', fontWeight: 700, borderRadius: '14px', textDecoration: 'none', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)' }}
+              >
+                Log In
+              </Link>
+            </>
+          )}
+
+          <div style={{ textAlign: 'center', marginTop: '4px' }}>
+            <Link
+              to="/institution/login"
+              style={{ fontSize: '0.74rem', color: 'var(--text-muted, #777)', textDecoration: 'underline' }}
+            >
+              Institution Portal Login →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Full Desktop / Web Browser Landing Page ──────────────────────────────
   return (
     <div style={{ background: 'var(--bg-base)', position: 'relative', overflow: 'hidden' }}>
       {/* Background Glows */}
