@@ -1,8 +1,37 @@
 import React, { useEffect, useState } from 'react';
+import { App as CapApp } from '@capacitor/app';
 import api from '../../api/axiosInstance';
 import { CURRENT_APP_VERSION, CURRENT_BUILD_NUMBER } from '../../config/appVersion';
-import { isNative, getApiBaseUrl } from '../../native/capacitorBridge';
-import { getDeviceOS, isMobile } from '../../utils/deviceDetect';
+import { isNative } from '../../native/capacitorBridge';
+import { getDeviceOS } from '../../utils/deviceDetect';
+
+/**
+ * Compares installed vs remote version.
+ * Returns TRUE if and only if the remote version is strictly newer than installed.
+ */
+function isVersionOutdated(currVer, currBuild, remoteVer, remoteBuild) {
+  const cBuild = Number(currBuild) || 0;
+  const rBuild = Number(remoteBuild) || 0;
+
+  // 1. If build numbers exist and remote is strictly greater -> Outdated
+  if (rBuild > 0 && cBuild > 0) {
+    if (rBuild > cBuild) return true;
+    if (rBuild < cBuild) return false;
+  }
+
+  // 2. Semantic version comparison (e.g., '1.2.0' vs '1.1.0')
+  const currParts = String(currVer || '1.0.0').split('.').map(p => parseInt(p, 10) || 0);
+  const remoteParts = String(remoteVer || '1.0.0').split('.').map(p => parseInt(p, 10) || 0);
+
+  for (let i = 0; i < Math.max(currParts.length, remoteParts.length); i++) {
+    const c = currParts[i] || 0;
+    const r = remoteParts[i] || 0;
+    if (r > c) return true;  // Remote is newer -> Update needed
+    if (r < c) return false; // Local is newer -> No update needed
+  }
+
+  return false; // Exactly equal -> No update needed
+}
 
 export default function AppUpdateModal() {
   const [updateInfo, setUpdateInfo] = useState(null);
@@ -10,35 +39,50 @@ export default function AppUpdateModal() {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    // ⚠️ Only show update prompt inside the installed mobile app APK, never in web browsers
+    // ⚠️ Only run update checks inside the installed native mobile app APK
     if (!isNative) return;
 
     const checkVersion = async () => {
       try {
+        let installedVer = CURRENT_APP_VERSION;
+        let installedBuild = CURRENT_BUILD_NUMBER;
+
+        // Query real native Android package metadata if available
+        try {
+          const info = await CapApp.getInfo();
+          if (info?.version) installedVer = info.version;
+          if (info?.build) installedBuild = parseInt(info.build, 10) || installedBuild;
+        } catch (e) {
+          // Fallback to JS config constants
+        }
+
         const res = await api.get('/app-version');
         const data = res.data?.data;
         if (!data) return;
 
         const remoteBuild   = Number(data.buildNumber) || 0;
-        const remoteVersion = data.latestVersion || '1.0.0';
+        const remoteVersion = data.latestVersion || '1.1.0';
 
-        // Check if remote version or build is newer
-        const isNewer = remoteBuild > CURRENT_BUILD_NUMBER || remoteVersion !== CURRENT_APP_VERSION;
+        // Check if user's installed app is strictly outdated
+        const outdated = isVersionOutdated(installedVer, installedBuild, remoteVersion, remoteBuild);
 
-        // Check if user dismissed it previously in this session
+        // Check if user dismissed prompt in this session
         const dismissed = sessionStorage.getItem('tuniverse_update_dismissed');
 
-        if (isNewer && (!dismissed || data.forceUpdate)) {
-          setUpdateInfo(data);
+        if (outdated && (!dismissed || data.forceUpdate)) {
+          setUpdateInfo({
+            ...data,
+            installedVersion: installedVer,
+          });
           setIsOpen(true);
         }
       } catch (err) {
-        // Silently skip update check if offline
-        console.warn('Update check failed (offline or network error):', err);
+        // Silently skip update check if offline or network error
+        console.warn('Update check error:', err);
       }
     };
 
-    // Run check 1.5s after app mount
+    // Run check 1.5s after app launch
     const timer = setTimeout(checkVersion, 1500);
     return () => clearTimeout(timer);
   }, []);
@@ -52,11 +96,10 @@ export default function AppUpdateModal() {
     setDownloading(true);
 
     if (isIOSDevice) {
-      // iOS
       const iosUrl = updateInfo.iosUrl || 'https://tunistudy.up.railway.app';
       window.location.href = iosUrl;
     } else {
-      // Android: Direct APK download from live production URL
+      // Direct APK download from production server
       const downloadUrl = 'https://tunistudy.up.railway.app/downloads/tuniverse-app.apk';
       
       const link = document.createElement('a');
@@ -67,7 +110,6 @@ export default function AppUpdateModal() {
       link.click();
       document.body.removeChild(link);
 
-      // Fallback
       setTimeout(() => {
         window.location.href = downloadUrl;
       }, 300);
@@ -85,7 +127,6 @@ export default function AppUpdateModal() {
     sessionStorage.setItem('tuniverse_update_dismissed', 'true');
     setIsOpen(false);
   };
-
 
   return (
     <div style={{
@@ -161,7 +202,7 @@ export default function AppUpdateModal() {
             color: 'var(--text-secondary, #a0a0a0)',
             marginTop: '4px',
           }}>
-            Installed: v{CURRENT_APP_VERSION} → Latest: v{updateInfo.latestVersion}
+            Installed: v{updateInfo.installedVersion || CURRENT_APP_VERSION} → Latest: v{updateInfo.latestVersion}
           </div>
         </div>
 
@@ -182,7 +223,7 @@ export default function AppUpdateModal() {
               color: 'var(--text-primary, #f0f0f0)',
               marginBottom: '6px',
             }}>
-              What's New in this Release:
+              What's New:
             </div>
             {Array.isArray(updateInfo.releaseNotes) ? (
               <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.76rem', color: 'var(--text-secondary, #a0a0a0)', lineHeight: 1.5 }}>
@@ -216,14 +257,13 @@ export default function AppUpdateModal() {
               cursor: 'pointer',
             }}
           >
-          {downloading ? (
+            {downloading ? (
               <>
                 <span className="animate-spin">⟳</span>
-                {isIOSDevice ? 'Opening in Safari...' : 'Downloading Update...'}
+                {isIOSDevice ? 'Opening Safari...' : 'Downloading Update...'}
               </>
             ) : isIOSDevice ? (
               <>
-                {/* Apple icon */}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
