@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axiosInstance';
 import { CURRENT_APP_VERSION, CURRENT_BUILD_NUMBER } from '../../config/appVersion';
 import { isNative, getApiBaseUrl } from '../../native/capacitorBridge';
-import { getDeviceOS } from '../../utils/deviceDetect';
+import { getDeviceOS, isMobile } from '../../utils/deviceDetect';
 
 export default function AppUpdateModal() {
   const [updateInfo, setUpdateInfo] = useState(null);
@@ -10,13 +10,16 @@ export default function AppUpdateModal() {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
+    // ⚠️ Only show update prompt on mobile phones/tablets, NEVER on desktop browsers
+    if (!isMobile()) return;
+
     const checkVersion = async () => {
       try {
         const res = await api.get('/app-version');
         const data = res.data?.data;
         if (!data) return;
 
-        const remoteBuild = Number(data.buildNumber) || 0;
+        const remoteBuild   = Number(data.buildNumber) || 0;
         const remoteVersion = data.latestVersion || '1.0.0';
 
         // Check if remote version or build is newer
@@ -39,6 +42,7 @@ export default function AppUpdateModal() {
     const timer = setTimeout(checkVersion, 1500);
     return () => clearTimeout(timer);
   }, []);
+
 
   if (!isOpen || !updateInfo) return null;
 
