@@ -4,6 +4,7 @@ import { useInstitutionStore } from '../../store/institutionStore';
 import { useTheme } from '../../contexts/ThemeContext';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import FileViewerModal from '../../components/common/FileViewerModal';
 
 export const InstitutionDashboard = () => {
   const { 
@@ -39,6 +40,25 @@ export const InstitutionDashboard = () => {
   const [meetingLink, setMeetingLink] = useState('');
   const [meetingNotes, setMeetingNotes] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
+
+  // File Preview Modal State
+  const [viewerModal, setViewerModal] = useState({
+    isOpen: false,
+    fileUrl: '',
+    fileName: '',
+  });
+
+  const openFileViewer = (fileUrl, fileName = 'Attached Document') => {
+    if (!fileUrl) {
+      toast.error('No file attachment found');
+      return;
+    }
+    setViewerModal({
+      isOpen: true,
+      fileUrl,
+      fileName,
+    });
+  };
 
   // New Listing Form state
   const isSchoolOrUni = institution?.type === 'university' || institution?.type === 'school';
@@ -624,15 +644,18 @@ export const InstitutionDashboard = () => {
                               
                               {bac.proofDocUrl && (
                                 <div style={{ marginTop: '6px' }}>
-                                  <a 
-                                    href={bac.proofDocUrl} 
-                                    target="_blank" 
-                                    rel="noreferrer"
+                                  <button 
+                                    type="button"
+                                    onClick={() => openFileViewer(bac.proofDocUrl, `${c.name || 'Candidate'} - Baccalaureate Proof`)} 
                                     className="btn btn-secondary btn-sm"
-                                    style={{ fontSize: '0.76rem', padding: '4px 10px' }}
+                                    style={{ fontSize: '0.76rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                   >
-                                    Inspect Baccalaureate Proof Document ↗
-                                  </a>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                      <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    Inspect Baccalaureate Proof Document
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -682,9 +705,18 @@ export const InstitutionDashboard = () => {
                           </div>
                           {(selectedApplicant.documents?.[0] || c.cvUrl) && (
                             <div style={{ marginTop: '4px' }}>
-                              <a href={selectedApplicant.documents?.[0] || c.cvUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ fontSize: '0.78rem' }}>
-                                View Attached Candidate CV ↗
-                              </a>
+                              <button 
+                                type="button"
+                                onClick={() => openFileViewer(selectedApplicant.documents?.[0] || c.cvUrl, `${c.name || 'Candidate'} - CV Document`)} 
+                                className="btn btn-secondary btn-sm" 
+                                style={{ fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                View Attached Candidate CV
+                              </button>
                             </div>
                           )}
                         </div>
@@ -733,9 +765,18 @@ export const InstitutionDashboard = () => {
                                   </div>
                                   <div style={{ marginTop: '2px', color: 'var(--text-secondary)' }}>{m.message}</div>
                                   {m.uploadedDocUrl && (
-                                    <a href={m.uploadedDocUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.72rem', color: '#60a5fa', display: 'block', marginTop: '4px' }}>
-                                      [View Uploaded Document ↗]
-                                    </a>
+                                    <button 
+                                      type="button"
+                                      onClick={() => openFileViewer(m.uploadedDocUrl, `${m.missingDocType || 'Uploaded Document'} (${m.senderName || 'Candidate'})`)} 
+                                      className="btn btn-ghost btn-sm"
+                                      style={{ fontSize: '0.72rem', color: '#60a5fa', padding: '2px 6px', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                      </svg>
+                                      View Uploaded Document
+                                    </button>
                                   )}
                                 </div>
                               ))}
@@ -1210,6 +1251,13 @@ export const InstitutionDashboard = () => {
         </div>
       )}
 
+      {/* Reusable In-App File & Photo Viewer Modal */}
+      <FileViewerModal
+        isOpen={viewerModal.isOpen}
+        onClose={() => setViewerModal({ ...viewerModal, isOpen: false })}
+        fileUrl={viewerModal.fileUrl}
+        fileName={viewerModal.fileName}
+      />
     </div>
   );
 };

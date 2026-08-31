@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import FileViewerModal from '../components/common/FileViewerModal';
+import CompleteProfileModal from '../components/common/CompleteProfileModal';
 
 export const UserProfile = () => {
   const { user, setUser, graduate, requestRecruitRights } = useAuthStore();
@@ -35,6 +37,26 @@ export const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('general'); // 'general', 'education', 'experience', 'company', 'network'
   const [followData, setFollowData] = useState({ followers: [], following: [], followersCount: 0, followingCount: 0 });
   const [loadingFollow, setLoadingFollow] = useState(false);
+  const [isCompleteProfileModalOpen, setIsCompleteProfileModalOpen] = useState(false);
+
+  // File Preview Modal State
+  const [viewerModal, setViewerModal] = useState({
+    isOpen: false,
+    fileUrl: '',
+    fileName: '',
+  });
+
+  const openFileViewer = (fileUrl, fileName = 'Attached Document') => {
+    if (!fileUrl) {
+      toast.error('No file attachment found');
+      return;
+    }
+    setViewerModal({
+      isOpen: true,
+      fileUrl,
+      fileName,
+    });
+  };
 
   const fetchFollowData = async () => {
     try {
@@ -505,15 +527,31 @@ export const UserProfile = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Digital CV / Portfolio URL</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="form-label">Digital CV / Portfolio URL</label>
+                    {cvUrl && (
+                      <button
+                        type="button"
+                        onClick={() => openFileViewer(cvUrl, `${name || 'Candidate'} - CV Document`)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '3px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        View Attached File
+                      </button>
+                    )}
+                  </div>
                   <input 
                     type="url" 
                     value={cvUrl} 
                     onChange={e => setCvUrl(e.target.value)} 
-                    placeholder="https://drive.google.com/your-cv.pdf or LinkedIn" 
+                    placeholder="https://res.cloudinary.com/... or https://drive.google.com/..." 
                   />
                   <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    📎 This CV will be automatically attached when you apply for Universities, Stages, or Jobs!
+                    📎 This CV is attached automatically when you apply for Universities, Stages, or Jobs!
                   </span>
                 </div>
               </div>
@@ -860,6 +898,20 @@ export const UserProfile = () => {
         </div>
 
       </div>
+
+      {/* Reusable In-App File & Photo Viewer Modal */}
+      <FileViewerModal
+        isOpen={viewerModal.isOpen}
+        onClose={() => setViewerModal({ ...viewerModal, isOpen: false })}
+        fileUrl={viewerModal.fileUrl}
+        fileName={viewerModal.fileName}
+      />
+
+      {/* Complete Profile Modal */}
+      <CompleteProfileModal
+        isOpen={isCompleteProfileModalOpen}
+        onClose={() => setIsCompleteProfileModalOpen(false)}
+      />
     </div>
   );
 };

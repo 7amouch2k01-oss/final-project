@@ -4,6 +4,7 @@ import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import CompleteProfileModal, { BrandLogo } from '../../components/common/CompleteProfileModal';
+import FileViewerModal from '../../components/common/FileViewerModal';
 
 export const CitizenDashboard = () => {
   const { user, requestRecruitRights } = useAuthStore();
@@ -19,6 +20,25 @@ export const CitizenDashboard = () => {
   const [submittingRights, setSubmittingRights] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [uploadingDocAppId, setUploadingDocAppId] = useState(null);
+
+  // File Preview Modal State
+  const [viewerModal, setViewerModal] = useState({
+    isOpen: false,
+    fileUrl: '',
+    fileName: '',
+  });
+
+  const openFileViewer = (fileUrl, fileName = 'Attached Document') => {
+    if (!fileUrl) {
+      toast.error('No file attachment found');
+      return;
+    }
+    setViewerModal({
+      isOpen: true,
+      fileUrl,
+      fileName,
+    });
+  };
 
   // New Hire-Me Post Modal Form
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
@@ -738,8 +758,22 @@ export const CitizenDashboard = () => {
                               Requested Document: {m.missingDocType}
                             </div>
                             {m.uploadedDocUrl ? (
-                              <div style={{ fontSize: '0.76rem', color: '#10b981', marginTop: '4px' }}>
-                                ✓ Document uploaded and delivered
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                                <span style={{ fontSize: '0.76rem', color: '#10b981' }}>
+                                  ✓ Document uploaded and delivered
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => openFileViewer(m.uploadedDocUrl, `${m.missingDocType || 'Uploaded Document'}`)}
+                                  className="btn btn-ghost btn-sm"
+                                  style={{ fontSize: '0.72rem', color: '#60a5fa', padding: '2px 6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                  </svg>
+                                  View File
+                                </button>
                               </div>
                             ) : (
                               <div style={{ marginTop: '8px' }}>
@@ -1002,6 +1036,14 @@ export const CitizenDashboard = () => {
       <CompleteProfileModal 
         isOpen={isProfileModalOpen} 
         onClose={() => { setIsProfileModalOpen(false); fetchDashboardData(); }} 
+      />
+
+      {/* Reusable In-App File & Photo Viewer Modal */}
+      <FileViewerModal
+        isOpen={viewerModal.isOpen}
+        onClose={() => setViewerModal({ ...viewerModal, isOpen: false })}
+        fileUrl={viewerModal.fileUrl}
+        fileName={viewerModal.fileName}
       />
     </div>
   );

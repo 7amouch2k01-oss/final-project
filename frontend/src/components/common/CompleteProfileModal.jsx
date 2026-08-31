@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import FileViewerModal from './FileViewerModal';
 
 export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const { user, setUser } = useAuthStore();
@@ -10,6 +11,25 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState(isStudent ? 'baccalaureate' : 'general');
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  // File Preview Modal State
+  const [viewerModal, setViewerModal] = useState({
+    isOpen: false,
+    fileUrl: '',
+    fileName: '',
+  });
+
+  const openFileViewer = (fileUrl, fileName = 'Attached Document') => {
+    if (!fileUrl) {
+      toast.error('No file attachment found');
+      return;
+    }
+    setViewerModal({
+      isOpen: true,
+      fileUrl,
+      fileName,
+    });
+  };
 
   // ── Core / General Info ──────────────────────────────────────
   const [name, setName] = useState(user?.name || '');
@@ -448,7 +468,18 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                   {bacProofDocUrl ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <span style={{ color: '#10b981', fontWeight: 700 }}>[Document Attached]</span>
-                      <a href={bacProofDocUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--red)', fontWeight: 600 }}>View File</a>
+                      <button 
+                        type="button" 
+                        onClick={() => openFileViewer(bacProofDocUrl, 'Baccalaureate Proof Document')} 
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.8rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        View File
+                      </button>
                     </div>
                   ) : (
                     <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
@@ -738,7 +769,18 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                     {cvUrl ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.88rem' }}>Profile CV Attached</span>
-                        <a href={cvUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', color: 'var(--red)', fontWeight: 600 }}>[View File]</a>
+                        <button 
+                          type="button" 
+                          onClick={() => openFileViewer(cvUrl, `${name || 'Candidate'} - Curriculum Vitae`)} 
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.78rem', padding: '3px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                          View File
+                        </button>
                       </div>
                     ) : (
                       <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
@@ -818,6 +860,14 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+
+      {/* File & Document Preview Modal */}
+      <FileViewerModal
+        isOpen={viewerModal.isOpen}
+        onClose={() => setViewerModal({ ...viewerModal, isOpen: false })}
+        fileUrl={viewerModal.fileUrl}
+        fileName={viewerModal.fileName}
+      />
     </div>
   );
 };
