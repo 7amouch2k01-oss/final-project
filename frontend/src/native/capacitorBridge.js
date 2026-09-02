@@ -16,9 +16,9 @@ export const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  // When inside Android native APK, route all traffic directly to live production backend
-  if (isNative || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost') {
-    return 'https://tunistudy.up.railway.app/api';
+  // Fallback when environment variable is not explicitly provided
+  if (isNative || window.location.protocol === 'capacitor:') {
+    return 'http://localhost:5000/api';
   }
   return '/api';
 };
@@ -30,8 +30,8 @@ export const getSocketUrl = () => {
   if (import.meta.env.VITE_SOCKET_URL) {
     return import.meta.env.VITE_SOCKET_URL;
   }
-  if (isNative || window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost') {
-    return 'https://tunistudy.up.railway.app';
+  if (isNative || window.location.protocol === 'capacitor:') {
+    return 'http://localhost:5000';
   }
   return window.location.origin;
 };

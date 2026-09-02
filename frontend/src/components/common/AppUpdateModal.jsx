@@ -96,11 +96,11 @@ export default function AppUpdateModal() {
     setDownloading(true);
 
     if (isIOSDevice) {
-      const iosUrl = updateInfo.iosUrl || 'https://tunistudy.up.railway.app';
+      const iosUrl = updateInfo.iosUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://tuniverse-app.vercel.app');
       window.location.href = iosUrl;
     } else {
-      // Direct APK download from production server
-      const downloadUrl = 'https://tunistudy.up.railway.app/downloads/tuniverse-app.apk';
+      // Direct APK download from server
+      const downloadUrl = updateInfo.apkUrl || `${getApiBaseUrl().replace(/\/api$/, '')}/downloads/tuniverse-app.apk`;
       
       const link = document.createElement('a');
       link.href = downloadUrl;

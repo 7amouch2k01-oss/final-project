@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { getDeviceOS } from '../../utils/deviceDetect';
 
 const APK_URL        = '/downloads/tuniverse-app.apk';
-const IOS_SAFARI_URL = 'https://tunistudy.up.railway.app';
+const IOS_SAFARI_URL = typeof window !== 'undefined' ? window.location.origin : 'https://tuniverse-app.vercel.app';
 const TESTFLIGHT_URL = null; // Set when TestFlight is ready
 
 /* ─── iOS Installation Guide Modal (Rendered via React Portal onto document.body) ─── */
