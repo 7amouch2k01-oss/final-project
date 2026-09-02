@@ -200,7 +200,9 @@ export const Navbar = () => {
           {/* Admin Panel Quick Link for Admins */}
           {user?.role === 'admin' && (
             <a
-              href="/admin"
+              href={import.meta.env.VITE_ADMIN_URL || '/admin'}
+              target={import.meta.env.VITE_ADMIN_URL ? '_blank' : '_self'}
+              rel="noreferrer"
               className="btn btn-secondary btn-sm hide-mobile"
               style={{
                 borderColor: 'var(--red-border)',
@@ -569,7 +571,9 @@ export const Navbar = () => {
 
               {user.role === 'admin' && (
                 <a
-                  href="/admin"
+                  href={import.meta.env.VITE_ADMIN_URL || '/admin'}
+                  target={import.meta.env.VITE_ADMIN_URL ? '_blank' : '_self'}
+                  rel="noreferrer"
                   style={{
                     padding: '12px 16px',
                     fontSize: '1rem',

@@ -189,6 +189,17 @@ export default function AdminLayout({ children }) {
         </nav>
 
         <div className="sidebar-footer">
+          {/* Main App Link */}
+          <a
+            href={import.meta.env.VITE_CLIENT_URL || '/'}
+            target={import.meta.env.VITE_CLIENT_URL ? '_blank' : '_self'}
+            rel="noreferrer"
+            className="nav-link"
+            style={{ marginBottom: '8px', color: 'var(--text-sec)', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <span className="icon">🌐</span> Go to Main App ↗
+          </a>
+
           {/* Admin info */}
           <div style={{ padding: '10px', background: 'var(--accent-light)', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '8px' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text)' }}>{admin?.name || 'Admin User'}</div>

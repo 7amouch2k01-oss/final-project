@@ -51,14 +51,44 @@ const server = http.createServer(app);
 // Enable trust proxy so rate-limiter and secure cookies work behind Railway
 app.set('trust proxy', 1);
 
-// ─── Socket.io ────────────────────────────────────────────────────────────────
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
-if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
-if (process.env.ADMIN_URL)  allowedOrigins.push(process.env.ADMIN_URL);
+// ─── Socket.io & Allowed CORS Origins ─────────────────────────────────────────
+const rawAllowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  'https://tunistudy.up.railway.app',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(s => s.trim()) : []),
+  ...(process.env.ADMIN_URL ? process.env.ADMIN_URL.split(',').map(s => s.trim()) : []),
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()) : []),
+];
+
+const allowedOrigins = Array.from(new Set(rawAllowedOrigins.filter(Boolean)));
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // native apps, curl, server-to-server, health checks
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow all Vercel, Railway, Render, Netlify preview & production deployments
+  if (
+    origin.endsWith('.vercel.app') ||
+    origin.endsWith('.up.railway.app') ||
+    origin.endsWith('.onrender.com') ||
+    origin.endsWith('.netlify.app')
+  ) {
+    return true;
+  }
+  return false;
+};
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -67,7 +97,9 @@ initSocket(io);
 app.set('io', io);
 
 // ─── Security middleware ───────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.disable('x-powered-by');
 
 // Global rate limiter (1000 req / 15 min per IP)
@@ -91,13 +123,10 @@ const authLimiter = rateLimit({
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, Railway health probes)
-      if (!origin) return callback(null, true);
-      // Accept all in production (single-host deployment) or known dev origins
-      if (process.env.NODE_ENV === 'production' || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(null, true); // Permissive fallback for seamless client communication
     },
     credentials: true,
   })
@@ -186,18 +215,34 @@ app.get('/downloads/tuniverse-app.apk', (_req, res) => {
   res.status(404).send('APK file not found.');
 });
 
-// ─── Serve Built SPAs ─────────────────────────────────────────────────────────
-// 1. Admin panel at /admin
-app.use('/admin', express.static(adminDist));
-app.get(/^\/admin(\/.*)?$/, (_req, res) => {
-  res.sendFile(path.join(adminDist, 'index.html'));
-});
+// ─── Serve Built SPAs (if present in monolithic mode, or API-only if separated) ──
+if (fs.existsSync(adminDist)) {
+  app.use('/admin', express.static(adminDist));
+  app.get(/^\/admin(\/.*)?$/, (_req, res) => {
+    res.sendFile(path.join(adminDist, 'index.html'));
+  });
+}
 
-// 2. Main frontend SPA at /
-app.use(express.static(frontendDist));
-app.get('{*splat}', (_req, res) => {
-  res.sendFile(path.join(frontendDist, 'index.html'));
-});
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('{*splat}', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+} else {
+  // Standalone Backend Mode Root Endpoint
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      service: 'TuniVerse Core API Server',
+      status: 'operational',
+      version: '1.2.0',
+      health: '/api/health',
+      docs: 'https://github.com/7amouch2k01-oss/final-project',
+      author: 'Mohamed Amine Rzeigui (mosma.vercel.app)',
+    });
+  });
+}
 
 // ─── 404 + Global error handler ───────────────────────────────────────────────
 app.use(notFoundHandler);
