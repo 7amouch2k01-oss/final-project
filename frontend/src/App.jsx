@@ -9,6 +9,8 @@ import Layout from './components/layout/Layout';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Universities from './pages/student/Universities';
 import Stages from './pages/student/Stages';
@@ -97,6 +99,8 @@ function App() {
             <Route path="/"         element={<GuestRoute><LandingPage /></GuestRoute>} />
             <Route path="/login"    element={<GuestRoute><Login /></GuestRoute>} />
             <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+            <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+            <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
 
             {/* Institution Portal Routes */}
             <Route path="/institution/register" element={<InstitutionRegister />} />
