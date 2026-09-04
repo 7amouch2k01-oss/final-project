@@ -158,22 +158,6 @@ cd admin && npm run dev
 
 ---
 
-## 🔑 Default Seed Credentials
-
-All seed accounts use the default evaluation password: **`Password123!`**
-
-| Role | Email | Password | Access Level |
-|---|---|---|---|
-| **Super Admin** | `admin@tunistudy.tn` | `Password123!` | TuniVerse Control Centre (`/admin`) |
-| **Verified Recruiter (Vermeg)** | `karim@vermeg.com` | `Password123!` | Career Centre Postings & Candidate Tracking |
-| **Verified Recruiter (InstaDeep)** | `sana@instadeep.com` | `Password123!` | Career Centre Postings & Candidate Tracking |
-| **Student Candidate** | `mariem@student.tn` | `Password123!` | Academic Hub, Part-Time Jobs, Bac Verification |
-| **Student (ESPRIT)** | `ali.bensalem@esprit.tn` | `Password123!` | Academic Hub, Applications |
-| **Citizen (Job Seeker)** | `ines@citizen.tn` | `Password123!` | Career Centre Listings, Hire-Me Posts |
-| **Institution Portal** | `addmisions@gomycode.tn` | `Password123!` | University Admissions Desk |
-
----
-
 ## 👨‍💻 Author & Portfolio
 
 <div align="center">
