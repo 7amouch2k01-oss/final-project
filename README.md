@@ -4,16 +4,16 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-[![React](https://img.shields.io/badge/React-v19+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
+[![React](https://img.shields.io/badge/React-v18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongodb.com)
 [![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
 [![Author Portfolio](https://img.shields.io/badge/Portfolio-mosma.vercel.app-e11d48?style=for-the-badge&logo=vercel&logoColor=white)](https://mosma.vercel.app)
 
 <p align="center">
-  <strong>A full-stack, AI-powered digital ecosystem connecting Tunisian high-school graduates, university students, and job-seeking professionals with verified academic institutions and top recruiters.</strong>
+  <strong>A full-stack, AI-powered digital super-platform connecting Tunisian high-school graduates, university students, and job-seeking professionals with verified academic institutions and top recruiters.</strong>
 </p>
 
-[Explore Live Platform](https://tunistudy-production.up.railway.app) • [View Author Portfolio](https://mosma.vercel.app) • [Report Bug](https://github.com/7amouch2k01-oss/final-project/issues)
+[Explore Live Platform](https://tuniverse.up.railway.app/) • [Admin Control Centre](https://tuniverse.up.railway.app/admin/) • [View Author Portfolio](https://mosma.vercel.app) • [Report Bug](https://github.com/7amouch2k01-oss/final-project/issues)
 
 </div>
 
@@ -21,7 +21,7 @@
 
 ## 🌟 Executive Overview
 
-**TuniVerse** is a unified, bi-modal web platform engineered to eliminate bureaucratic friction in Tunisia's academic orientation and employment markets. It unifies **two specialized centres** into one cohesive system:
+**TuniVerse** is a unified, multi-portal web platform engineered to eliminate bureaucratic friction in Tunisia's academic orientation and employment markets. It unifies **three specialized centres** into one cohesive system:
 
 1. 🎓 **Academic Hub (For Students)**: Digital application engine for university admissions (ESPRIT, INSAT, MSB, ENIT, etc.), internship matchmaking (PFE / Summer stages), Baccalaureate verification, score calculating algorithms, and an integrated **AI Academic Advisor** (Google Gemini).
 2. 💼 **Career Centre (For Professionals & Recruiters)**: Fast-paced employment portal for remote, hybrid, and on-site careers in Tunisia, featuring verified recruiter rights, candidate inquiries, portfolio showcases ("Hire Me"), and Stripe checkout.
@@ -52,24 +52,25 @@ graph TD
 
 ## 🚀 Key Features
 
-### 🎓 Academic Hub (Students & Higher Education)
+### 🎓 Academic & Student Hub
 - **Direct University Applications**: Submit admissions applications with transcripts and automated CV attachments.
 - **PFE & Internship Portal**: Browse stages from Tunisia's leading tech hubs (*InstaDeep, Vermeg, Orange Digital Center, Telnet, Satoripop*).
-- **⭐ Pro Academic Hub**:
+- **Student Part-Time Jobs**: Verified student-friendly part-time opportunities (12-20h/week) with transparent salaries in TND and flexible scheduling.
+- **⭐ Pro Student Hub**:
   - **AI Orientation Advisor**: Live conversational agent trained on the Tunisian orientation score formula (*Score de Réorientation*).
   - **Task & Sprint Board**: Kanban organizer for PFE deadlines and project deliverables.
-  - **Score Simulator**: Accurate formula calculator across Math, Info, Sciences, and Technique branches.
-- **Academic Verification**: Baccalaureate diploma validation and flexible post-bac path tracking to reach 100% profile strength.
+- **Academic Verification Engine**: Official Tunisian Baccalaureate diploma validation with in-app previewer and 24-hour administrative review center.
 
-### 💼 Career Centre (Professionals & Recruiters)
+### 💼 Career Centre (Citizens & Recruiters)
 - **Verified Recruiter Workflow**: Citizens and hiring managers can request recruiter rights to post jobs and review candidate CVs.
 - **Direct Application Hub**: One-click application pipeline with status tracker (*Pending → Under Review → Accepted / Rejected*).
-- **"Hire Me" Social Showcase**: Publish service availability cards with direct messaging and inquiries.
+- **"Hire Me" Freelance Showcase**: Publish service availability cards with direct messaging and inquiries.
 
 ### 🛡️ TuniVerse Control Centre (Administration)
 - **KYC & Recruiter Rights Approval**: Review business credentials and approve or reject recruiter rights.
-- **Institution Management**: Onboard academic universities and technical faculties.
-- **Real-Time Analytics**: Visual metric charts powered by Chart.js.
+- **Baccalaureate Verification Queue**: Inspect uploaded diplomas in high-resolution with zoom controls, verify official Ministry stamps, and confirm authentic academic credentials.
+- **Jobs, Part-Time & Stage Directory**: Full CRUD oversight over all listings across Tunisia with tabbed categorization.
+- **Real-Time Analytics**: Visual metric charts and system logs.
 
 ---
 
@@ -77,12 +78,13 @@ graph TD
 
 | Layer | Technologies |
 |---|---|
-| **Frontend UI** | React 19, React Router v7, Zustand, Chart.js, Vite 8, Lucide & Custom SVG vectors |
+| **Frontend UI** | React 18, React Router v6, Zustand, Vite 8, Lucide & Custom SVG vectors |
 | **Styling & Design** | CSS Variables, Custom Dark Glassmorphism + Soft Zinc Light Theme, Responsive Clamp Grids |
 | **Backend Core** | Node.js (v18+), Express 5, Mongoose 9, Socket.io |
-| **Security & Auth** | JWT (HttpOnly cookies + Bearer), BCrypt.js, Helmet, Express Rate Limit, Express Validator |
+| **Performance & Speed** | Gzip/Brotli Network Compression, MongoDB Socket Connection Pooling (50 max / 10 min), 1-Year Immutable Static Asset Caching |
+| **Security & Auth** | JWT (HttpOnly cookies + Bearer), BCrypt.js, Helmet, HSTS Enforcement, Express Rate Limit (Dual-layer), Postman Test Suite |
 | **AI & Cloud** | Google Gemini Generative AI SDK, Cloudinary Multi-part storage, Stripe API |
-| **DevOps & Deploy** | Railway CI/CD, Git, GitHub Actions |
+| **DevOps & Deploy** | Railway Cloud CI/CD, Git, GitHub Actions, MongoDB Atlas |
 
 ---
 
@@ -158,13 +160,17 @@ cd admin && npm run dev
 
 ## 🔑 Default Seed Credentials
 
+All seed accounts use the default evaluation password: **`Password123!`**
+
 | Role | Email | Password | Access Level |
 |---|---|---|---|
-| **Super Admin** | `admin@tunistudy.tn` | `Password123!` | TuniVerse Control Centre |
-| **Recruiter (Vermeg)** | `hr@vermeg.com` | `Password123!` | Career Centre Postings & Applicant Review |
+| **Super Admin** | `admin@tunistudy.tn` | `Password123!` | TuniVerse Control Centre (`/admin`) |
+| **Verified Recruiter (Vermeg)** | `karim@vermeg.com` | `Password123!` | Career Centre Postings & Candidate Tracking |
+| **Verified Recruiter (InstaDeep)** | `sana@instadeep.com` | `Password123!` | Career Centre Postings & Candidate Tracking |
+| **Student Candidate** | `mariem@student.tn` | `Password123!` | Academic Hub, Part-Time Jobs, Bac Verification |
 | **Student (ESPRIT)** | `ali.bensalem@esprit.tn` | `Password123!` | Academic Hub, Applications |
-| **Student (INSAT)** | `sana.trabelsi@insat.u-carthage.tn` | `Password123!` | Academic Hub, Academic Track |
-| **Citizen (Job Seeker)** | `ramy.gharbi@gmail.com` | `Password123!` | Career Centre Listings, Hire-Me Posts |
+| **Citizen (Job Seeker)** | `ines@citizen.tn` | `Password123!` | Career Centre Listings, Hire-Me Posts |
+| **Institution Portal** | `addmisions@gomycode.tn` | `Password123!` | University Admissions Desk |
 
 ---
 
