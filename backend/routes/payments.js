@@ -1,9 +1,22 @@
 const express = require('express');
 const router  = express.Router();
-const stripe  = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User    = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { success, badRequest } = require('../utils/apiResponse');
+
+// Lazy-initialize Stripe client so missing env var does not crash server at startup
+let _stripeInstance = null;
+const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    const error = new Error('STRIPE_SECRET_KEY is not configured on this server');
+    error.statusCode = 503;
+    throw error;
+  }
+  if (!_stripeInstance) {
+    _stripeInstance = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  }
+  return _stripeInstance;
+};
 
 // Plan price IDs — create these in your Stripe dashboard
 const PRICE_IDS = {
@@ -24,7 +37,7 @@ router.post('/create-checkout-session', protect, async (req, res, next) => {
     // Create or reuse Stripe customer
     let customerId = user.subscription?.stripeCustomerId;
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: user.email,
         name:  user.name,
         metadata: { userId: user._id.toString() },
@@ -35,7 +48,7 @@ router.post('/create-checkout-session', protect, async (req, res, next) => {
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer:   customerId,
       mode:       'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
@@ -55,7 +68,7 @@ router.post('/cancel-subscription', protect, async (req, res, next) => {
     const subId = user.subscription?.stripeSubscriptionId;
     if (!subId) return badRequest(res, 'No active subscription');
 
-    await stripe.subscriptions.update(subId, { cancel_at_period_end: true });
+    await getStripe().subscriptions.update(subId, { cancel_at_period_end: true });
     success(res, {}, 'Subscription will cancel at end of billing period');
   } catch (e) { next(e); }
 });
@@ -65,7 +78,7 @@ router.post('/stripe', async (req, res) => {
   const sig     = req.headers['stripe-signature'];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = getStripe().webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error('⚠️  Stripe webhook signature failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
