@@ -246,9 +246,18 @@ const getAllListings = async (query) => {
     const total = await Stage.countDocuments({ deletedAt: null });
     return { data, total, type };
   }
-  // default: jobs
-  const data  = await Job.find({ deletedAt: null }).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('recruiterId', 'name email');
-  const total = await Job.countDocuments({ deletedAt: null });
+  if (type === 'part-time') {
+    const data = await Job.find({ deletedAt: null, contractType: 'part-time' }).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('recruiterId', 'name email');
+    const total = await Job.countDocuments({ deletedAt: null, contractType: 'part-time' });
+    return { data, total, type: 'part-time' };
+  }
+  // default: jobs (full / professional jobs)
+  const jobFilter = { deletedAt: null };
+  if (query.contractType) {
+    jobFilter.contractType = query.contractType;
+  }
+  const data  = await Job.find(jobFilter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('recruiterId', 'name email');
+  const total = await Job.countDocuments(jobFilter);
   return { data, total, type: 'job' };
 };
 

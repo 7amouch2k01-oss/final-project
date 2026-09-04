@@ -10,6 +10,7 @@ const helmet        = require('helmet');
 const morgan        = require('morgan');
 const cookieParser  = require('cookie-parser');
 const rateLimit     = require('express-rate-limit');
+const compression   = require('compression');
 
 dotenv.config();
 
@@ -96,9 +97,15 @@ const io = new Server(server, {
 initSocket(io);
 app.set('io', io);
 
+// ─── Performance: Gzip/Brotli Compression ─────────────────────────────────────
+app.use(compression());
+
 // ─── Security middleware ───────────────────────────────────────────────────────
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  contentSecurityPolicy: false, // Handled per-client for SPAs & Cloudinary asset embeds
+  hsts: process.env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
 }));
 app.disable('x-powered-by');
 
@@ -135,8 +142,8 @@ app.use(
 // ─── Body parsers ─────────────────────────────────────────────────────────────
 // Stripe webhook needs raw body — must be BEFORE express.json()
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
 // ─── HTTP logger ──────────────────────────────────────────────────────────────
@@ -215,18 +222,25 @@ app.get('/downloads/tuniverse-app.apk', (_req, res) => {
   res.status(404).send('APK file not found.');
 });
 
-// ─── Serve Built SPAs (if present in monolithic mode, or API-only if separated) ──
+// ─── Serve Built SPAs (with 1-year immutable caching on hashed assets for instant page loads) ──
+const staticOptions = {
+  maxAge: process.env.NODE_ENV === 'production' ? '1y' : 0,
+  immutable: process.env.NODE_ENV === 'production',
+};
+
 if (fs.existsSync(adminDist)) {
-  app.use('/admin', express.static(adminDist));
+  app.use('/admin', express.static(adminDist, staticOptions));
   app.get(/^\/admin(\/.*)?$/, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(path.join(adminDist, 'index.html'));
   });
 }
 
 if (fs.existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
+  app.use(express.static(frontendDist, staticOptions));
   app.get('{*splat}', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
+    res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
 } else {

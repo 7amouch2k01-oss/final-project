@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      maxPoolSize: 50,      // Maintain up to 50 concurrent socket connections
+      minPoolSize: 10,      // Keep 10 idle connections ready for instant queries
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
     // Auto-ensure default super admin account exists
