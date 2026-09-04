@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -320,26 +321,35 @@ export default function BacVerifications() {
       </div>
 
       {/* ── Document Inspection Modal ── */}
-      {selectedStudent && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
-          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
-        }}>
-          <div className="card" style={{ width: '100%', maxWidth: '900px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '24px', gap: '16px' }}>
+      {selectedStudent && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="admin-modal-overlay"
+          onClick={() => setSelectedStudent(null)}
+        >
+          <div 
+            className="card admin-modal-dialog"
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: '980px', maxHeight: '90vh', padding: '24px', gap: '16px' }}
+          >
             
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '14px' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
                   Baccalaureate Dossier: {selectedStudent.name}
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-sec)', margin: '2px 0 0' }}>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-sec)', margin: '2px 0 0' }}>
                   {selectedStudent.email} · {selectedStudent.baccalaureate?.school} ({selectedStudent.baccalaureate?.section})
                 </p>
               </div>
               <button
                 onClick={() => setSelectedStudent(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-sec)', fontSize: '1.4rem', cursor: 'pointer' }}
+                style={{ 
+                  background: 'var(--surface-raised)', border: '1px solid var(--border)', 
+                  color: 'var(--text-sec)', width: '34px', height: '34px', borderRadius: '8px', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.2rem', cursor: 'pointer', transition: 'all 0.15s ease' 
+                }}
               >
                 ✕
               </button>
@@ -349,8 +359,8 @@ export default function BacVerifications() {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '20px', flex: 1, minHeight: '380px', overflowY: 'auto' }}>
               
               {/* Left: Document Embed / Viewer */}
-              <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '8px 14px', background: 'var(--bg-base)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '8px 14px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-sec)' }}>OFFICIAL ATTACHED PROOF</span>
                   <a
                     href={selectedStudent.baccalaureate?.proofDocUrl}
@@ -362,18 +372,18 @@ export default function BacVerifications() {
                     Open in Full Window ↗
                   </a>
                 </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '340px', background: '#000' }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '360px', background: '#0a0a0a', padding: '12px' }}>
                   {selectedStudent.baccalaureate?.proofDocUrl?.endsWith('.pdf') ? (
                     <iframe
                       src={selectedStudent.baccalaureate.proofDocUrl}
                       title="Baccalaureate Certificate Preview"
-                      style={{ width: '100%', height: '100%', minHeight: '380px', border: 'none' }}
+                      style={{ width: '100%', height: '100%', minHeight: '380px', border: 'none', borderRadius: '6px' }}
                     />
                   ) : (
                     <img
                       src={selectedStudent.baccalaureate?.proofDocUrl}
                       alt="Baccalaureate Proof Document"
-                      style={{ maxWidth: '100%', maxHeight: '420px', objectFit: 'contain' }}
+                      style={{ maxWidth: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: '6px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
                     />
                   )}
                 </div>
@@ -383,7 +393,7 @@ export default function BacVerifications() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 
                 {/* Status Box */}
-                <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div style={{ padding: '14px', background: 'var(--surface-raised)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-sec)', textTransform: 'uppercase' }}>Current Status</div>
                   <div style={{ marginTop: '4px' }}>{getStatusBadge(selectedStudent.baccalaureate?.verificationStatus)}</div>
                   {selectedStudent.baccalaureate?.verificationNotes && (
@@ -394,8 +404,8 @@ export default function BacVerifications() {
                 </div>
 
                 {/* Extracted Details */}
-                <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--text-primary)', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
+                <div style={{ padding: '14px', background: 'var(--surface-raised)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text)', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
                     Candidate Declared Details
                   </div>
                   <div><strong>High School:</strong> {selectedStudent.baccalaureate?.school || '—'}</div>
@@ -406,8 +416,8 @@ export default function BacVerifications() {
                 </div>
 
                 {/* Hallmark Checklist */}
-                <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Tunisian Legal Checklist</div>
+                <div style={{ padding: '14px', background: 'var(--surface-raised)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text)' }}>Tunisian Legal Checklist</div>
                   <div>✓ Check for <strong>"الجمهورية التونسية / République Tunisienne"</strong></div>
                   <div>✓ Check for <strong>"وزارة التربية / Ministère de l'Éducation"</strong></div>
                   <div>✓ Check for Official Session & Seal</div>
@@ -435,16 +445,21 @@ export default function BacVerifications() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Reject Reason Prompt Modal ── */}
-      {rejectModalOpen && studentToReject && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
-          zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
-        }}>
-          <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {rejectModalOpen && studentToReject && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="admin-modal-overlay"
+          onClick={() => setRejectModalOpen(false)}
+        >
+          <div 
+            className="card admin-modal-dialog"
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: '480px', padding: '24px', gap: '16px' }}
+          >
             <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#ef4444' }}>
               Reject Baccalaureate Proof
             </h3>
@@ -459,8 +474,8 @@ export default function BacVerifications() {
               placeholder="e.g. The document is unreadable / Missing official Ministry stamp / Wrong certificate"
               style={{
                 width: '100%', padding: '10px', borderRadius: '6px',
-                background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)', fontSize: '0.84rem'
+                background: 'var(--surface-raised)', border: '1px solid var(--border)',
+                color: 'var(--text)', fontSize: '0.84rem'
               }}
             />
 
@@ -482,7 +497,8 @@ export default function BacVerifications() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
