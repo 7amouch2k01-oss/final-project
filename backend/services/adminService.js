@@ -104,6 +104,37 @@ const toggleBan = async (userId, ban) => {
   return user;
 };
 
+// ── Delete a user (Admin) ───────────────────────────────────────────────────
+const deleteUser = async (userId, currentAdminId) => {
+  if (userId.toString() === currentAdminId?.toString()) {
+    const e = new Error('You cannot delete your own admin account');
+    e.statusCode = 400;
+    throw e;
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    const e = new Error('User not found');
+    e.statusCode = 404;
+    throw e;
+  }
+
+  // Delete user record
+  await User.findByIdAndDelete(userId);
+
+  // Clean up user's applications, notifications, and related listings
+  await Promise.allSettled([
+    Application.deleteMany({ applicantId: userId }),
+    Notification.deleteMany({ userId }),
+    Job.updateMany({ recruiterId: userId }, { isActive: false, deletedAt: new Date() }),
+    Stage.updateMany({ recruiterId: userId }, { isActive: false, deletedAt: new Date() }),
+    University.updateMany({ recruiterId: userId }, { isActive: false, deletedAt: new Date() }),
+  ]);
+
+  return { deleted: true, userId };
+};
+
+
 // ── Get Institutions List (Admin) ─────────────────────────────────────────────
 const getInstitutions = async (query) => {
   const filter = {};
@@ -441,7 +472,7 @@ const deleteListing = async (type, id) => {
 };
 
 module.exports = {
-  getStats, getAllUsers, changeUserRole, toggleBan,
+  getStats, getAllUsers, changeUserRole, toggleBan, deleteUser,
   getInstitutions, approveInstitution, rejectInstitution,
   getRecruitRequests, getPendingRecruitRequests: getRecruitRequests, approveRecruit, rejectRecruit,
   broadcastNotification, getAllListings, deleteListing,

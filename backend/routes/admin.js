@@ -10,6 +10,7 @@ router.get('/users',                  ctrl.getAllUsers);
 router.patch('/users/:id/role',       ctrl.changeRole);
 router.patch('/users/:id/ban',        ctrl.banUser);
 router.patch('/users/:id/unban',      ctrl.unbanUser);
+router.delete('/users/:id',           ctrl.deleteUser);
 
 // Institution Approvals
 router.get('/institutions',                  ctrl.getInstitutions);

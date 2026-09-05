@@ -6,6 +6,7 @@ const getAllUsers  = async (req, res, next) => { try { success(res, await adminS
 const changeRole  = async (req, res, next) => { try { const u = await adminService.changeUserRole(req.params.id, req.body.role); success(res, { user: u.toPublicProfile() }, 'Role updated'); } catch(e){next(e);} };
 const banUser     = async (req, res, next) => { try { const u = await adminService.toggleBan(req.params.id, true);  success(res, { user: u.toPublicProfile() }, 'User banned'); } catch(e){next(e);} };
 const unbanUser   = async (req, res, next) => { try { const u = await adminService.toggleBan(req.params.id, false); success(res, { user: u.toPublicProfile() }, 'User unbanned'); } catch(e){next(e);} };
+const deleteUser  = async (req, res, next) => { try { const r = await adminService.deleteUser(req.params.id, req.user?.id); success(res, r, 'User deleted successfully'); } catch(e){next(e);} };
 
 // Institutions
 const getInstitutions = async (req, res, next) => { try { success(res, { institutions: await adminService.getInstitutions(req.query) }); } catch(e){next(e);} };
@@ -84,7 +85,7 @@ const rejectBacVerification = async (req, res, next) => {
 };
 
 module.exports = {
-  getStats, getAllUsers, changeRole, banUser, unbanUser,
+  getStats, getAllUsers, changeRole, banUser, unbanUser, deleteUser,
   getInstitutions, approveInstitution, rejectInstitution,
   getRecruitRequests, approveRecruit, rejectRecruit,
   broadcast, getAllListings, deleteListing,

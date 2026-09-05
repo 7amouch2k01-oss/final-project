@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -90,6 +90,23 @@ export default function Users() {
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /* ── delete user ── */
+  const handleDeleteUser = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+    setActionLoading(`${id}-delete`);
+    try {
+      await api.delete(`/admin/users/${id}`);
+      toast.success(`User "${name}" deleted successfully.`);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user.');
     } finally {
       setActionLoading(null);
     }
@@ -200,12 +217,31 @@ export default function Users() {
                     <td>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                         {u.role !== 'admin' && (
-                          <button
-                            className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}`}
-                            onClick={() => handleToggleBan(u._id, u.isActive)}
-                          >
-                            {u.isActive ? 'Ban' : 'Unban'}
-                          </button>
+                          <>
+                            <button
+                              className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}`}
+                              onClick={() => handleToggleBan(u._id, u.isActive)}
+                            >
+                              {u.isActive ? 'Ban' : 'Unban'}
+                            </button>
+                            <button
+                              className="btn btn-sm"
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                color: '#ef4444',
+                                border: '1px solid rgba(239, 68, 68, 0.25)',
+                                padding: '3px 10px',
+                                fontSize: '0.75rem',
+                                borderRadius: '6px',
+                                cursor: actionLoading ? 'not-allowed' : 'pointer',
+                              }}
+                              disabled={actionLoading === `${u._id}-delete`}
+                              onClick={() => handleDeleteUser(u._id, u.name)}
+                              title="Permanently delete user"
+                            >
+                              {actionLoading === `${u._id}-delete` ? '…' : '🗑 Delete'}
+                            </button>
+                          </>
                         )}
 
                         {isPending && (
