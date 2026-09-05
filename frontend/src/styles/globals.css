@@ -734,13 +734,25 @@ textarea::placeholder { color: var(--text-muted); }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: max(80px, 9vh);
-  padding-bottom: max(40px, 5vh);
+  padding-top: max(88px, 11vh);
+  padding-bottom: max(36px, 4vh);
   padding-left: clamp(16px, 4vw, 32px);
   padding-right: clamp(16px, 4vw, 32px);
   overflow-y: auto;
   animation: fadeIn 0.2s ease;
   box-sizing: border-box;
+}
+
+@keyframes shakeModal {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-9px); }
+  30%, 60%, 90% { transform: translateX(9px); }
+}
+
+.animate-modal-shake {
+  animation: shakeModal 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.3) !important;
 }
 
 .modal {

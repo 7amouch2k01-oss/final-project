@@ -8,7 +8,12 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const { user, setUser } = useAuthStore();
   const isStudent = user?.role === 'student';
 
-  const [activeTab, setActiveTab] = useState(isStudent ? 'baccalaureate' : 'general');
+  // Steps definition:
+  // Student: Step 1 = Baccalaureate, Step 2 = Higher Education/Path, Step 3 = Personal Details & CV
+  // Citizen: Step 1 = Work Experience, Step 2 = Personal Details & CV
+  const totalSteps = isStudent ? 3 : 2;
+  const [currentStep, setCurrentStep] = useState(1);
+
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
@@ -47,7 +52,6 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const [bacProofDocUrl, setBacProofDocUrl] = useState(bac.proofDocUrl || '');
 
   // ── Flexible Post-Baccalaureate / Higher Education ────────────
-  // Options: 'university', 'formation', 'other', 'none'
   const firstEdu = user?.education?.[0] || {};
   const initialPath = user?.postBacPath || (firstEdu.school ? 'university' : user?.formationDetails?.instituteName ? 'formation' : 'none');
   const [postBacChoice, setPostBacChoice] = useState(initialPath);
@@ -76,6 +80,81 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
   const [expTitle, setExpTitle] = useState(firstExp.title || '');
   const [expDesc, setExpDesc] = useState(firstExp.description || '');
   const [expCertUrl, setExpCertUrl] = useState(firstExp.certUrl || '');
+
+  // ── Real-time Dynamic 100% Progress Calculation ───────────────
+  // Evaluates every filled input and uploaded file live as user interacts
+  const calculateRealTimeScore = () => {
+    let score = 0;
+    if (isStudent) {
+      // Name: 15%
+      if (name.trim().length > 0) score += 15;
+      // Baccalaureate details: 20%
+      if (bacSchool.trim().length > 0 && bacSection.trim().length > 0 && bacYear) score += 20;
+      // Baccalaureate Proof Document: 20%
+      if (bacProofDocUrl.trim().length > 0) score += 20;
+      // Higher Education / Post-bac Path: 15%
+      if (postBacChoice === 'university' && eduSchool.trim().length > 0) score += 15;
+      else if (postBacChoice === 'formation' && formationInstitute.trim().length > 0) score += 15;
+      else if (postBacChoice === 'other' && otherDescription.trim().length > 0) score += 15;
+      else if (postBacChoice === 'none') score += 15;
+      // CV / Resume Document: 20%
+      if (cvUrl.trim().length > 0) score += 20;
+      // Bio & Skills: 10% (5% each)
+      if (bio.trim().length > 0) score += 5;
+      if (skills.trim().length > 0) score += 5;
+    } else {
+      // Citizen
+      if (name.trim().length > 0) score += 20;
+      if (cvUrl.trim().length > 0) score += 25;
+      if (bio.trim().length > 0) score += 15;
+      if (skills.trim().length > 0) score += 15;
+      if (expCompany.trim().length > 0 && expTitle.trim().length > 0) score += 25;
+    }
+    return Math.min(100, score);
+  };
+
+  const currentScore = calculateRealTimeScore();
+
+  // Determine if the current step can advance via "Next"
+  const isCurrentStepValid = () => {
+    if (isStudent) {
+      if (currentStep === 1) {
+        // Step 1: Baccalaureate
+        return (
+          bacSchool.trim().length > 0 &&
+          bacYear &&
+          bacSection.trim().length > 0 &&
+          bacProofDocUrl.trim().length > 0
+        );
+      }
+      if (currentStep === 2) {
+        // Step 2: Higher Education Path
+        if (postBacChoice === 'university') {
+          return eduSchool.trim().length > 0;
+        }
+        if (postBacChoice === 'formation') {
+          return formationInstitute.trim().length > 0 && formationProgram.trim().length > 0;
+        }
+        if (postBacChoice === 'other') {
+          return otherDescription.trim().length > 0;
+        }
+        return true; // 'none'
+      }
+      if (currentStep === 3) {
+        // Step 3: Bio, Skills & CV
+        return name.trim().length > 0 && cvUrl.trim().length > 0;
+      }
+    } else {
+      // Citizen
+      if (currentStep === 1) {
+        return expCompany.trim().length > 0 && expTitle.trim().length > 0;
+      }
+      if (currentStep === 2) {
+        return name.trim().length > 0 && cvUrl.trim().length > 0;
+      }
+    }
+    return true;
+  };
 
   if (!isOpen) return null;
 
@@ -128,24 +207,24 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
 
   // ── Submit Profile ───────────────────────────────────────────
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     if (isStudent) {
       if (!bacSchool.trim() || !bacYear || !bacSection || !bacProofDocUrl) {
         toast.error('Baccalaureate details and official proof document upload are required.');
-        setActiveTab('baccalaureate');
+        setCurrentStep(1);
         return;
       }
       if (postBacChoice === 'university' && !eduIsCurrent && !eduGradCertUrl) {
         toast.error('If your higher study is completed, please upload your graduation certificate.');
-        setActiveTab('education');
+        setCurrentStep(2);
         return;
       }
     }
 
     if (!cvUrl.trim()) {
       toast.error('Please upload your CV / Resume document to complete your profile.');
-      setActiveTab('general');
+      setCurrentStep(isStudent ? 3 : 2);
       return;
     }
 
@@ -205,7 +284,38 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
-  if (!isOpen) return null;
+  const handleNext = (e) => {
+    if (e) e.preventDefault();
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handleSkip = (e) => {
+    if (e) e.preventDefault();
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handleBack = (e) => {
+    if (e) e.preventDefault();
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const progressColor = currentScore >= 100 
+    ? '#10b981' 
+    : currentScore >= 60 
+    ? '#0ea5e9' 
+    : currentScore >= 30 
+    ? '#f59e0b' 
+    : 'var(--red)';
 
   return (
     <div className="modal-backdrop animate-fade-in" onClick={onClose}>
@@ -213,25 +323,25 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
         className="modal" 
         onClick={e => e.stopPropagation()} 
         style={{ 
-          maxWidth: '700px', 
+          maxWidth: '720px', 
           width: '100%',
-          maxHeight: 'calc(100vh - 100px)', 
+          maxHeight: 'calc(100vh - 120px)', 
+          marginTop: '16px',
           padding: 'clamp(20px, 3.5vw, 32px)',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--glass-border)'
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px', flexShrink: 0 }}>
           <div style={{ flex: 1, paddingRight: '12px' }}>
-            <div className="section-label" style={{ fontSize: '0.68rem', marginBottom: '2px' }}>Verified Profile Hub</div>
+            <div className="section-label" style={{ fontSize: '0.68rem', marginBottom: '2px' }}>TuniVerse Verification Hub</div>
             <h3 style={{ fontSize: '1.35rem', margin: 0, fontWeight: 800 }}>
-              {isStudent ? 'Student & Academic Verification' : 'Professional Profile Verification'}
+              {isStudent ? 'Complete Your Academic Profile' : 'Complete Your Professional Profile'}
             </h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '4px 0 0', lineHeight: 1.4 }}>
-              {isStudent 
-                ? 'Upload your Baccalaureate proof and choose your academic or vocational path to reach 100%.'
-                : 'Complete your credentials and CV to unlock full dashboard privileges.'}
+              Fill in your credentials to reach 100% and unlock applications for universities, internships, and jobs.
             </p>
           </div>
           <button 
@@ -254,95 +364,187 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          {isStudent && (
-            <button
-              type="button"
-              onClick={() => setActiveTab('baccalaureate')}
-              style={{
-                background: activeTab === 'baccalaureate' ? 'var(--red-subtle)' : 'var(--bg-elevated)',
-                border: `1px solid ${activeTab === 'baccalaureate' ? 'var(--red-border)' : 'var(--glass-border)'}`,
-                color: activeTab === 'baccalaureate' ? 'var(--red)' : 'var(--text-secondary)',
-                borderRadius: 'var(--r-md)',
-                padding: '8px 14px',
-                fontSize: '0.84rem',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              1. Baccalaureate (Required)
-            </button>
-          )}
+        {/* 100% Dynamic Progress Bar Card */}
+        <div style={{ 
+          background: 'var(--bg-elevated)', 
+          border: '1px solid var(--glass-border)', 
+          borderRadius: 'var(--r-md)', 
+          padding: '12px 16px', 
+          marginBottom: '20px', 
+          flexShrink: 0 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Profile Completion Status
+              </span>
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: 'var(--r-full)',
+                background: currentScore >= 100 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                color: progressColor,
+                border: `1px solid ${progressColor}40`
+              }}>
+                {currentScore === 100 ? '✓ Ready to Apply' : 'Required to Apply'}
+              </span>
+            </div>
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: progressColor }}>
+              {currentScore}%
+            </span>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('education')}
-            style={{
-              background: activeTab === 'education' ? 'var(--red-subtle)' : 'var(--bg-elevated)',
-              border: `1px solid ${activeTab === 'education' ? 'var(--red-border)' : 'var(--glass-border)'}`,
-              color: activeTab === 'education' ? 'var(--red)' : 'var(--text-secondary)',
-              borderRadius: 'var(--r-md)',
-              padding: '8px 14px',
-              fontSize: '0.84rem',
-              fontFamily: 'var(--font-display)',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            {isStudent ? '2. Post-Bac Path (Flexible)' : 'Education & Training'}
-          </button>
+          {/* Animated Bar Track */}
+          <div style={{ width: '100%', height: '8px', background: 'var(--bg-base)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div 
+              style={{ 
+                width: `${currentScore}%`, 
+                height: '100%', 
+                background: currentScore >= 100 
+                  ? 'linear-gradient(90deg, #10b981, #059669)' 
+                  : 'linear-gradient(90deg, var(--red), #f59e0b)', 
+                borderRadius: '999px',
+                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+              }} 
+            />
+          </div>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('general')}
-            style={{
-              background: activeTab === 'general' ? 'var(--red-subtle)' : 'var(--bg-elevated)',
-              border: `1px solid ${activeTab === 'general' ? 'var(--red-border)' : 'var(--glass-border)'}`,
-              color: activeTab === 'general' ? 'var(--red)' : 'var(--text-secondary)',
-              borderRadius: 'var(--r-md)',
-              padding: '8px 14px',
-              fontSize: '0.84rem',
-              fontFamily: 'var(--font-display)',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            {isStudent ? '3. Personal Info & CV' : 'Personal Info & CV'}
-          </button>
+        {/* Step Progression Indicators */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px', flexShrink: 0, gap: '8px' }}>
+          {isStudent ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  background: currentStep === 1 ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                  border: `1px solid ${currentStep === 1 ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                  color: currentStep === 1 ? 'var(--red)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: currentStep === 1 ? 'var(--red)' : 'var(--bg-surface)', color: currentStep === 1 ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem' }}>1</span>
+                <span>Baccalaureate</span>
+              </button>
 
-          {!isStudent && (
-            <button
-              type="button"
-              onClick={() => setActiveTab('experience')}
-              style={{
-                background: activeTab === 'experience' ? 'var(--red-subtle)' : 'var(--bg-elevated)',
-                border: `1px solid ${activeTab === 'experience' ? 'var(--red-border)' : 'var(--glass-border)'}`,
-                color: activeTab === 'experience' ? 'var(--red)' : 'var(--text-secondary)',
-                borderRadius: 'var(--r-md)',
-                padding: '8px 14px',
-                fontSize: '0.84rem',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Work Experience
-            </button>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  background: currentStep === 2 ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                  border: `1px solid ${currentStep === 2 ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                  color: currentStep === 2 ? 'var(--red)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: currentStep === 2 ? 'var(--red)' : 'var(--bg-surface)', color: currentStep === 2 ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem' }}>2</span>
+                <span>Post-Bac Path</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrentStep(3)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  background: currentStep === 3 ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                  border: `1px solid ${currentStep === 3 ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                  color: currentStep === 3 ? 'var(--red)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: currentStep === 3 ? 'var(--red)' : 'var(--bg-surface)', color: currentStep === 3 ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem' }}>3</span>
+                <span>Bio & CV</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  background: currentStep === 1 ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                  border: `1px solid ${currentStep === 1 ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                  color: currentStep === 1 ? 'var(--red)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: currentStep === 1 ? 'var(--red)' : 'var(--bg-surface)', color: currentStep === 1 ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem' }}>1</span>
+                <span>Work Experience</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  background: currentStep === 2 ? 'var(--red-subtle)' : 'var(--bg-elevated)',
+                  border: `1px solid ${currentStep === 2 ? 'var(--red-border)' : 'var(--glass-border)'}`,
+                  color: currentStep === 2 ? 'var(--red)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: currentStep === 2 ? 'var(--red)' : 'var(--bg-surface)', color: currentStep === 2 ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem' }}>2</span>
+                <span>Personal Info & CV</span>
+              </button>
+            </>
           )}
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto', paddingRight: '4px' }}>
 
-          {/* ════ TAB 1: BACCALAUREATE (REQUIRED FOR STUDENTS) ════ */}
-          {activeTab === 'baccalaureate' && isStudent && (
+          {/* ════ STUDENT STEP 1: BACCALAUREATE ════ */}
+          {isStudent && currentStep === 1 && (
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ padding: '14px 18px', background: 'var(--red-subtle)', border: '1px solid var(--red-border)', borderRadius: 'var(--r-md)' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--red)' }}>Tunisian Baccalaureate Verification</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  Please supply your high school graduation details and upload your diploma or grade transcript copy.
+                  Please supply your high school graduation details and upload your official diploma or grade transcript copy.
                 </div>
               </div>
 
@@ -401,56 +603,6 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Baccalaureate Verification Status Badge / SLA Notice */}
-              {bac.verificationStatus && bac.verificationStatus !== 'unsubmitted' && (
-                <div style={{
-                  padding: '14px 16px',
-                  borderRadius: 'var(--r-md)',
-                  border: bac.verificationStatus === 'verified' 
-                    ? '1px solid rgba(16, 185, 129, 0.3)' 
-                    : bac.verificationStatus === 'rejected'
-                    ? '1px solid rgba(239, 68, 68, 0.4)'
-                    : '1px solid rgba(245, 158, 11, 0.4)',
-                  background: bac.verificationStatus === 'verified' 
-                    ? 'rgba(16, 185, 129, 0.08)' 
-                    : bac.verificationStatus === 'rejected'
-                    ? 'rgba(239, 68, 68, 0.08)'
-                    : 'rgba(245, 158, 11, 0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{
-                      fontWeight: 800,
-                      fontSize: '0.86rem',
-                      color: bac.verificationStatus === 'verified' ? '#10b981' : bac.verificationStatus === 'rejected' ? '#ef4444' : '#f59e0b'
-                    }}>
-                      {bac.verificationStatus === 'verified' && '✓ Official Tunisian Baccalaureate Verified'}
-                      {bac.verificationStatus === 'under_review' && '⏳ Under Priority Administrative Review (< 24h SLA)'}
-                      {bac.verificationStatus === 'rejected' && '⚠️ Baccalaureate Proof Needs Action'}
-                    </span>
-                    {bac.verificationConfidence > 0 && (
-                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                        AI Score: {bac.verificationConfidence}%
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                    {bac.verificationStatus === 'verified' && (
-                      'Your diploma has been authenticated and verified. Your academic profile is fully accredited.'
-                    )}
-                    {bac.verificationStatus === 'under_review' && (
-                      'Your proof has been submitted to the administration queue. Our review team will visually inspect and verify your document in under 24 hours.'
-                    )}
-                    {bac.verificationStatus === 'rejected' && (
-                      `Reason: "${bac.rejectionReason || 'The uploaded file does not clearly show the official Ministry of Education seals or text.'}" — Please attach a clearer copy below.`
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Bac Proof Upload */}
               <div className="form-group">
                 <label className="form-label">Official Baccalaureate Proof Document (PDF or Photo) *</label>
@@ -475,7 +627,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                         style={{ fontSize: '0.8rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                         View File
@@ -502,15 +654,15 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* ════ TAB 2: FLEXIBLE POST-BAC PATH ════ */}
-          {activeTab === 'education' && (
+          {/* ════ STUDENT STEP 2: FLEXIBLE POST-BAC PATH ════ */}
+          {isStudent && currentStep === 2 && (
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ padding: '14px 18px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '8px' }}>
-                  What are you currently doing after the Baccalaureate?
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px' }}>
+                  Current Path & Higher Education
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
-                  You do not need to attend university to complete your profile. Select your exact track below to reach 100%.
+                  Select your current educational pathway. You can also skip this section if applying directly with your Baccalaureate.
                 </p>
               </div>
 
@@ -629,11 +781,11 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* Path 2: Formation Professionnelle */}
+              {/* Path 2: Formation */}
               {postBacChoice === 'formation' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--r-md)', border: '1px solid var(--glass-border)' }}>
                   <div className="form-group">
-                    <label className="form-label">Training Center / Institute (Centre de Formation) *</label>
+                    <label className="form-label">Training Center / Institute *</label>
                     <input 
                       type="text" 
                       value={formationInstitute} 
@@ -648,7 +800,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                       type="text" 
                       value={formationProgram} 
                       onChange={e => setFormationProgram(e.target.value)} 
-                      placeholder="e.g. Full-Stack Web Development, Data Analytics, Design..."
+                      placeholder="e.g. Full-Stack Web Development, Data Analytics..."
                       required
                     />
                   </div>
@@ -674,7 +826,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                       rows="3" 
                       value={otherDescription} 
                       onChange={e => setOtherDescription(e.target.value)} 
-                      placeholder="e.g. Self-studying programming and UI design, participating in online certifications..."
+                      placeholder="e.g. Self-studying programming and UI design..."
                     />
                   </div>
                   <div className="form-group">
@@ -694,18 +846,18 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
               {postBacChoice === 'none' && (
                 <div style={{ padding: '16px', background: 'rgba(52, 211, 153, 0.05)', borderRadius: 'var(--r-md)', border: '1px solid rgba(52, 211, 153, 0.2)' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#10b981' }}>
-                    Profile will be completed to 100%
+                    Baccalaureate Path Validated
                   </div>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-                    No higher education degree is required. Once your Baccalaureate certificate, CV, and core skills are saved in step 3, your profile verification will reach 100%.
+                    Proceed to Step 3 to add your CV and skills to reach full 100% completion.
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* ════ TAB 3: PERSONAL INFO & CV ════ */}
-          {activeTab === 'general' && (
+          {/* ════ STUDENT STEP 3 OR CITIZEN STEP 2: PERSONAL INFO & CV ════ */}
+          {((isStudent && currentStep === 3) || (!isStudent && currentStep === 2)) && (
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Full Name *</label>
@@ -751,7 +903,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* CV File Upload (Required for 100%) */}
+              {/* CV File Upload */}
               <div className="form-group">
                 <label className="form-label">Curriculum Vitae (CV / Resume Document) *</label>
                 <div style={{
@@ -784,7 +936,7 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
                       </div>
                     ) : (
                       <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                        Upload your CV (PDF or Word) to auto-attach on all future applications.
+                        Upload your CV (PDF or Word) to auto-attach on all applications.
                       </div>
                     )}
                   </div>
@@ -803,26 +955,35 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* ════ TAB 4: EXPERIENCE (CITIZEN ONLY) ════ */}
-          {activeTab === 'experience' && !isStudent && (
+          {/* ════ CITIZEN STEP 1: EXPERIENCE ════ */}
+          {!isStudent && currentStep === 1 && (
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ padding: '14px 18px', background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', borderRadius: 'var(--r-md)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Professional Work Experience</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  List your latest company and role to present verified background to recruiters.
+                </div>
+              </div>
+
               <div className="form-group">
-                <label className="form-label">Recent Company / Employer</label>
+                <label className="form-label">Recent Company / Employer *</label>
                 <input 
                   type="text" 
                   value={expCompany} 
                   onChange={e => setExpCompany(e.target.value)} 
-                  placeholder="e.g. Telnet, Vermeg, Ooredoo" 
+                  placeholder="e.g. Telnet, Vermeg, Ooredoo, Instadeep" 
+                  required
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Job Title / Position</label>
+                <label className="form-label">Job Title / Position *</label>
                 <input 
                   type="text" 
                   value={expTitle} 
                   onChange={e => setExpTitle(e.target.value)} 
-                  placeholder="e.g. Senior Software Engineer" 
+                  placeholder="e.g. Senior Software Engineer / UX Lead" 
+                  required
                 />
               </div>
 
@@ -849,14 +1010,63 @@ export const CompleteProfileModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Modal Footer Actions */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
-            <button type="button" onClick={onClose} className="btn btn-ghost">
-              Cancel
-            </button>
-            <button type="submit" disabled={loading || uploadingDoc} className="btn btn-primary">
-              {loading ? 'Saving Profile...' : 'Save & Complete Profile (100%)'}
-            </button>
+          {/* Modal Footer Step Navigation Actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', borderTop: '1px solid var(--glass-border)', paddingTop: '16px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {currentStep > 1 ? (
+                <button type="button" onClick={handleBack} className="btn btn-ghost" style={{ padding: '8px 16px' }}>
+                  ← Back
+                </button>
+              ) : (
+                <button type="button" onClick={onClose} className="btn btn-ghost" style={{ padding: '8px 16px' }}>
+                  Cancel
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              {/* Skip button for non-mandatory steps */}
+              {currentStep < totalSteps && (
+                <button 
+                  type="button" 
+                  onClick={handleSkip} 
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '8px 14px', fontSize: '0.82rem' }}
+                >
+                  Skip Section →
+                </button>
+              )}
+
+              {/* Next or Finish Button */}
+              {currentStep < totalSteps ? (
+                <button 
+                  type="button" 
+                  onClick={handleNext}
+                  disabled={!isCurrentStepValid() || uploadingDoc}
+                  className="btn btn-primary"
+                  style={{ 
+                    padding: '8px 20px',
+                    opacity: isCurrentStepValid() ? 1 : 0.45,
+                    cursor: isCurrentStepValid() ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  Next Step →
+                </button>
+              ) : (
+                <button 
+                  type="submit" 
+                  disabled={loading || uploadingDoc || !isCurrentStepValid()} 
+                  className="btn btn-primary"
+                  style={{
+                    padding: '8px 20px',
+                    opacity: isCurrentStepValid() ? 1 : 0.45,
+                    cursor: isCurrentStepValid() ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  {loading ? 'Saving Profile...' : `Save & Complete (${currentScore}%)`}
+                </button>
+              )}
+            </div>
           </div>
         </form>
       </div>

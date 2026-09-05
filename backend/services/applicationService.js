@@ -68,12 +68,15 @@ const apply = async ({ applicantId, targetId, targetType, targetModel: targetMod
   const hasName = applicant.name && applicant.name.trim().length > 0;
   const hasCv = (applicant.cvUrl && applicant.cvUrl.trim().length > 0) || (cvUrl && cvUrl.trim().length > 0);
   const hasBio = applicant.bio && applicant.bio.trim().length > 0;
+  const isStudent = applicant.role === 'student';
+  const hasBacProof = applicant.baccalaureate?.school && applicant.baccalaureate?.proofDocUrl;
 
-  if (!hasName || !hasCv || !hasBio) {
+  if (!hasName || !hasCv || !hasBio || (isStudent && !hasBacProof)) {
     const missing = [];
     if (!hasName) missing.push('Full Name');
     if (!hasCv) missing.push('CV / Proof document');
     if (!hasBio) missing.push('Bio & General profile info');
+    if (isStudent && !hasBacProof) missing.push('Official Baccalaureate proof document');
     const e = new Error(`Profile incomplete: Please finish uploading your ${missing.join(', ')} in your profile before applying.`);
     e.statusCode = 400;
     throw e;

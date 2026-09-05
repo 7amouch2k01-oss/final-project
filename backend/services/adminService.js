@@ -148,11 +148,28 @@ const rejectInstitution = async (instId, reason, io) => {
   return inst;
 };
 
-// ── Get pending recruit requests ──────────────────────────────────────────────
-const getPendingRecruitRequests = async () => {
-  return User.find({ role: 'citizen', 'recruitRights.status': 'pending' })
+// ── Get recruit requests (filterable by status) ──────────────────────────────
+const getRecruitRequests = async (query = {}) => {
+  const filter = { role: 'citizen' };
+  
+  if (query.status && query.status !== 'all') {
+    filter['recruitRights.status'] = query.status;
+  } else {
+    filter['recruitRights.status'] = { $in: ['pending', 'approved', 'rejected'] };
+  }
+
+  if (query.search) {
+    const safe = escapeRegExp(query.search);
+    filter.$or = [
+      { name: new RegExp(safe, 'i') },
+      { email: new RegExp(safe, 'i') },
+      { 'company.name': new RegExp(safe, 'i') },
+    ];
+  }
+
+  return User.find(filter)
     .select('name email avatar company recruitRights createdAt')
-    .sort({ 'recruitRights.requestedAt': 1 });
+    .sort({ 'recruitRights.requestedAt': -1, createdAt: -1 });
 };
 
 // ── Approve recruit rights ────────────────────────────────────────────────────
@@ -426,7 +443,7 @@ const deleteListing = async (type, id) => {
 module.exports = {
   getStats, getAllUsers, changeUserRole, toggleBan,
   getInstitutions, approveInstitution, rejectInstitution,
-  getPendingRecruitRequests, approveRecruit, rejectRecruit,
+  getRecruitRequests, getPendingRecruitRequests: getRecruitRequests, approveRecruit, rejectRecruit,
   broadcastNotification, getAllListings, deleteListing,
   getBacVerifications, approveBacVerification, rejectBacVerification,
 };

@@ -24,7 +24,7 @@ const rejectInstitution = async (req, res, next) => {
   } catch(e){next(e);}
 };
 
-const getRecruitRequests = async (req, res, next) => { try { success(res, { requests: await adminService.getPendingRecruitRequests() }); } catch(e){next(e);} };
+const getRecruitRequests = async (req, res, next) => { try { success(res, { requests: await adminService.getRecruitRequests(req.query) }); } catch(e){next(e);} };
 
 const approveRecruit = async (req, res, next) => {
   try {

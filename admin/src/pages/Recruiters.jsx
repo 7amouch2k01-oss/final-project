@@ -16,7 +16,7 @@ export default function Recruiters() {
     try {
       const [instRes, recruitRes] = await Promise.allSettled([
         api.get(`/admin/institutions?status=${filter}&search=${search}`),
-        api.get('/admin/recruit-requests'),
+        api.get(`/admin/recruit-requests?status=${filter}&search=${search}`),
       ]);
       
       if (instRes.status === 'fulfilled') {
@@ -302,28 +302,26 @@ export default function Recruiters() {
                       {r.recruitRights?.requestedAt ? new Date(r.recruitRights.requestedAt).toLocaleDateString() : '—'}
                     </td>
                     <td>
-                      {r.recruitRights?.status === 'pending' ? (
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button
-                            className="btn btn-sm btn-success"
-                            disabled={actionLoading}
-                            onClick={() => handleCitizenAction(r._id, 'approve', r.name)}
-                          >
-                            ✓ Approve
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            disabled={actionLoading}
-                            onClick={() => handleCitizenAction(r._id, 'reject', r.name)}
-                          >
-                            ✗ Reject
-                          </button>
+                          {r.recruitRights?.status !== 'approved' && (
+                            <button
+                              className="btn btn-sm btn-success"
+                              disabled={actionLoading}
+                              onClick={() => handleCitizenAction(r._id, 'approve', r.name)}
+                            >
+                              ✓ Approve
+                            </button>
+                          )}
+                          {r.recruitRights?.status !== 'rejected' && (
+                            <button
+                              className="btn btn-sm btn-danger"
+                              disabled={actionLoading}
+                              onClick={() => handleCitizenAction(r._id, 'reject', r.name)}
+                            >
+                              ✗ Reject
+                            </button>
+                          )}
                         </div>
-                      ) : (
-                        <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                          Reviewed
-                        </span>
-                      )}
                     </td>
                   </tr>
                 ))}

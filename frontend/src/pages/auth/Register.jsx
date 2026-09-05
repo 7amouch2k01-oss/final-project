@@ -32,8 +32,9 @@ export const Register = () => {
     }
     const res = await register(name.trim(), email.trim(), password, role);
     if (res.success) {
+      sessionStorage.setItem('justRegistered', 'true');
       toast.success('Welcome! Your account has been created.');
-      navigate('/dashboard');
+      navigate('/dashboard?onboarding=true');
     } else {
       setError(res.error || 'Registration failed. Please try again.');
     }

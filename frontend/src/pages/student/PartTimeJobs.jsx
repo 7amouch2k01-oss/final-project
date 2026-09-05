@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
-import { BrandLogo } from '../../components/common/CompleteProfileModal';
+import CompleteProfileModal, { BrandLogo } from '../../components/common/CompleteProfileModal';
 
 // ─── Small helpers ──────────────────────────────────────────────────────────────
 
@@ -85,6 +85,9 @@ export const PartTimeJobs = () => {
   const [showApply, setShowApply]         = useState(false);
   const [coverLetter, setCoverLetter]     = useState('');
   const [submitting, setSubmitting]       = useState(false);
+  const [isShaking, setIsShaking]         = useState(false);
+  const [profileWarning, setProfileWarning] = useState('');
+  const [isCompleteProfileModalOpen, setIsCompleteProfileModalOpen] = useState(false);
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
 
@@ -103,19 +106,11 @@ export const PartTimeJobs = () => {
 
       const fetchedJobs = jobsRes.data.data.jobs || [];
       const fetchedApps = appsRes.data.data.applications || [];
-
       setJobs(fetchedJobs);
       setTotal(jobsRes.data.data.total || fetchedJobs.length);
-      setMyApps(fetchedApps.filter(a => a.targetModel === 'Job'));
-
-      const ids = new Set(
-        fetchedApps
-          .filter(a => a.targetModel === 'Job')
-          .map(a => a.targetId?._id || a.targetId)
-      );
-      setAppliedIds(ids);
+      setMyApps(fetchedApps);
+      setAppliedIds(new Set(fetchedApps.map(a => a.targetId?._id || a.targetId)));
     } catch (err) {
-      console.error(err);
       toast.error('Failed to load part-time jobs');
     } finally {
       setLoading(false);
@@ -132,11 +127,27 @@ export const PartTimeJobs = () => {
     setSelectedJob(job);
     setShowApply(false);
     setCoverLetter('');
+    setProfileWarning('');
+  };
+
+  const triggerShake = (warningMessage) => {
+    setProfileWarning(warningMessage);
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 650);
   };
 
   const handleApply = async (e) => {
     e.preventDefault();
     if (!user) { toast.error('Please log in to apply'); return; }
+
+    // Profile completion check
+    const hasBac = user.baccalaureate?.school && user.baccalaureate?.proofDocUrl;
+    if (!user.name || !user.name.trim() || !user.cvUrl || !user.cvUrl.trim() || !user.bio || !user.bio.trim() || (user.role === 'student' && !hasBac)) {
+      triggerShake('You must complete your profile credentials and upload required documents before applying to part-time jobs.');
+      toast.error('Profile incomplete: Please complete your profile to 100% first.', { duration: 4000 });
+      return;
+    }
+
     if (appliedIds.has(selectedJob._id)) { toast.error('You already applied to this position'); return; }
     setSubmitting(true);
     try {
@@ -474,8 +485,12 @@ export const PartTimeJobs = () => {
           JOB DETAIL / APPLY MODAL
       ════════════════════════════════════════════════════════════════════════ */}
       {selectedJob && (
-        <div className="modal-backdrop animate-fade-in" onClick={() => { setSelectedJob(null); setShowApply(false); }}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: showApply ? '520px' : '680px', padding: '0', overflow: 'hidden' }}>
+        <div className="modal-backdrop animate-fade-in" onClick={() => { setSelectedJob(null); setShowApply(false); setProfileWarning(''); }}>
+          <div 
+            className={`modal ${isShaking ? 'animate-modal-shake' : ''}`} 
+            onClick={e => e.stopPropagation()} 
+            style={{ maxWidth: showApply ? '520px' : '680px', padding: '0', overflow: 'hidden', transition: 'border-color 0.3s, box-shadow 0.3s' }}
+          >
 
             {/* Header */}
             <div style={{ padding: '24px 28px 18px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
@@ -491,11 +506,42 @@ export const PartTimeJobs = () => {
                   </p>
                 </div>
               </div>
-              <button onClick={() => { setSelectedJob(null); setShowApply(false); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+              <button onClick={() => { setSelectedJob(null); setShowApply(false); setProfileWarning(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}>✕</button>
             </div>
 
             {/* Content */}
             <div style={{ padding: '20px 28px 24px', maxHeight: '70vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+              {/* Incomplete Profile Warning Alert Banner with Direct Action */}
+              {profileWarning && (
+                <div style={{
+                  padding: '12px 14px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  borderRadius: 'var(--r-md)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                    <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#ef4444' }}>
+                      Profile Completion Required
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                    {profileWarning}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsCompleteProfileModalOpen(true)}
+                    className="btn btn-primary btn-sm"
+                    style={{ alignSelf: 'flex-start', marginTop: '4px', fontSize: '0.78rem', padding: '6px 14px' }}
+                  >
+                    Complete Profile (100%) Now →
+                  </button>
+                </div>
+              )}
 
               {/* Chips row */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
@@ -563,7 +609,7 @@ export const PartTimeJobs = () => {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                    <button onClick={() => { setSelectedJob(null); }} className="btn btn-ghost" style={{ flex: 1 }}>Close</button>
+                    <button onClick={() => { setSelectedJob(null); setProfileWarning(''); }} className="btn btn-ghost" style={{ flex: 1 }}>Close</button>
                     <button
                       onClick={() => setShowApply(true)}
                       disabled={appliedIds.has(selectedJob._id)}
@@ -612,7 +658,7 @@ export const PartTimeJobs = () => {
                   )}
 
                   <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                    <button type="button" onClick={() => setShowApply(false)} className="btn btn-ghost" style={{ flex: 1 }}>Back</button>
+                    <button type="button" onClick={() => { setShowApply(false); setProfileWarning(''); }} className="btn btn-ghost" style={{ flex: 1 }}>Back</button>
                     <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: 2, justifyContent: 'center' }}>
                       {submitting ? 'Submitting...' : 'Confirm & Submit'}
                     </button>
@@ -623,6 +669,15 @@ export const PartTimeJobs = () => {
           </div>
         </div>
       )}
+
+      {/* Profile Completion Modal */}
+      <CompleteProfileModal
+        isOpen={isCompleteProfileModalOpen}
+        onClose={() => {
+          setIsCompleteProfileModalOpen(false);
+          setProfileWarning('');
+        }}
+      />
     </div>
   );
 };

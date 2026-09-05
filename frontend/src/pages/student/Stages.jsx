@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
-import { BrandLogo } from '../../components/common/CompleteProfileModal';
+import CompleteProfileModal, { BrandLogo } from '../../components/common/CompleteProfileModal';
 
 export const Stages = () => {
   const { user } = useAuthStore();
@@ -16,6 +16,9 @@ export const Stages = () => {
   const [selectedTrack, setSelectedTrack] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
   const [submittingApp, setSubmittingApp] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+  const [profileWarning, setProfileWarning] = useState('');
+  const [isCompleteProfileModalOpen, setIsCompleteProfileModalOpen] = useState(false);
 
   const fetchStagesAndApps = async () => {
     setLoading(true);
@@ -53,26 +56,25 @@ export const Stages = () => {
     }
   };
 
+  const triggerShake = (warningMessage) => {
+    setProfileWarning(warningMessage);
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 650);
+  };
+
   const handleApply = async (e) => {
     e.preventDefault();
     if (!user) {
       toast.error('Please log in to apply');
       return;
     }
-    // Profile completion gate — must have name + CV + bio
-    if (!user.name || !user.name.trim()) {
-      toast.error('Please complete your Full Name in your profile before applying.', { duration: 4000 });
-      navigate('/profile');
-      return;
-    }
-    if (!user.cvUrl || !user.cvUrl.trim()) {
-      toast.error('Please upload your CV/Portfolio URL in your profile before applying.', { duration: 4000 });
-      navigate('/profile');
-      return;
-    }
-    if (!user.bio || !user.bio.trim()) {
-      toast.error('Please write a short Bio in your profile before applying.', { duration: 4000 });
-      navigate('/profile');
+    // Profile completion gate — must have name + CV + bio + baccalaureate
+    const isStudent = user.role === 'student';
+    const hasBac = user.baccalaureate?.school && user.baccalaureate?.proofDocUrl;
+
+    if (!user.name || !user.name.trim() || !user.cvUrl || !user.cvUrl.trim() || !user.bio || !user.bio.trim() || (isStudent && !hasBac)) {
+      triggerShake('You must complete your profile credentials and upload required documents before applying to internships.');
+      toast.error('Profile incomplete: Please complete your profile to 100% first.', { duration: 4000 });
       return;
     }
     if (appliedStageIds.has(selectedStage._id)) {
@@ -297,8 +299,12 @@ export const Stages = () => {
 
       {/* Simplified Apply Modal (Auto profile CV) */}
       {selectedStage && (
-        <div className="modal-backdrop animate-fade-in" onClick={() => setSelectedStage(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', padding: '28px' }}>
+        <div className="modal-backdrop animate-fade-in" onClick={() => { setSelectedStage(null); setProfileWarning(''); }}>
+          <div 
+            className={`modal ${isShaking ? 'animate-modal-shake' : ''}`} 
+            onClick={e => e.stopPropagation()} 
+            style={{ maxWidth: '520px', padding: '28px', transition: 'border-color 0.3s, box-shadow 0.3s' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px' }}>
               <div>
                 <div className="section-label" style={{ fontSize: '0.65rem' }}>Internship Application</div>
@@ -306,12 +312,44 @@ export const Stages = () => {
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>{selectedStage.company}</p>
               </div>
               <button 
-                onClick={() => setSelectedStage(null)} 
+                onClick={() => { setSelectedStage(null); setProfileWarning(''); }} 
                 style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.3rem', cursor: 'pointer' }}
               >
                 ✕
               </button>
             </div>
+
+            {/* Incomplete Profile Warning Alert Banner with Direct Action */}
+            {profileWarning && (
+              <div style={{
+                padding: '12px 14px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: 'var(--r-md)',
+                marginBottom: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                  <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#ef4444' }}>
+                    Profile Completion Required
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                  {profileWarning}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsCompleteProfileModalOpen(true)}
+                  className="btn btn-primary btn-sm"
+                  style={{ alignSelf: 'flex-start', marginTop: '4px', fontSize: '0.78rem', padding: '6px 14px' }}
+                >
+                  Complete Profile (100%) Now →
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleApply} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {selectedStage.programmes && selectedStage.programmes.length > 0 && (
@@ -374,7 +412,7 @@ export const Stages = () => {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
-                <button type="button" onClick={() => setSelectedStage(null)} className="btn btn-ghost">
+                <button type="button" onClick={() => { setSelectedStage(null); setProfileWarning(''); }} className="btn btn-ghost">
                   Cancel
                 </button>
                 <button type="submit" disabled={submittingApp} className="btn btn-primary">
@@ -385,6 +423,15 @@ export const Stages = () => {
           </div>
         </div>
       )}
+
+      {/* Profile Completion Modal */}
+      <CompleteProfileModal
+        isOpen={isCompleteProfileModalOpen}
+        onClose={() => {
+          setIsCompleteProfileModalOpen(false);
+          setProfileWarning('');
+        }}
+      />
     </div>
   );
 };

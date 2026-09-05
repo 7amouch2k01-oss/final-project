@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axiosInstance';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import CompleteProfileModal, { BrandLogo } from '../../components/common/CompleteProfileModal';
 import FileViewerModal from '../../components/common/FileViewerModal';
 import toast from 'react-hot-toast';
 
 export const StudentDashboard = () => {
   const { user } = useAuthStore();
+  const [searchParams] = useSearchParams();
   const [unis, setUnis] = useState([]);
   const [stages, setStages] = useState([]);
   const [apps, setApps] = useState([]);
@@ -16,6 +17,14 @@ export const StudentDashboard = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [uploadingDocAppId, setUploadingDocAppId] = useState(null);
   const [followData, setFollowData] = useState({ followers: [], following: [], followersCount: 0, followingCount: 0 });
+
+  useEffect(() => {
+    const shouldOnboard = searchParams.get('onboarding') === 'true' || sessionStorage.getItem('justRegistered') === 'true';
+    if (shouldOnboard && !user?.isProfileComplete) {
+      setIsProfileModalOpen(true);
+      sessionStorage.removeItem('justRegistered');
+    }
+  }, [searchParams, user?.isProfileComplete]);
 
   // File Preview Modal State
   const [viewerModal, setViewerModal] = useState({
